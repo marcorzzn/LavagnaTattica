@@ -272,7 +272,7 @@ export default function App() {
               activeNav === 'video_cv_lab' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
             }`}
           >
-            Analisi Video CV
+            Simulatore su Frame (Human-in-the-Loop)
           </button>
           <button
             onClick={() => setActiveNav('benchmark_12')}

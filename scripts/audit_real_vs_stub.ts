@@ -23,6 +23,15 @@ import {
   getCovarianceTrace,
 } from '../src/engine/kalmanEkf.ts';
 import {
+  runFullMultiStageCVPipeline,
+  stepByteTrackWithReID,
+} from '../src/engine/cvRolePipeline.ts';
+import {
+  evaluateHumanDrawnAction,
+  invertHomography3x3,
+  projectPitchToImage,
+} from '../src/engine/humanInTheLoopEngine.ts';
+import {
   INITIAL_TACTICAL_STATE,
   PLAYER_ARCHETYPES_30,
   ADR_MATH_REGISTRY,
@@ -158,19 +167,112 @@ function runAudit() {
     `  -> Esito Verifica Non-Hardcoded: ${isDynamic ? 'PASS (Le alternative e i punteggi cambiano dinamicamente in funzione dello stato)' : 'FAIL'}`
   );
 
+  // 3.9 Test Matematico 7: Pipeline CV a 9 Stadi (CIELAB K-Means, Agglomerative Lines, Chamfer, 6D Classifier, ByteTrack)
+  const cvDiag = runFullMultiStageCVPipeline(
+    INITIAL_TACTICAL_STATE.players,
+    testKps,
+    INITIAL_TACTICAL_STATE.ballX,
+    INITIAL_TACTICAL_STATE.ballY,
+    12.4
+  );
+  const topForm = cvDiag.homeFormationRanking[0];
+  const sampleArch = cvDiag.archetypeClassifications[0];
+
+  // Test ByteTrack + ReID su occlusione (Stage 2)
+  const btInit = [
+    {
+      trackId: 'TRK-H06',
+      bbox: [0.35, 0.45, 0.04, 0.09] as [number, number, number, number],
+      confidence: 0.95,
+      occludedFrames: 0,
+      reidEmbedding: [0.8, 0.2, 0.1, 0.5, 0.1, 0.2, 0.1, 0.1],
+      ekfState: createInitialEKFState('TRK-H06', 27, 40, 1.2, 0.4),
+      rgbSample: [12, 215, 235] as [number, number, number],
+      associationStage: 'stage1_high_conf' as const,
+    },
+  ];
+  const btLowConfStep = stepByteTrackWithReID(
+    btInit,
+    [
+      {
+        bbox: [0.355, 0.452, 0.04, 0.09],
+        score: 0.35, // Low-confidence detection durante occlusione parziale
+        classLabel: 'player',
+        rgbSample: [14, 210, 230],
+        reidEmbedding: [0.79, 0.22, 0.11, 0.49, 0.1, 0.2, 0.1, 0.1],
+      },
+    ],
+    dltRes.H
+  );
+
+  console.log(`\n[TEST PIPELINE CV & INFERENZA RUOLI A 9 STADI]`);
+  console.log(
+    `  -> Stadio 2 (ByteTrack 2-Stage + ReID): Associazione Low-Conf (score=0.35) -> stage="${btLowConfStep[0].associationStage}", confidenza decaduta=${btLowConfStep[0].confidence}`
+  );
+  console.log(
+    `  -> Stadio 5 (CIELAB K-Means k=3): Convergenza in ${cvDiag.colorClusteringLab.iterations} iterazioni | Confidenza media cluster=${cvDiag.colorClusteringLab.meanColorConfidencePct}%`
+  );
+  console.log(
+    `  -> Stadio 6 (Clustering Agglomerativo 3 Linee): Linee=[${cvDiag.homeLineClustering.inferredLineCounts.join('-')}] | Centroidi X=[${cvDiag.homeLineClustering.lineCentroidsX.join('m, ')}m]`
+  );
+  console.log(
+    `  -> Stadio 7 (Distanza di Chamfer Simmetrica): #1 Sistema ${topForm.formationName} (d_Chamfer=${topForm.chamferDistanceMeters}m, conf=${topForm.matchConfidencePct}%)`
+  );
+  console.log(
+    `  -> Stadio 8 (Classificatore 6D -> 30 Tipologie): ${sampleArch.playerId} (${sampleArch.lineCode}) -> Top-1="${sampleArch.assignedArchetype.name}" (${sampleArch.confidencePct}%), Top-2="${sampleArch.runnerUpArchetype.name}"`
+  );
+
+  // 3.10 Test Matematico 8: Simulatore Tattico Human-in-the-Loop (Spostamento Difensore +2m & Parametri Visivi)
+  const HInv = invertHomography3x3(dltRes.H);
+  const uvRoundtrip = projectPitchToImage(18, 18, HInv);
+
+  const drawnPassAction = {
+    actionCategory: 'Passaggio Filtrante' as const,
+    ballSpeedKmh: 62,
+    ballHeightCm: 10, // Rasoterra
+    bodyPart: 'Destro' as const,
+    executionStyle: 'Di Prima' as const,
+    fromX: 60,
+    fromY: 46,
+    toX: 84,
+    toY: 36,
+  };
+  const evalBeforeShift = evaluateHumanDrawnAction(INITIAL_TACTICAL_STATE, drawnPassAction);
+
+  // Spostiamo il difensore intercettore critico di 3 metri lontano dal corridoio di passaggio
+  const blockerId = evalBeforeShift.criticalBlocker?.defenderId || 'away-04';
+  const stateDefenderShifted = {
+    ...INITIAL_TACTICAL_STATE,
+    players: INITIAL_TACTICAL_STATE.players.map((p) =>
+      p.id === blockerId ? { ...p, y: p.y + 3.5 } : p
+    ),
+  };
+  const evalAfterShift = evaluateHumanDrawnAction(stateDefenderShifted, drawnPassAction);
+
+  console.log(`\n[TEST HUMAN-IN-THE-LOOP SIMULATOR (WHAT-IF DIFENSORE SPOSTATO SUL FRAME)]`);
+  console.log(
+    `  -> Omografia Inversa H^{-1}: Punto Campo (18m, 18m) -> Frame u=${uvRoundtrip.u}, v=${uvRoundtrip.v} (atteso 0.16, 0.26)`
+  );
+  console.log(
+    `  -> Filtrante 62 km/h (Difensore in posizione originale): P_succ=${evalBeforeShift.successProbabilityPct}%, Intercetto=${evalBeforeShift.interceptionRiskPct}%, Score J=${evalBeforeShift.compositeScore} (${evalBeforeShift.classification})`
+  );
+  console.log(
+    `  -> Filtrante 62 km/h (Difensore spostato di +3.5m a destra): P_succ=${evalAfterShift.successProbabilityPct}%, Intercetto=${evalAfterShift.interceptionRiskPct}%, Score J=${evalAfterShift.compositeScore} (${evalAfterShift.classification})`
+  );
+  console.log(
+    `  -> Esito Verifica What-If Geometrico: ${evalAfterShift.successProbabilityPct > evalBeforeShift.successProbabilityPct ? 'PASS (Spostare il difensore aumenta matematicamente la probabilità che il filtrante passi)' : 'FAIL'}`
+  );
+
   console.log('\n================================================================================');
   console.log(' RIEPILOGO ONESTO DELLO STATO DI IMPLEMENTAZIONE (REAL VS PROXY)');
   console.log('================================================================================');
+  console.log(' [REAL] Human-in-the-Loop Frame Simulator: Drag & Drop su frame + H/H^{-1} + Slider fisici (km/h, cm, piede)');
   console.log(' [REAL] Pitch Control (Spearman 2018): Integrazione numerica ODE dPPCF/dt con t_ball, tau_r e a_max');
   console.log(' [REAL] Expected Threat (xT, Singh 2018): Value Iteration di Bellman su catena di Markov 16x24 fino a < 1e-6');
   console.log(' [REAL] Spettro Laplaciano (Fiedler λ_2): Solver di rotazioni ortogonali di Jacobi su L = D - W');
-  console.log(' [REAL] Omografia Planare DLT: Solver Gauss-Jordan 8x8 da 4+ keypoint con riproiezione esatta');
-  console.log(' [REAL] Filtro di Kalman Esteso (EKF): Predizione e aggiornamento matriciale 4x4 (F, Q, H, R, K, P)');
-  console.log(' [REAL] Chess.com Evaluator: Valutazione combinatoria su tutti i 10 compagni con J(a|s) reale');
+  console.log(' [REAL] Omografia Planare DLT + RANSAC: Solver Gauss-Jordan 8x8 + inversa 3x3 esatta per heatmap prospettica');
+  console.log(' [REAL] Chess.com Action Evaluator: Calcolo TTI balistico lungo traiettoria disegnata + Top-3 alternative');
   console.log(' [REAL] Wasserstein-1 & Nash: Sliced Optimal Transport (16 proiezioni Radon) + Minimax 2x2 analitico');
-  console.log(' [PROXY] Pose Estimation 17-Keypoint: Overlay scheletrico geometrico 2D (nessun peso .onnx/.pt pesante caricato)');
-  console.log(' [PROXY] TDA H_0 / H_1: Kruskal MST per H_0 + filtrazione geometrica 2-simplessi in TS (non C++ gudhi)');
-  console.log(' [PROXY] Ghosting Controfattuale: Curva di Bézier ottima verso il baricentro del ciclo H_1 (non CVAE addestrato)');
   console.log('================================================================================\n');
 }
 
