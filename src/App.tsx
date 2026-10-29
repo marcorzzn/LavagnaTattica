@@ -37,7 +37,7 @@ type MainWorkspaceView =
   | 'knowledge_educational';
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('tactical_lab');
+  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('video_cv_lab');
   const [state, setState] = useState<TacticalState>(INITIAL_TACTICAL_STATE);
   const [history, setHistory] = useState<TacticalState[]>([]);
 
@@ -164,7 +164,7 @@ export default function App() {
 
   const applyTacticalPreset = (presetId: string) => {
     setHistory((h) => [...h.slice(-8), state]);
-    if (presetId === 'libero_moderno_build_up' || presetId === 'lobotka_libero') {
+    if (presetId === 'libero_moderno_build_up') {
       setState(INITIAL_TACTICAL_STATE);
       setActiveOverlays(['pitch_control', 'pass_network']);
     } else if (presetId === 'tda_gap_attack') {

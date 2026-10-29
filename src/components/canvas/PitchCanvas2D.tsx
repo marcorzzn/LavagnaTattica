@@ -37,6 +37,7 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingBall, setDraggingBall] = useState<boolean>(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const clientToPitchCoords = (clientX: number, clientY: number): { x: number; y: number } => {
     if (!svgRef.current) return { x: 60, y: 40 };
@@ -130,13 +131,13 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
           />
         ))}
 
-        {/* OVERLAY 1: Pitch Control Heatmap (ADR-Math-001) */}
+        {/* OVERLAY 1: Pitch Control Heatmap (Scala Termica Blu Trasparente -> Rosso Trasparente) */}
         {showPitchControl &&
           metrics.pitchControlGrid.map((row, rIdx) =>
             row.map((probHome, cIdx) => {
               const delta = probHome - 0.5;
-              const fill = delta >= 0 ? '#00F2FF' : '#FF6B35';
-              const opacity = Math.min(0.45, Math.abs(delta) * 0.78);
+              const fill = delta >= 0 ? '#3B82F6' : '#EF4444';
+              const opacity = Math.min(0.42, Math.abs(delta) * 0.72);
               return (
                 <rect
                   key={`pc-${rIdx}-${cIdx}`}
@@ -317,18 +318,22 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
           </g>
         )}
 
-        {/* Player Velocity Vectors & Abstract Archetype Tokens (Zero Proper Names) */}
+        {/* Player Velocity Vectors & Abstract Archetype Tokens (Blu = Squadra A, Rosso = Squadra B, Label su Hover/Click) */}
         {players.map((player) => {
           const isHome = player.team === 'home';
           const isSelected = player.id === selectedPlayerId;
-          const primaryColor = isHome ? '#00F2FF' : '#FF6B35';
-          const bgColor = isHome ? '#082F49' : '#431407';
+          const isHovered = player.id === hoveredId;
+          const primaryColor = isHome ? '#60A5FA' : '#F87171';
+          const bgColor = isHome ? '#1D4ED8' : '#B91C1C';
+          const showLabel = isSelected || isHovered;
 
           return (
             <g
               key={player.id}
               transform={`translate(${player.x}, ${player.y})`}
               className="cursor-grab active:cursor-grabbing"
+              onPointerEnter={() => setHoveredId(player.id)}
+              onPointerLeave={() => setHoveredId(null)}
               onPointerDown={(e) => {
                 e.stopPropagation();
                 onSelectPlayer(player.id);
@@ -353,7 +358,7 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
                   cy={0}
                   r={3.2}
                   fill="none"
-                  stroke="#B4FF39"
+                  stroke="#FACC15"
                   strokeWidth={0.45}
                 />
               )}
@@ -363,40 +368,54 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
                 cy={0}
                 r={2.25}
                 fill={bgColor}
+                fillOpacity={showLabel ? 0.95 : 0.8}
                 stroke={primaryColor}
-                strokeWidth={isSelected ? 0.65 : 0.45}
-                filter={isSelected ? 'url(#cyanGlow)' : undefined}
+                strokeWidth={isSelected ? 0.6 : 0.4}
               />
 
               <text
                 x={0}
                 y={0.75}
                 textAnchor="middle"
-                fontSize="2.1"
+                fontSize="2.0"
                 fontWeight="700"
-                fill="#F8FAFC"
+                fill="#FFFFFF"
                 className="font-mono pointer-events-none"
               >
                 {player.number}
               </text>
 
-              {/* Abstract Archetype Label (Zero Proper Names) */}
-              <text
-                x={0}
-                y={4.1}
-                textAnchor="middle"
-                fontSize="1.6"
-                fontWeight="600"
-                fill={isSelected ? '#B4FF39' : '#E2E8F0'}
-                className="pointer-events-none"
-              >
-                {player.archetypeName}
-              </text>
+              {/* Mostra il nome esteso della tipologia solo su Hover o Click (Regola 2) */}
+              {showLabel && (
+                <g className="pointer-events-none">
+                  <rect
+                    x={-11}
+                    y={-5.8}
+                    width={22}
+                    height={2.8}
+                    rx={0.6}
+                    fill="#09090B"
+                    fillOpacity={0.92}
+                    stroke={primaryColor}
+                    strokeWidth={0.2}
+                  />
+                  <text
+                    x={0}
+                    y={-3.9}
+                    textAnchor="middle"
+                    fontSize="1.55"
+                    fontWeight="600"
+                    fill="#F8FAFC"
+                  >
+                    {player.archetypeName}
+                  </text>
+                </g>
+              )}
             </g>
           );
         })}
 
-        {/* Interactive Ball Token */}
+        {/* Interactive Ball Token (Giallo per distinguersi nettamente da Blu e Rosso) */}
         <g
           transform={`translate(${ballX}, ${ballY})`}
           className="cursor-grab active:cursor-grabbing"
@@ -405,16 +424,15 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
             setDraggingBall(true);
           }}
         >
-          <circle cx={0} cy={0} r={1.6} fill="#B4FF39" fillOpacity={0.25} />
-          <circle cx={0} cy={0} r={1.05} fill="#FFFFFF" stroke="#09090B" strokeWidth={0.3} />
-          <circle cx={0} cy={0} r={0.4} fill="#09090B" />
+          <circle cx={0} cy={0} r={1.8} fill="#FACC15" fillOpacity={0.3} />
+          <circle cx={0} cy={0} r={1.15} fill="#FACC15" stroke="#09090B" strokeWidth={0.35} />
         </g>
 
-        <text x="1" y="82.8" fontSize="1.55" fill="#64748B" className="font-mono">
-          CANONICAL COORDS: STATSBOMB 120×80m | ZERO NOMI PROPRI (30 ARCHETIPI ASTRATTI) | DRAG PER RICALCOLO 6 PILASTRI
+        <text x="1" y="82.8" fontSize="1.5" fill="#64748B" className="font-mono">
+          CAMPO 120×80m · PASSA IL MOUSE O CLICCA UNA PEDINA PER VEDERE LA TIPOLOGIA ASTRATTA
         </text>
-        <text x="119" y="82.8" textAnchor="end" fontSize="1.55" fill="#94A3B8" className="font-mono">
-          SQUADRA CASA (#00F2FF) → | ← SQUADRA OSPITE (#FF6B35)
+        <text x="119" y="82.8" textAnchor="end" fontSize="1.5" fill="#94A3B8" className="font-mono">
+          SQUADRA A (BLU) → | ← SQUADRA B (ROSSO) · PALLA (GIALLO)
         </text>
       </svg>
     </div>
