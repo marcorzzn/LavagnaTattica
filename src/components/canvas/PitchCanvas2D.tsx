@@ -5,6 +5,8 @@ import {
   PlayerNode,
   SixPillarsMetrics,
 } from '../../core/types';
+import { useViewportStore } from '../../stores/viewportStore';
+import { getPitchTheme } from '../../core/pitchThemes';
 
 interface PitchCanvas2DProps {
   players: PlayerNode[];
@@ -38,6 +40,9 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingBall, setDraggingBall] = useState<boolean>(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const theme = useViewportStore((s) => s.theme);
+  const currentTheme = getPitchTheme(theme);
 
   const clientToPitchCoords = (clientX: number, clientY: number): { x: number; y: number } => {
     if (!svgRef.current) return { x: 60, y: 40 };
@@ -115,9 +120,9 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
           </marker>
         </defs>
 
-        {/* Pitch Turf Base */}
-        <rect x="-2" y="-2" width="124" height="84" rx="2" fill="#0B131E" />
-        <rect x="0" y="0" width="120" height="80" fill="#0D1926" />
+        {/* Pitch Turf Base (Verde Prato o Tema Attivo) */}
+        <rect x="-2" y="-2" width="124" height="84" rx="2" fill={currentTheme.turfBase} />
+        <rect x="0" y="0" width="120" height="80" fill={currentTheme.turfBase} />
 
         {[0, 20, 40, 60, 80, 100].map((stripeX) => (
           <rect
@@ -126,8 +131,8 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
             y={0}
             width={10}
             height={80}
-            fill="#112233"
-            fillOpacity={0.35}
+            fill={currentTheme.turfStripe}
+            fillOpacity={currentTheme.stripeOpacity}
           />
         ))}
 
@@ -211,24 +216,24 @@ export const PitchCanvas2D: React.FC<PitchCanvas2DProps> = ({
           ZONA 14 ({metrics.zone14ControlPct}% PC)
         </text>
 
-        {/* Official StatsBomb 120x80 Pitch Lines */}
-        <g stroke="#64748B" strokeWidth="0.35" fill="none">
+        {/* Official StatsBomb 120x80 Pitch Lines (Bianco Crema o Tema Attivo) */}
+        <g stroke={currentTheme.lineColor} strokeOpacity={currentTheme.lineOpacity} strokeWidth="0.38" fill="none">
           <rect x="0" y="0" width="120" height="80" />
           <line x1="60" y1="0" x2="60" y2="80" />
           <circle cx="60" cy="40" r="9.15" />
-          <circle cx="60" cy="40" r="0.4" fill="#64748B" />
+          <circle cx="60" cy="40" r="0.4" fill={currentTheme.centerDotColor} />
 
           <rect x="0" y="18" width="18" height="44" />
           <rect x="0" y="30" width="6" height="20" />
-          <circle cx="12" cy="40" r="0.4" fill="#64748B" />
+          <circle cx="12" cy="40" r="0.4" fill={currentTheme.centerDotColor} />
           <path d="M 18 32.5 A 9.15 9.15 0 0 1 18 47.5" />
-          <rect x="-2" y="36" width="2" height="8" stroke="#94A3B8" />
+          <rect x="-2" y="36" width="2" height="8" stroke={currentTheme.lineColor} />
 
           <rect x="102" y="18" width="18" height="44" />
           <rect x="114" y="30" width="6" height="20" />
-          <circle cx="108" cy="40" r="0.4" fill="#64748B" />
+          <circle cx="108" cy="40" r="0.4" fill={currentTheme.centerDotColor} />
           <path d="M 102 32.5 A 9.15 9.15 0 0 0 102 47.5" />
-          <rect x="120" y="36" width="2" height="8" stroke="#94A3B8" />
+          <rect x="120" y="36" width="2" height="8" stroke={currentTheme.lineColor} />
         </g>
 
         {/* OVERLAY 4: TDA Topological Gaps H1 */}

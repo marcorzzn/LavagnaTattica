@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, Play, RotateCcw, Sparkles, Award } from 'lucide-react';
 import { KNOWLEDGE_ARTICLES } from '../../core/presets';
+import { TacticalLearningLab } from './TacticalLearningLab';
+import { GlossaryTaxonomy } from './GlossaryTaxonomy';
 
 interface EducationalAndKnowledgeProps {
   onLoadPresetScenario: (presetId: string) => void;
+  onNavigateToStudio?: () => void;
 }
 
 interface GateNode {
@@ -23,8 +26,11 @@ const INITIAL_GATES: GateNode[] = [
 
 export const EducationalAndKnowledge: React.FC<EducationalAndKnowledgeProps> = ({
   onLoadPresetScenario,
+  onNavigateToStudio,
 }) => {
-  const [subView, setSubView] = useState<'educational_tsp' | 'knowledge_base' | 'ml_notebooks'>('educational_tsp');
+  const [subView, setSubView] = useState<
+    'learning_lab' | 'glossary_taxonomy' | 'educational_tsp' | 'knowledge_base' | 'ml_notebooks'
+  >('learning_lab');
   const [selectedArticleId, setSelectedArticleId] = useState<string>(KNOWLEDGE_ARTICLES[0].id);
   const [categoryFilter, setCategoryFilter] = useState<string>('Tutte');
 
@@ -103,12 +109,14 @@ export const EducationalAndKnowledge: React.FC<EducationalAndKnowledgeProps> = (
     <div className="space-y-6">
       {/* Mode Selector */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[#111118] border border-zinc-800">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {(
             [
-              { id: 'educational_tsp', label: 'Laboratorio Educational (Commesso Viaggiatore & Nash)' },
-              { id: 'knowledge_base', label: 'Knowledge Base (Spielverlagerung, MIT SSAC, Soccermatics)' },
-              { id: 'ml_notebooks', label: 'Moduli ML & SoccerAnalyticsML Repository (Sez. 6)' },
+              { id: 'learning_lab', label: 'Laboratorio Tattico (Lezioni, Quiz & Puzzle 3-Pass)' },
+              { id: 'glossary_taxonomy', label: 'Glossario Metriche & Formule Ufficiali' },
+              { id: 'educational_tsp', label: 'Commesso Viaggiatore (TSP) & Teoria dei Giochi Nash' },
+              { id: 'knowledge_base', label: 'Knowledge Base (Spielverlagerung, MIT SSAC)' },
+              { id: 'ml_notebooks', label: 'Moduli ML & SoccerAnalyticsML Repository' },
             ] as const
           ).map((tab) => (
             <button
@@ -128,6 +136,12 @@ export const EducationalAndKnowledge: React.FC<EducationalAndKnowledgeProps> = (
           Sezione 6 & 9: Pedagogia, Trasparenza & Riproducibilità
         </span>
       </div>
+
+      {subView === 'learning_lab' && (
+        <TacticalLearningLab onLoadScenarioIntoStudio={onNavigateToStudio} />
+      )}
+
+      {subView === 'glossary_taxonomy' && <GlossaryTaxonomy />}
 
       {subView === 'educational_tsp' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

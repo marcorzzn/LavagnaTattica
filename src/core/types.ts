@@ -341,3 +341,79 @@ export interface KnowledgeArticle {
   linkedPresetId: string;
   references: string[];
 }
+
+// ============================================================================
+// MODULO STUDIO & LAVAGNA TATTICA (ANIMAZIONE, DISEGNO E KEYFRAME)
+// ============================================================================
+
+export type ArrowType = 'pass' | 'run' | 'cross' | 'pressing' | 'transition';
+export type ArrowStyle = 'straight' | 'curved' | 'dashed';
+export type ZoneShape = 'rect' | 'circle' | 'polygon';
+export type TacticalTheme =
+  | 'grass_cream'
+  | 'neon'
+  | 'chalk'
+  | 'blueprint'
+  | 'minimal'
+  | 'light';
+export type FormationPreset =
+  | '4-3-3'
+  | '4-2-3-1'
+  | '3-5-2'
+  | '4-4-2'
+  | '3-4-3'
+  | '5-3-2'
+  | '4-1-4-1';
+
+export interface BoardArrow {
+  id: string;
+  type: ArrowType;
+  style: ArrowStyle;
+  fromX: number; // StatsBomb 0..120 o Opta 0..100
+  fromY: number; // StatsBomb 0..80 o Opta 0..100
+  toX: number;
+  toY: number;
+  controlX?: number;
+  controlY?: number;
+  color: string;
+  strokeWidth: number;
+  label?: string;
+}
+
+export interface BoardZone {
+  id: string;
+  shape: ZoneShape;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  points?: Array<{ x: number; y: number }>;
+  color: string;
+  opacity: number;
+  label?: string;
+}
+
+export interface BoardPenStroke {
+  id: string;
+  tool: 'pen' | 'highlighter';
+  points: Array<{ x: number; y: number }>;
+  color: string;
+  strokeWidth: number;
+}
+
+export interface BoardNote {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  tag?: string;
+  color?: string;
+}
+
+export interface KeyframeState {
+  id: string;
+  timestampMs: number;
+  label: string;
+  players: Record<string, { x: number; y: number }>;
+  ball: { x: number; y: number };
+}
