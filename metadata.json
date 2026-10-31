@@ -1,6 +1,6 @@
 {
-  "name": "OpenPitch",
-  "description": "Motore di analisi calcistica multi-dimensionale e laboratorio tattico aumentato con i 6 Pilastri matematici, 12 Dimensioni di analisi e LLM Orchestrator.",
+  "name": "LavagnaTattica",
+  "description": "Lavagna tattica aumentata con motore matematico NucleoTattico, 6 Pilastri, 12 Dimensioni di analisi e Human-in-the-Loop.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

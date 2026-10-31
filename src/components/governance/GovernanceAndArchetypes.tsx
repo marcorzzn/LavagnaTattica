@@ -37,7 +37,7 @@ export const GovernanceAndArchetypes: React.FC<GovernanceAndArchetypesProps> = (
             <span>Fondatore & Proprietario: Marco Razzano</span>
             <span>·</span>
             <span className="font-mono text-[#B4FF39]">
-              0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
+              0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
             </span>
           </div>
           <h2 className="text-xl font-bold text-zinc-100 mt-1">
@@ -276,22 +276,22 @@ export const GovernanceAndArchetypes: React.FC<GovernanceAndArchetypesProps> = (
             {[
               {
                 cluster: 'Cluster 1: Core, Ingest & CV (01–06)',
-                services: ['openpitch-core', 'openpitch-ingest', 'openpitch-cv', 'openpitch-fusion', 'openpitch-warehouse', 'openpitch-math'],
+                services: ['lavagnatattica-core', 'lavagnatattica-ingest', 'lavagnatattica-cv', 'lavagnatattica-fusion', 'lavagnatattica-warehouse', 'nucleotattico-math'],
                 desc: 'Ingestione universale video (240p–8K, broadcast/drone), calibrazione DLT+RANSAC, tracking Kalman e fusione multi-sorgente.',
               },
               {
                 cluster: 'Cluster 2: Evaluation & Intelligence (07–14)',
-                services: ['openpitch-eval', 'openpitch-tactics', 'openpitch-physical', 'openpitch-psych', 'openpitch-setpieces', 'openpitch-gk', 'openpitch-ref'],
+                services: ['nucleotattico-eval', 'lavagnatattica-tactics', 'lavagnatattica-physical', 'lavagnatattica-psych', 'lavagnatattica-setpieces', 'lavagnatattica-gk', 'lavagnatattica-ref'],
                 desc: 'Motore di valutazione stile chess.com (Top-3 alternative), potenza metabolica, calci piazzati MILP, portiere e arbitro.',
               },
               {
                 cluster: 'Cluster 3: Simulazione & AI Avanzata (20–32)',
-                services: ['openpitch-clipping', 'openpitch-sim', 'openpitch-gen', 'openpitch-adversarial', 'openpitch-marl', 'openpitch-gnn', 'openpitch-ssl'],
+                services: ['lavagnatattica-clipping', 'nucleotattico-sim', 'lavagnatattica-gen', 'lavagnatattica-adversarial', 'nucleotattico-marl', 'nucleotattico-gnn', 'lavagnatattica-ssl'],
                 desc: 'Monte Carlo, Multi-Agent RL (MAPPO/QMIX), Graph Neural Networks (GAT), Self-Supervised Learning e sintesi tattica generativa.',
               },
               {
                 cluster: 'Cluster 4: Governance, LLM & Platform (33–50)',
-                services: ['openpitch-llm', 'openpitch-knowledge', 'openpitch-education', 'openpitch-report', 'openpitch-audit', 'openpitch-observability', 'openpitch-security'],
+                services: ['lavagnatattica-llm', 'lavagnatattica-knowledge', 'lavagnatattica-education', 'lavagnatattica-report', 'lavagnatattica-audit', 'lavagnatattica-observability', 'lavagnatattica-security'],
                 desc: 'LLM Orchestrator con tool call verificabili, audit log immutabile ADR-Math, WCAG 2.2 AAA, GDPR & AI Act compliance.',
               },
             ].map((c) => (

@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Glossario Metriche & Tassonomia Tattica
+ * LavagnaTattica — Glossario Metriche & Tassonomia Tattica
  *
  * Visualizzatore navigabile e filtrabile di tutte le metriche e concetti spaziali
  * con formule LaTeX KaTeX, interpretazione tattica sul campo e citazioni ufficiali.
@@ -43,7 +43,7 @@ export const GlossaryTaxonomy: React.FC = () => {
           </h1>
         </div>
         <p className="max-w-3xl text-sm text-slate-400 leading-relaxed">
-          Ogni metrica e concetto tattico integrato in OpenPitch è accompagnato dalla formulazione matematica esatta,
+          Ogni metrica e concetto tattico integrato in LavagnaTattica (motore NucleoTattico) è accompagnato dalla formulazione matematica esatta,
           dalla generazione evolutiva di appartenenza, dall’applicazione pratica per l’analista e dal riferimento accademico o federale verificabile.
         </p>
       </div>

@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Catalogo Dottrinale delle Strategie degli Allenatori & Filosofie Tattiche
+ * LavagnaTattica — Catalogo Dottrinale delle Strategie degli Allenatori & Filosofie Tattiche
  *
  * Registra le grandi scuole tattiche, le giocate codificate e i punti fissi dei maestri del settore:
  * Gegenpressing (Klopp), Gioco di Posizione (Guardiola), Catena di Sinistra & Cutback (Sarri),

@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Configuratore Temi Cromatici Campo & UI
+ * LavagnaTattica — Configuratore Temi Cromatici Campo & UI
  *
  * Include il tema calcistico autentico "Verde Prato & Bianco Crema",
  * la modalità Cyber Dark "Notte Tattica", la "Lavagna Gesso" e il "Blueprint".

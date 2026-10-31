@@ -51,3 +51,4 @@ export function useAnimationPlayback() {
     };
   }, [animation.playing, animation.speed, animation.loop, animation.totalDuration, seekAnimation, setAnimation]);
 }
+

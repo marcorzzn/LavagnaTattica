@@ -14,10 +14,10 @@ export interface TacticalAnimationExport {
 export function exportAnimationJSON(
   keyframes: Keyframe[],
   actions: TacticalAction[],
-  filename = 'azione_tattica_cardine.json'
+  filename = 'azione_tattica_nucleo.json'
 ): void {
   const payload: TacticalAnimationExport = {
-    openCoreVersion: '2.0.0-CARDINE-ANIMATION',
+    openCoreVersion: '2.0.0-NUCLEOTATTICO-ANIMATION',
     exportedAt: new Date().toISOString(),
     totalDurationMs: keyframes.length === 0 ? 0 : Math.max(...keyframes.map((k) => k.timestamp ?? 0)),
     keyframes,
@@ -88,3 +88,4 @@ export async function exportAnimationWebM(
     }
   });
 }
+

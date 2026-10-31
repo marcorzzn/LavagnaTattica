@@ -283,3 +283,4 @@ export function interpolateAt(
     segmentProgress: t,
   };
 }
+

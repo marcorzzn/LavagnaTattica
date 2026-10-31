@@ -1,9 +1,21 @@
 {
-  "name": "openpitch",
-  "private": true,
+  "name": "lavagna-tattica",
   "version": "0.1.0",
-  "description": "OpenPitch — Tactical Operating System for Football Analysis",
+  "description": "Lavagna tattica aumentata con motore NucleoTattico",
+  "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcorzzn/LavagnaTattica.git"
+  },
+  "homepage": "https://github.com/marcorzzn/LavagnaTattica#readme",
+  "bugs": {
+    "url": "https://github.com/marcorzzn/LavagnaTattica/issues"
+  },
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",

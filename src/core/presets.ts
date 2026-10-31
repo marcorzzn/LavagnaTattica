@@ -794,7 +794,7 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     date: '2026-10-28',
     proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
     mrbReviewers: ['MRB-Chair-Continuum', 'MRB-Stochastic-Lead', 'MRB-CV-Lead'],
-    razzanoSignatureHash: '0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR001',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR001',
     context:
       'I modelli di Voronoi statici ignorano il vettore velocità istantaneo e il tempo fisiologico di reazione τ_react, sovrastimando il controllo spaziale dei difensori fermi rispetto agli incursori in corsa.',
     decision:
@@ -831,7 +831,7 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     date: '2026-10-28',
     proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
     mrbReviewers: ['MRB-Spectral-Graph', 'MRB-Topology-Lead', 'MRB-GameTheory'],
-    razzanoSignatureHash: '0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR002',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR002',
     context:
       'I grafi di passaggio costruiti solo sui passaggi storici non misurano la resilienza istantanea di uno schieramento al pressing avversario prima che la palla venga giocata.',
     decision:
@@ -866,9 +866,9 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     date: '2026-10-28',
     proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
     mrbReviewers: ['MRB-Decision-Theory', 'MRB-RL-Lead', 'MRB-Tactical-Analyst'],
-    razzanoSignatureHash: '0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR003',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR003',
     context:
-      'Per trasformare OpenPitch in un motore di valutazione stile chess.com serve un funzionale scalare composito che ordini ogni giocata possibile (passaggio, conduzione, smarcamento) e mostri le alternative scartate.',
+      'Per trasformare LavagnaTattica in un motore di valutazione stile chess.com (motore NucleoTattico) serve un funzionale scalare composito che ordini ogni giocata possibile (passaggio, conduzione, smarcamento) e mostri le alternative scartate.',
     decision:
       'Definire il punteggio composito J(a | s) come combinazione convessa certificata dal Fondatore di ΔEPV, ΔxT, ΔPitchControl, ΔFiedler e persistenza del varco TDA H₁.',
     formulas:
@@ -900,7 +900,7 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     date: '2026-10-28',
     proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
     mrbReviewers: ['MRB-Statistics-Chair', 'MRB-Data-Quality'],
-    razzanoSignatureHash: '0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR004',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR004',
     context:
       'I report calcistici tradizionali commettono errori metodologici gravi: sommano partizioni non disgiunte al 200% e dichiarano "più letale" un fondamentale su piccoli campioni (es. 9/50 vs 13/94) senza test d’ipotesi.',
     decision:
@@ -932,7 +932,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     subtitle: 'Come l’abbassamento del vertice basso tra i centrali trasforma la connettività algebrica di Fiedler λ₂ e il Pitch Control',
     category: 'Tattica',
     pillarTag: 'Pilastro II & IV — Pitch Control & Spettrale',
-    authors: 'Spielverlagerung & OpenPitch Tactical Research',
+    authors: 'Spielverlagerung & LavagnaTattica Research',
     year: '2026',
     readTime: '6 min',
     summary:
@@ -955,7 +955,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     subtitle: 'Complesso di Vietoris-Rips, numeri di Betti (β₀, β₁) e distanza di Wasserstein sui blocchi tattici',
     category: 'Pilastri Matematici',
     pillarTag: 'Pilastro V — Topologia Computazionale (TDA)',
-    authors: 'Dłotko et al. / OpenPitch Mathematical Review Board',
+    authors: 'Dłotko et al. / NucleoTattico Mathematical Review Board',
     year: '2026',
     readTime: '8 min',
     summary:
@@ -977,14 +977,14 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     subtitle: 'Trasformare video broadcast, drone, camera fissa o smartphone in coordinate metriche 120×80',
     category: 'Machine Learning',
     pillarTag: 'Pilastro I — Geometria Proiettiva & Computer Vision',
-    authors: 'Hartley & Zisserman / Chen et al. / OpenPitch CV Lab',
+    authors: 'Hartley & Zisserman / Chen et al. / NucleoTattico CV Lab',
     year: '2026',
     readTime: '7 min',
     summary:
       'Qualsiasi flusso video calcistico può essere mappato sul piano del campo tramite un’omografia planare H ∈ PGL(3, ℝ) stimata da almeno 4 punti di corrispondenza o linee di campo.',
     formula: '\\tilde{x}_{\\text{pitch}} \\sim H \\tilde{u}_{\\text{image}}, \\quad \\min_{H} \\sum_{i} \\rho\\left( \\| x_i - \\pi(H u_i) \\|_2 \\right)',
     tacticalExplanation:
-      'Anche quando il video proviene da uno smartphone a bordo campo o da una telecamera broadcast in movimento (pan/tilt/zoom), i vertici dell’area di rigore e il cerchio di centrocampo forniscono vincoli geometrici esatti. Applicando l’algoritmo Direct Linear Transform (DLT) combinato con RANSAC per scartare gli outlier e un Filtro di Kalman Esteso (EKF) per smussare le traiettorie, OpenPitch ricostruisce posizioni e velocità di tutte le 22 tipologie in campo.',
+      'Anche quando il video proviene da uno smartphone a bordo campo o da una telecamera broadcast in movimento (pan/tilt/zoom), i vertici dell’area di rigore e il cerchio di centrocampo forniscono vincoli geometrici esatti. Applicando l’algoritmo Direct Linear Transform (DLT) combinato con RANSAC per scartare gli outlier e un Filtro di Kalman Esteso (EKF) per smussare le traiettorie, NucleoTattico ricostruisce posizioni e velocità di tutte le 22 tipologie in campo.',
     mathematicalFormalism:
       'Ogni corrispondenza (u_i, v_i) ↔ (X_i, Y_i) genera due equazioni lineari negli elementi di H (matrice 3×3 definita a meno di un fattore di scala, 8 gradi di libertà). Con N ≥ 4 punti non collineari si risolve A h = 0 tramite decomposizione ai valori singolari (SVD).',
     linkedPresetId: 'libero_moderno_build_up',

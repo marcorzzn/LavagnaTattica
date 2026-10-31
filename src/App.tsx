@@ -220,7 +220,7 @@ export default function App() {
   const exportTacticalStateJson = () => {
     const payload = {
       openCoreVersion: '2.0.0-SUPREME',
-      founderAuthority: 'Marco Razzano — 0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
+      founderAuthority: 'Marco Razzano — 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
       exportedAt: new Date().toISOString(),
       tacticalState: state,
       sixPillarsEvaluation: metrics,
@@ -231,7 +231,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `openpitch_supreme_${state.matchId}_min${state.minute}.json`;
+    a.download = `lavagnatattica_supreme_${state.matchId}_min${state.minute}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -254,7 +254,7 @@ export default function App() {
           }}
           className="text-lg font-bold tracking-tight text-zinc-100 font-display whitespace-nowrap shrink-0"
         >
-          OpenPitch
+          LavagnaTattica
         </a>
 
         {/* Zone 2: 5 concise single-line text navigation links */}

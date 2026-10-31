@@ -1,5 +1,5 @@
 /**
- * Script di Verifica Automatica OpenPitch (Sezione 3 — Audit "Real vs Stub")
+ * Script di Verifica Automatica LavagnaTattica (Sezione 3 — Audit "Real vs Stub", Motore NucleoTattico)
  * Esegue i 7 controlli strutturali e i test matematici su tutti i moduli.
  * Esecuzione: npx tsx scripts/audit_real_vs_stub.ts
  */
@@ -53,7 +53,7 @@ function getAllTsFiles(dir: string, acc: string[] = []): string[] {
 
 function runAudit() {
   console.log('================================================================================');
-  console.log(' OPENPITCH — AUDIT AUTOMATICO DI VERIFICA (REAL VS STUB & TEST MATEMATICI)');
+  console.log(' LAVAGNATATTICA — AUDIT AUTOMATICO DI VERIFICA (MOTORE NUCLEOTATTICO)');
   console.log(' Autorità Matematica Suprema: Marco Razzano');
   console.log('================================================================================\n');
 

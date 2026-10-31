@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Template Canonici di Formazione (7 Moduli Standard)
+ * LavagnaTattica — Template Canonici di Formazione (7 Moduli Standard)
  *
  * Conforme alla Regola Non Negoziabile #3 (Zero Nomi Propri):
  * Ogni slot è rigorosamente mappato su una delle 30 Tipologie Astratte (PLAYER_ARCHETYPES_30).

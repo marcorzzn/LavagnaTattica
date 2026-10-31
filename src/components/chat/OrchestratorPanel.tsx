@@ -180,7 +180,7 @@ export const OrchestratorPanel: React.FC<OrchestratorPanelProps> = ({
           >
             <div className="flex items-center gap-2 mb-1 text-[11px] text-zinc-500">
               <span className="font-medium text-zinc-400">
-                {msg.sender === 'user' ? 'Analista' : 'OpenPitch Orchestrator'}
+                {msg.sender === 'user' ? 'Analista' : 'LavagnaTattica Orchestrator'}
               </span>
               <span>·</span>
               <span className="font-mono">{msg.timestamp}</span>

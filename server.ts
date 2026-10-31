@@ -276,7 +276,7 @@ async function startServer() {
     res.json({
       founder: 'Marco Razzano',
       role: 'Fondatore, Proprietario, Autorità Matematica Suprema',
-      signatureHash: '0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
+      signatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
       adrRegistry: ADR_MATH_REGISTRY,
       archetypesCatalog: PLAYER_ARCHETYPES_30,
     });
@@ -317,7 +317,7 @@ async function startServer() {
                   },
                 },
                 {
-                  text: `Analizza questo fotogramma di una partita di calcio per il motore OpenPitch.
+                  text: `Analizza questo fotogramma di una partita di calcio per il motore NucleoTattico.
 REGOLA ASSOLUTA: NON usare mai nomi propri di calciatori, squadre, allenatori o stadi. Usa SOLO tipologie tattiche astratte (es. Libero Moderno, Centravanti Boa, Mezzala d'Inserimento, Ala Invertita, Braccetto Aggressivo, Portiere Sweeper, Mediano Metodista).
 Restituisci un JSON conforme allo schema richiesto con le posizioni normalizzate [x,y,w,h] (tra 0.05 e 0.90) dei giocatori visibili e del pallone, il modulo inferito e la migliore giocata controfattuale.`,
                 },
@@ -507,7 +507,7 @@ Restituisci un JSON conforme allo schema richiesto con le posizioni normalizzate
     const ai = getAiClient();
     if (ai) {
       try {
-        const systemInstruction = `Sei l'LLM Orchestrator di OpenPitch (sotto l'autorità matematica suprema del Fondatore Marco Razzano).
+        const systemInstruction = `Sei l'LLM Orchestrator di LavagnaTattica (sotto l'autorità matematica suprema del Fondatore Marco Razzano, motore NucleoTattico).
 REGOLE NON NEGOZIABILI:
 1. VIETATO USARE NOMI PROPRI di calciatori, squadre, allenatori, stadi o competizioni. Usa ESCLUSIVAMENTE le 30 Tipologie Astratte (es. Libero Moderno #6, Centravanti Boa #9, Mezzala d'Inserimento #13, Ala Invertita #11, Difensore Centrale di Copertura #4, Braccetto Aggressivo #2).
 2. L'LLM non inventa mai numeri e non calcola a mente; sintetizza esclusivamente i risultati restituiti dai tool matematici appena eseguiti.
@@ -586,7 +586,7 @@ Sintetizza la risposta tecnica in 2-3 paragrafi concisi senza usare alcun nome p
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`OpenPitch Supreme OS Server running on http://localhost:${PORT}`);
+    console.log(`LavagnaTattica Supreme OS Server (motore NucleoTattico) running on http://localhost:${PORT}`);
   });
 }
 

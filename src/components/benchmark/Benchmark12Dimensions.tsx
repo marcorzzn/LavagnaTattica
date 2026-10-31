@@ -19,9 +19,9 @@ export const Benchmark12Dimensions: React.FC<Benchmark12DimensionsProps> = ({
   const [assertionsVerified, setAssertionsVerified] = useState<boolean>(true);
 
   const exportMarkdownReport = () => {
-    const md = `# OPENPITCH — REPORT TATTICO AUTOMATICO VERIFICATO (ZERO NOMI PROPRI)
+    const md = `# LAVAGNATATTICA — REPORT TATTICO AUTOMATICO VERIFICATO (MOTORE NUCLEOTATTICO, ZERO NOMI PROPRI)
 Autorità Matematica Suprema: Marco Razzano (Fondatore & Proprietario)
-Hash Certificazione: 0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
+Hash Certificazione: 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
 Data generazione: ${new Date().toISOString().slice(0, 10)}
 Scenario / Corpus: ${state.title}
 Copertura coordinate evento: ${BENCHMARK_FIXTURE_DATA.corpusSummary.coordinateCoverageEvents}/${BENCHMARK_FIXTURE_DATA.corpusSummary.coordinateCoverageTotal} (${BENCHMARK_FIXTURE_DATA.corpusSummary.coveragePct}%)
@@ -48,7 +48,7 @@ Copertura sotto-corpus Ospite: ${BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubset
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `openpitch_report_${state.matchId}.md`;
+    a.download = `lavagnatattica_report_${state.matchId}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };

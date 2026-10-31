@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Adapter Matematico di Coordinate Tattiche
+ * NucleoTattico — Adapter Matematico di Coordinate Tattiche
  *
  * Mappa biunivocamente e senza perdita di precisione tra:
  *  1. Coordinate Opta Normalizzate [0, 100] x [0, 100]

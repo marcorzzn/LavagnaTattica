@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Glossario Metriche & Tassonomia Tattica Verificabile
+ * LavagnaTattica — Glossario Metriche & Tassonomia Tattica Verificabile
  *
  * Tutte le metriche di 2ª e 3ª generazione con formule matematiche esatte,
  * interpretazione tattica sul campo, generazione evolutiva e citazione della fonte ufficiale.

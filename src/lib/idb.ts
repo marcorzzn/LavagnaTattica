@@ -1,6 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
-const DB_NAME = 'openpitch-db';
+const DB_NAME = 'lavagnatattica-db';
 const DB_VERSION = 1;
 const STORE_PROJECTS = 'projects';
 const STORE_SNAPSHOTS = 'snapshots';

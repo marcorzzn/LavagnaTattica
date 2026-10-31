@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Laboratorio Didattico & Percorsi Tattici
+ * LavagnaTattica — Laboratorio Didattico & Percorsi Tattici
  *
  * Percorsi guidati con caricamento diretto sulla lavagna tattica,
  * quiz situazionali sul campo, puzzle con vincoli di passaggio a 3 tocchi (terzo uomo),

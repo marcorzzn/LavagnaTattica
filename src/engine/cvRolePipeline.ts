@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Pipeline Multi-Stadio di Computer Vision, Tracking e Inferenza Ruoli (Sezioni 1–6)
+ * NucleoTattico — Pipeline Multi-Stadio di Computer Vision, Tracking e Inferenza Ruoli (Sezioni 1–6)
  *
  * Implementa matematicamente tutti i 9 stadi descritti nell'architettura:
  *  Stadio 1: Isolamento istanze (Detection bounding box + confidenza)
@@ -819,7 +819,7 @@ export interface ArchetypeClassificationResult {
 
 /**
  * Mappa il vettore di 6 feature comportamentali su una distribuzione di probabilità Softmax
- * sopra le 30 Tipologie Astratte di OpenPitch, filtrando per compatibilità di linea (GK/DEF/MID/FWD).
+ * sopra le 30 Tipologie Astratte di NucleoTattico, filtrando per compatibilità di linea (GK/DEF/MID/FWD).
  */
 export function classifyPlayerArchetypeFromFeatures(
   playerId: string,

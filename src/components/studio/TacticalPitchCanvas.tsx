@@ -115,7 +115,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const [noteDraftPos, setNoteDraftPos] = useState<{ x: number; y: number } | null>(null);
   const [noteDraftText, setNoteDraftText] = useState('');
 
-  // Valori xT calcolati dal Bellman solver reale di OpenPitch
+  // Valori xT calcolati dal Bellman solver reale di NucleoTattico
   const xtGrid = React.useMemo(() => solveMarkovXtWithStats().grid, []);
 
   const getCanvasCoordinates = (e: React.PointerEvent<SVGSVGElement>): { optaX: number; optaY: number; sbX: number; sbY: number } => {
@@ -301,7 +301,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
 
   return (
     <div className="relative w-full select-none overflow-hidden rounded-xl border border-slate-800/90 bg-slate-950 shadow-2xl">
-      {/* Telemetria Spaziale Superiore (Integrazione OpenPitch Math + Opta + FIFA) */}
+      {/* Telemetria Spaziale Superiore (Integrazione NucleoTattico Math + Opta + FIFA) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/90 bg-slate-900/95 px-4 py-2 text-xs text-slate-300">
         <div className="flex items-center gap-3">
           <span className="font-mono font-semibold text-cyan-400 tabular-nums">

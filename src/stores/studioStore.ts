@@ -89,7 +89,7 @@ interface StudioState {
   seekAnimation: (currentTimeMs: number) => void;
   togglePlayAnimation: () => void;
 
-  // Export current TacticalState for OpenPitch Math Engine
+  // Export current TacticalState for NucleoTattico Math Engine
   getTacticalState: () => TacticalState;
 }
 
@@ -209,7 +209,7 @@ function createInitialActions(): TacticalAction[] {
 const defaultStrategy = COACHING_STRATEGIES_CATALOG[0]; // Sarri catena sinistra
 
 export const useStudioStore = create<StudioState>((set, get) => ({
-  id: `openpitch-${defaultStrategy.id}`,
+  id: `lavagnatattica-${defaultStrategy.id}`,
   title: `${defaultStrategy.name} · ${defaultStrategy.coach}`,
   description: defaultStrategy.description,
   gameFormat: '11v11',

@@ -1,5 +1,5 @@
 /**
- * OpenPitch — Motore Matematico "Human-in-the-Loop" (Annotazione Umana su Frame Reale)
+ * NucleoTattico — Motore Matematico "Human-in-the-Loop" (Annotazione Umana su Frame Reale)
  *
  * Principio Architetturale:
  * L'analista umano è il sensore "ground truth" (zero errori di tracking):

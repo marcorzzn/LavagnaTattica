@@ -412,7 +412,7 @@ export const EducationalAndKnowledge: React.FC<EducationalAndKnowledgeProps> = (
               <p className="text-xs leading-relaxed text-zinc-200">{selectedArticle.tacticalExplanation}</p>
 
               <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 pt-2">
-                2. Modello nei 6 Pilastri di OpenPitch
+                2. Modello nei 6 Pilastri di NucleoTattico
               </h4>
               <p className="text-xs leading-relaxed text-zinc-300">{selectedArticle.mathematicalFormalism}</p>
             </div>
