@@ -1,9 +1,40 @@
+# Dipendenze
 node_modules/
-build/
+.pnpm-store/
+bun.lock
+
+# Build
 dist/
-coverage/
-.DS_Store
+build/
+out/
+.vite/
+*.tsbuildinfo
+
+# Log
 *.log
-*.zip
-.env*
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+task-*.log
+
+# Ambiente
+.env
+.env.local
+.env.*.local
 !.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Test
+coverage/
+
+# Tauri
+src-tauri/target/
