@@ -1,13 +1,17 @@
 import { create } from 'zustand';
 import {
+  AnimationPlaybackState,
   BoardArrow,
   BoardNote,
   BoardPenStroke,
   BoardZone,
   FormationPreset,
   GameFormat,
+  Keyframe,
+  KeyframePlayer,
   KeyframeState,
   PlayerNode,
+  TacticalAction,
   TacticalState,
 } from '../core/types';
 import { INITIAL_ABSTRACT_PLAYERS } from '../core/presets';
@@ -15,6 +19,11 @@ import { buildFormationPlayers } from '../core/formationPresets';
 import { COACHING_STRATEGIES_CATALOG, CoachingStrategy } from '../core/tacticalStrategiesCatalog';
 import { useHistoryStore } from './historyStore';
 import { saveProjectToIdb } from '../lib/idb';
+import {
+  getKeyframeTimestamp,
+  normalizeKeyframePlayers,
+  interpolateAt,
+} from '../engine/animationEngine';
 
 export interface TeamBlockSliders {
   depth: number;  // 0..100 (50 neutral)
@@ -42,9 +51,11 @@ interface StudioState {
   zones: BoardZone[];
   strokes: BoardPenStroke[];
   notes: BoardNote[];
-  keyframes: KeyframeState[];
+  keyframes: Keyframe[];
+  actions: TacticalAction[];
   activeKeyframeIndex: number;
   activeStrategyId: string | null;
+  animation: AnimationPlaybackState;
 
   // Actions
   setGameFormat: (fmt: GameFormat) => void;
@@ -66,10 +77,17 @@ interface StudioState {
   resetToInitialPreset: () => void;
   applyCoachingStrategy: (strategyId: string) => void;
 
-  // Keyframe Actions
+  // Keyframe & Animation Actions (3-Level Engine)
   captureKeyframe: (label?: string) => void;
   applyKeyframeAtIndex: (index: number) => void;
+  updateKeyframe: (id: string, patch: Partial<Keyframe>) => void;
   deleteKeyframe: (id: string) => void;
+  addAction: (action: TacticalAction) => void;
+  updateAction: (id: string, patch: Partial<TacticalAction>) => void;
+  deleteAction: (id: string) => void;
+  setAnimation: (patch: Partial<AnimationPlaybackState>) => void;
+  seekAnimation: (currentTimeMs: number) => void;
+  togglePlayAnimation: () => void;
 
   // Export current TacticalState for OpenPitch Math Engine
   getTacticalState: () => TacticalState;
@@ -98,15 +116,9 @@ function scheduleAutosave(state: any) {
   }, 1500);
 }
 
-function createInitialKeyframes(players: PlayerNode[], ball: { x: number; y: number }): KeyframeState[] {
-  const pMap1: Record<string, { x: number; y: number }> = {};
-  const pMap2: Record<string, { x: number; y: number }> = {};
-  const pMap3: Record<string, { x: number; y: number }> = {};
-
-  for (const p of players) {
-    pMap1[p.id] = { x: p.x, y: p.y };
-
-    // Keyframe 2: Avanzamento di catena
+function createInitialKeyframes(players: PlayerNode[], ball: { x: number; y: number }): Keyframe[] {
+  const pList1: KeyframePlayer[] = players.map((p) => ({ id: p.id, x: p.x, y: p.y, visible: true }));
+  const pList2: KeyframePlayer[] = players.map((p) => {
     let dx = 0;
     let dy = 0;
     if (p.team === 'home') {
@@ -117,39 +129,79 @@ function createInitialKeyframes(players: PlayerNode[], ball: { x: number; y: num
       if (p.positionGroup === 'DEF') { dx = 3; }
       else { dx = 2; }
     }
-    pMap2[p.id] = {
+    return {
+      id: p.id,
       x: Number(Math.max(4, Math.min(116, p.x + dx)).toFixed(1)),
       y: Number(Math.max(4, Math.min(76, p.y + dy)).toFixed(1)),
+      visible: true,
     };
-
-    // Keyframe 3: Attacco area di rigore e rifinitura
-    pMap3[p.id] = {
-      x: Number(Math.max(4, Math.min(116, pMap2[p.id].x + (p.team === 'home' ? 5 : 2))).toFixed(1)),
-      y: pMap2[p.id].y,
-    };
-  }
+  });
+  const pList3: KeyframePlayer[] = pList2.map((p) => ({
+    id: p.id,
+    x: Number(Math.max(4, Math.min(116, p.x + 5)).toFixed(1)),
+    y: p.y,
+    visible: true,
+  }));
 
   return [
     {
       id: 'kf-1',
+      timestamp: 0,
       timestampMs: 0,
-      label: 'Fase 1 · Costruzione Bassa',
-      players: pMap1,
-      ball: { x: ball.x, y: ball.y },
+      label: 'Step 1 · Costruzione Bassa',
+      players: pList1,
+      ball: { x: ball.x, y: ball.y, z: 0, carrierId: 'home-06' },
     },
     {
       id: 'kf-2',
-      timestampMs: 1500,
-      label: 'Fase 2 · Progressione Half-Space',
-      players: pMap2,
-      ball: { x: ball.x + 18, y: ball.y - 10 },
+      timestamp: 2000,
+      timestampMs: 2000,
+      label: 'Step 2 · Sviluppo Catena',
+      players: pList2,
+      ball: { x: 58, y: 22, z: 0, carrierId: 'home-10' },
     },
     {
       id: 'kf-3',
-      timestampMs: 3000,
-      label: 'Fase 3 · Rifinitura & Zona Goal',
-      players: pMap3,
-      ball: { x: ball.x + 38, y: 40 },
+      timestamp: 4500,
+      timestampMs: 4500,
+      label: 'Step 3 · Rifinitura & Taglio',
+      players: pList3,
+      ball: { x: 92, y: 38, z: 0, carrierId: 'home-09' },
+    },
+  ];
+}
+
+function createInitialActions(): TacticalAction[] {
+  return [
+    {
+      id: 'act-init-1',
+      keyframeFrom: 'kf-1',
+      keyframeTo: 'kf-2',
+      type: 'pass_ground',
+      playerId: 'home-06',
+      targetPlayerId: 'home-10',
+      params: {
+        speedKmh: 58,
+        heightCm: 0,
+        curve: 0,
+        contact: 'flat',
+        duration: 2000,
+      },
+    },
+    {
+      id: 'act-init-2',
+      keyframeFrom: 'kf-2',
+      keyframeTo: 'kf-3',
+      type: 'cross',
+      playerId: 'home-10',
+      targetPlayerId: 'home-09',
+      params: {
+        speedKmh: 72,
+        heightCm: 240,
+        curve: 0.4,
+        contact: 'collar',
+        duration: 2500,
+      },
     },
   ];
 }
@@ -166,7 +218,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   players: defaultStrategy.players,
   basePlayers: defaultStrategy.players,
   ball: defaultStrategy.ball,
-  ballCarrierId: null,
+  ballCarrierId: 'home-06',
   teamSliders: {
     home: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
     away: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
@@ -183,18 +235,17 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       color: '#00E5FF',
     },
   ],
-  keyframes: defaultStrategy.keyframes.map((kf) => {
-    const pMap: Record<string, { x: number; y: number }> = {};
-    for (const p of defaultStrategy.players) {
-      pMap[p.id] = { x: p.x, y: p.y };
-    }
-    return {
-      ...kf,
-      players: Object.keys(kf.players).length > 0 ? kf.players : pMap,
-    };
-  }),
+  keyframes: createInitialKeyframes(defaultStrategy.players, defaultStrategy.ball),
+  actions: createInitialActions(),
   activeKeyframeIndex: 0,
   activeStrategyId: defaultStrategy.id,
+  animation: {
+    playing: false,
+    currentTime: 0,
+    totalDuration: 4500,
+    speed: 1,
+    loop: true,
+  },
 
   setGameFormat: (fmt) => {
     useHistoryStore.getState().pushSnapshot(get());
@@ -603,48 +654,168 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   captureKeyframe: (label) => {
     set((state) => {
-      const pMap: Record<string, { x: number; y: number }> = {};
-      for (const p of state.players) {
-        pMap[p.id] = { x: p.x, y: p.y };
-      }
+      const pList: KeyframePlayer[] = state.players.map((p) => ({
+        id: p.id,
+        x: p.x,
+        y: p.y,
+        visible: true,
+      }));
       const newIndex = state.keyframes.length + 1;
-      const kf: KeyframeState = {
+      const prevMaxTime =
+        state.keyframes.length === 0
+          ? 0
+          : Math.max(...state.keyframes.map(getKeyframeTimestamp));
+      const nextTime = state.keyframes.length === 0 ? 0 : prevMaxTime + 2000;
+      const kf: Keyframe = {
         id: `kf-${Date.now()}`,
-        timestampMs: state.keyframes.length * 1500,
-        label: label || `Fase ${newIndex}`,
-        players: pMap,
-        ball: { x: state.ball.x, y: state.ball.y },
+        timestamp: nextTime,
+        timestampMs: nextTime,
+        label: label || `Step ${newIndex}`,
+        players: pList,
+        ball: {
+          x: state.ball.x,
+          y: state.ball.y,
+          z: 0,
+          carrierId: state.ballCarrierId,
+        },
       };
+      const updated = [...state.keyframes, kf];
       return {
-        keyframes: [...state.keyframes, kf],
-        activeKeyframeIndex: state.keyframes.length,
+        keyframes: updated,
+        activeKeyframeIndex: updated.length - 1,
+        animation: {
+          ...state.animation,
+          currentTime: nextTime,
+          totalDuration: Math.max(1000, nextTime),
+        },
       };
     });
+    scheduleAutosave(get());
   },
 
   applyKeyframeAtIndex: (index) => {
-    const { keyframes, players } = get();
+    const { keyframes, players, animation } = get();
     if (index < 0 || index >= keyframes.length) return;
     const target = keyframes[index];
+    const pMap = normalizeKeyframePlayers(target.players);
+    const kfTime = getKeyframeTimestamp(target);
+
     set({
       activeKeyframeIndex: index,
-      ball: { ...target.ball },
+      ball: { x: target.ball.x, y: target.ball.y },
+      ballCarrierId: target.ball.carrierId ?? null,
       players: players.map((p) => {
-        const pos = target.players[p.id];
+        const pos = pMap.get(p.id);
         return pos ? { ...p, x: pos.x, y: pos.y } : p;
       }),
+      animation: {
+        ...animation,
+        currentTime: kfTime,
+      },
     });
+  },
+
+  updateKeyframe: (id, patch) => {
+    set((state) => {
+      const updated = state.keyframes.map((k) => (k.id === id ? { ...k, ...patch } : k));
+      const maxTime = Math.max(1000, ...updated.map(getKeyframeTimestamp));
+      return {
+        keyframes: updated,
+        animation: {
+          ...state.animation,
+          totalDuration: maxTime,
+        },
+      };
+    });
+    scheduleAutosave(get());
   },
 
   deleteKeyframe: (id) => {
     set((state) => {
       if (state.keyframes.length <= 1) return state;
       const filtered = state.keyframes.filter((k) => k.id !== id);
+      const filteredActions = state.actions.filter(
+        (a) => a.keyframeFrom !== id && a.keyframeTo !== id
+      );
+      const maxTime = Math.max(1000, ...filtered.map(getKeyframeTimestamp));
       return {
         keyframes: filtered,
+        actions: filteredActions,
         activeKeyframeIndex: Math.min(state.activeKeyframeIndex, filtered.length - 1),
+        animation: {
+          ...state.animation,
+          totalDuration: maxTime,
+          currentTime: Math.min(state.animation.currentTime, maxTime),
+        },
       };
     });
+    scheduleAutosave(get());
+  },
+
+  addAction: (action) => {
+    set((state) => ({
+      actions: [...state.actions.filter((a) => a.id !== action.id), action],
+    }));
+    scheduleAutosave(get());
+  },
+
+  updateAction: (id, patch) => {
+    set((state) => ({
+      actions: state.actions.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+    }));
+    scheduleAutosave(get());
+  },
+
+  deleteAction: (id) => {
+    set((state) => ({
+      actions: state.actions.filter((a) => a.id !== id),
+    }));
+    scheduleAutosave(get());
+  },
+
+  setAnimation: (patch) => {
+    set((state) => ({
+      animation: { ...state.animation, ...patch },
+    }));
+  },
+
+  seekAnimation: (currentTimeMs) => {
+    const { keyframes, actions, animation, players } = get();
+    const clampedTime = Math.max(0, Math.min(animation.totalDuration, currentTimeMs));
+    const interpolated = interpolateAt(keyframes, clampedTime, actions);
+
+    set({
+      animation: {
+        ...animation,
+        currentTime: clampedTime,
+      },
+      ball: { x: interpolated.ball.x, y: interpolated.ball.y },
+      ballCarrierId: interpolated.ball.carrierId,
+      players: players.map((p) => {
+        const nextPos = interpolated.players.get(p.id);
+        return nextPos ? { ...p, x: nextPos.x, y: nextPos.y } : p;
+      }),
+    });
+  },
+
+  togglePlayAnimation: () => {
+    const { animation } = get();
+    if (!animation.playing && animation.currentTime >= animation.totalDuration) {
+      set({
+        animation: {
+          ...animation,
+          playing: true,
+          currentTime: 0,
+        },
+      });
+    } else {
+      set({
+        animation: {
+          ...animation,
+          playing: !animation.playing,
+        },
+      });
+    }
   },
 
   getTacticalState: (): TacticalState => {

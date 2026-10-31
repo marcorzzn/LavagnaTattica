@@ -36,6 +36,7 @@ import {
   PLAYER_ARCHETYPES_30,
   ADR_MATH_REGISTRY,
 } from '../src/core/presets.ts';
+import { runAnimationEngineTests } from '../src/engine/animationEngine.test.ts';
 
 function getAllTsFiles(dir: string, acc: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -263,6 +264,13 @@ function runAudit() {
     `  -> Esito Verifica What-If Geometrico: ${evalAfterShift.successProbabilityPct > evalBeforeShift.successProbabilityPct ? 'PASS (Spostare il difensore aumenta matematicamente la probabilità che il filtrante passi)' : 'FAIL'}`
   );
 
+  const animTest = runAnimationEngineTests();
+  console.log('\n[TEST MOTORE DI ANIMAZIONE (KEYFRAME & AZIONI TATTICHE)]');
+  for (const line of animTest.details) {
+    console.log(`  -> ${line}`);
+  }
+  console.log(`  -> Esito Test Animazione: ${animTest.passed ? 'PASS (Tutti i test matematici di interpolazione superati)' : 'FAIL'}`);
+
   console.log('\n================================================================================');
   console.log(' RIEPILOGO ONESTO DELLO STATO DI IMPLEMENTAZIONE (REAL VS PROXY)');
   console.log('================================================================================');
@@ -273,6 +281,7 @@ function runAudit() {
   console.log(' [REAL] Omografia Planare DLT + RANSAC: Solver Gauss-Jordan 8x8 + inversa 3x3 esatta per heatmap prospettica');
   console.log(' [REAL] Chess.com Action Evaluator: Calcolo TTI balistico lungo traiettoria disegnata + Top-3 alternative');
   console.log(' [REAL] Wasserstein-1 & Nash: Sliced Optimal Transport (16 proiezioni Radon) + Minimax 2x2 analitico');
+  console.log(' [REAL] Motore di Animazione a 3 Livelli: Interpolazione continua, cubic easing, traiettorie Bézier e parabole 3D');
   console.log('================================================================================\n');
 }
 

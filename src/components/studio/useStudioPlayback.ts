@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStudioStore } from '../../stores/studioStore';
+import { normalizeKeyframePlayers } from '../../engine/animationEngine';
 
 export type PlaybackSpeed = 0.5 | 1 | 1.5 | 2;
 
@@ -41,6 +42,9 @@ export function useStudioPlayback() {
       const kfEnd = keyframes[segIdx + 1];
 
       if (kfStart && kfEnd) {
+        const map0 = normalizeKeyframePlayers(kfStart.players);
+        const map1 = normalizeKeyframePlayers(kfEnd.players);
+
         useStudioStore.setState((state) => ({
           activeKeyframeIndex: segIdx,
           ball: {
@@ -48,8 +52,8 @@ export function useStudioPlayback() {
             y: Number((kfStart.ball.y + (kfEnd.ball.y - kfStart.ball.y) * easedT).toFixed(2)),
           },
           players: state.players.map((p) => {
-            const p0 = kfStart.players[p.id];
-            const p1 = kfEnd.players[p.id];
+            const p0 = map0.get(p.id);
+            const p1 = map1.get(p.id);
             if (!p0 || !p1) return p;
             return {
               ...p,

@@ -14,6 +14,10 @@ import {
 import { sampleXtAtCoord, solveMarkovXtWithStats } from '../../engine/mathEngine';
 import { PlayerNode } from '../../core/types';
 import { getPitchTheme } from '../../core/pitchThemes';
+import {
+  interpolateAt,
+  normalizeKeyframePlayers,
+} from '../../engine/animationEngine';
 
 interface TacticalPitchCanvasProps {
   svgRef?: React.RefObject<SVGSVGElement | null>;
@@ -40,6 +44,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const strokes = useStudioStore((s) => s.strokes);
   const notes = useStudioStore((s) => s.notes);
   const keyframes = useStudioStore((s) => s.keyframes);
+  const actions = useStudioStore((s) => s.actions);
+  const animation = useStudioStore((s) => s.animation);
   const activeKeyframeIndex = useStudioStore((s) => s.activeKeyframeIndex);
 
   const movePlayer = useStudioStore((s) => s.movePlayer);
@@ -267,7 +273,26 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const awayColor = colorblindSafe ? '#FB923C' : '#FF4D6D';
   const prevKeyframe = activeKeyframeIndex > 0 ? keyframes[activeKeyframeIndex - 1] : null;
 
-  const visiblePlayers = players.filter((p) => {
+  // Stato dinamico calcolato dal motore di animazione a 3 livelli
+  const dynamicState = React.useMemo(() => {
+    if (!animation.playing) return null;
+    return interpolateAt(keyframes, animation.currentTime, actions);
+  }, [animation.playing, animation.currentTime, keyframes, actions]);
+
+  const effectivePlayers = React.useMemo(() => {
+    if (!dynamicState) return players;
+    return players.map((p) => {
+      const dyn = dynamicState.players.get(p.id);
+      return dyn ? { ...p, x: dyn.x, y: dyn.y } : p;
+    });
+  }, [players, dynamicState]);
+
+  const effectiveBall = dynamicState
+    ? dynamicState.ball
+    : { ...ball, z: 0, carrierId: ballCarrierId };
+  const effectiveCarrierId = effectiveBall.carrierId ?? ballCarrierId;
+
+  const visiblePlayers = effectivePlayers.filter((p) => {
     if (p.team === 'home' && !showHomeTeam) return false;
     if (p.team === 'away' && !showAwayTeam) return false;
     if (hiddenPlayerIds.includes(p.id)) return false;
@@ -663,9 +688,10 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
           )}
 
           {/* 9. Onion Skin & Ghost Trails (Silhouette Keyframe Precedente) */}
-          {prevKeyframe &&
-            visiblePlayers.map((p) => {
-              const prevPos = prevKeyframe.players[p.id];
+          {prevKeyframe && (() => {
+            const prevMap = normalizeKeyframePlayers(prevKeyframe.players);
+            return visiblePlayers.map((p) => {
+              const prevPos = prevMap.get(p.id);
               if (!prevPos) return null;
               const dist = Math.hypot(prevPos.x - p.x, prevPos.y - p.y);
               if (dist < 1.0) return null;
@@ -702,7 +728,77 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                   )}
                 </g>
               );
-            })}
+            });
+          })()}
+
+          {/* 9.5 Traiettorie Azioni Tattiche Dichiarate (Frecce Curvature Bézier & Linee Corsa) */}
+          {!animation.playing && actions.map((act) => {
+            const currentKf = keyframes[activeKeyframeIndex];
+            const nextKf = keyframes[activeKeyframeIndex + 1];
+            if (!currentKf || !nextKf || act.keyframeFrom !== currentKf.id) return null;
+
+            const executor = players.find((p) => p.id === act.playerId);
+            const target = players.find((p) => p.id === act.targetPlayerId);
+            if (!executor) return null;
+
+            const fromPos = statsbombToSvg(executor.x, executor.y);
+            const toPos = target
+              ? statsbombToSvg(target.x, target.y)
+              : act.targetCoords
+              ? statsbombToSvg(act.targetCoords.x, act.targetCoords.y)
+              : null;
+
+            if (!toPos) return null;
+
+            const curve = act.params?.curve ?? 0;
+            const dx = toPos.x - fromPos.x;
+            const dy = toPos.y - fromPos.y;
+            const len = Math.hypot(dx, dy);
+            const perpX = -dy / (len || 1);
+            const perpY = dx / (len || 1);
+            const ctrlX = (fromPos.x + toPos.x) / 2 + perpX * curve * 50;
+            const ctrlY = (fromPos.y + toPos.y) / 2 + perpY * curve * 50;
+
+            const isPass = act.type.startsWith('pass') || act.type === 'cross';
+            const strokeColor = isPass ? '#FACC15' : act.type.startsWith('shot') ? '#F43F5E' : '#38BDF8';
+
+            return (
+              <g key={`tact_act_${act.id}`} pointerEvents="none">
+                <path
+                  d={`M ${fromPos.x} ${fromPos.y} Q ${ctrlX} ${ctrlY} ${toPos.x} ${toPos.y}`}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="2.5"
+                  strokeDasharray={act.type === 'pass_lofted' || act.type === 'cross' ? '6 4' : undefined}
+                  markerEnd="url(#op-arrow-cyan)"
+                  opacity="0.85"
+                />
+                <circle cx={ctrlX} cy={ctrlY} r="3" fill={strokeColor} opacity="0.6" />
+                <rect
+                  x={(fromPos.x + toPos.x) / 2 - 20}
+                  y={(fromPos.y + toPos.y) / 2 - 8}
+                  width="40"
+                  height="16"
+                  rx="4"
+                  fill="#0B0F17"
+                  stroke={strokeColor}
+                  strokeWidth="1"
+                  opacity="0.9"
+                />
+                <text
+                  x={(fromPos.x + toPos.x) / 2}
+                  y={(fromPos.y + toPos.y) / 2 + 4}
+                  textAnchor="middle"
+                  fill="#FFFFFF"
+                  fontSize="9"
+                  fontFamily="monospace"
+                  fontWeight="bold"
+                >
+                  {act.params.speedKmh}k
+                </text>
+              </g>
+            );
+          })}
 
           {/* 10. Pedine Giocatori (Tipologie Astratte con Dischi Glass) */}
           {visiblePlayers.map((player) => {
@@ -817,28 +913,54 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
             );
           })}
 
-          {/* 11. Token Pallone (Draggable con Snap Magnetico al Portatore) */}
+          {/* 11. Token Pallone (Draggable con Snap Magnetico al Portatore & Parabola 3D) */}
           {(() => {
-            const ballSvg = statsbombToSvg(ball.x, ball.y);
+            const ballSvg = statsbombToSvg(effectiveBall.x, effectiveBall.y);
+            const ballZ = effectiveBall.z ?? 0;
+            const visualBallY = ballSvg.y - ballZ * 12;
+            const ballScale = 1 + ballZ * 0.12;
+
             return (
-              <g
-                transform={`translate(${ballSvg.x}, ${ballSvg.y})`}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  if (activeTool === 'select') {
-                    setDraggingEntity({ type: 'ball', id: 'ball', recordedHistory: false });
-                  }
-                }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setBallCarrierId(null);
-                }}
-                className="cursor-grab active:cursor-grabbing"
-              >
-                <title>{ballCarrierId ? "Doppio clic per liberare il possesso" : "Trascina su un giocatore per agganciare la palla"}</title>
-                <circle r={ballCarrierId ? "15" : "12"} fill="#FACC15" fillOpacity={ballCarrierId ? "0.4" : "0.25"} className={ballCarrierId ? "animate-pulse" : ""} />
-                <circle r="7.5" fill="#FFFFFF" stroke="#000000" strokeWidth="1.5" />
-                <circle r="2.5" fill="#000000" />
+              <g>
+                {/* Ombra sul terreno quando la palla è in aria (z > 0) */}
+                {ballZ > 0.05 && (
+                  <ellipse
+                    cx={ballSvg.x}
+                    cy={ballSvg.y}
+                    rx={Math.max(3, 8 - ballZ * 0.6)}
+                    ry={Math.max(1.5, 4 - ballZ * 0.3)}
+                    fill="rgba(0, 0, 0, 0.45)"
+                  />
+                )}
+
+                <g
+                  transform={`translate(${ballSvg.x}, ${visualBallY}) scale(${ballScale})`}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    if (activeTool === 'select' && !animation.playing) {
+                      setDraggingEntity({ type: 'ball', id: 'ball', recordedHistory: false });
+                    }
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setBallCarrierId(null);
+                  }}
+                  className={animation.playing ? 'pointer-events-none' : 'cursor-grab active:cursor-grabbing'}
+                >
+                  <title>
+                    {effectiveCarrierId
+                      ? 'Doppio clic per liberare il possesso'
+                      : 'Trascina su un giocatore per agganciare la palla'}
+                  </title>
+                  <circle
+                    r={effectiveCarrierId ? '15' : '12'}
+                    fill="#FACC15"
+                    fillOpacity={effectiveCarrierId ? '0.4' : '0.25'}
+                    className={effectiveCarrierId ? 'animate-pulse' : ''}
+                  />
+                  <circle r="7.5" fill="#FFFFFF" stroke="#000000" strokeWidth="1.5" />
+                  <circle r="2.5" fill="#000000" />
+                </g>
               </g>
             );
           })()}

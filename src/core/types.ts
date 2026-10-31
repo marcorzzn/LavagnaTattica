@@ -416,10 +416,68 @@ export interface BoardNote {
   color?: string;
 }
 
-export interface KeyframeState {
+export interface KeyframePlayer {
   id: string;
-  timestampMs: number;
-  label: string;
-  players: Record<string, { x: number; y: number }>;
-  ball: { x: number; y: number };
+  x: number;
+  y: number;
+  visible?: boolean;
+}
+
+export interface KeyframeBall {
+  x: number;
+  y: number;
+  z?: number;
+  carrierId?: string | null;
+}
+
+export interface Keyframe {
+  id: string;
+  timestamp?: number;          // ms dall'inizio animazione
+  timestampMs?: number;        // alias per compatibilità
+  label?: string;
+  players: KeyframePlayer[] | Record<string, { x: number; y: number; visible?: boolean }>;
+  ball: KeyframeBall;
+}
+
+export type KeyframeState = Keyframe;
+
+export type TacticalActionType =
+  | 'pass_ground'
+  | 'pass_lofted'
+  | 'pass_through'
+  | 'shot_ground'
+  | 'shot_lofted'
+  | 'shot_curl'
+  | 'cross'
+  | 'run'
+  | 'press';
+
+export type ContactSurface = 'flat' | 'collar' | 'trivela' | 'head' | 'inside';
+
+export interface TacticalActionParams {
+  speedKmh: number;         // 15-140 (riusa i preset di HITL)
+  heightCm: number;         // 0-500
+  curve: number;            // -1 (sinistra) .. +1 (destra)
+  contact: ContactSurface;
+  duration: number;         // ms
+}
+
+export interface TacticalAction {
+  id: string;
+  keyframeFrom: string;       // id keyframe di partenza
+  keyframeTo: string;         // id keyframe di arrivo
+  type: TacticalActionType;
+  playerId: string;           // chi esegue
+  targetPlayerId?: string;    // per passaggi
+  targetCoords?: { x: number; y: number };  // per tiri
+  waypoints?: { x: number; y: number }[];   // per run
+  params: TacticalActionParams;
+}
+
+export interface AnimationPlaybackState {
+  playing: boolean;
+  currentTime: number;        // ms
+  totalDuration: number;
+  speed: 0.5 | 1 | 1.5 | 2;
+  loop: boolean;
 }
