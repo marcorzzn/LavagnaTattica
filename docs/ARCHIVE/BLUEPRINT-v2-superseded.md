@@ -1,8 +1,11 @@
-# BLUEPRINT ARCHITETTURALE: LAVAGNA TATTICA & MOTORE CARDINE
-> **Versione:** 2.0.0 (Fusione Unitaria OpenPitch + OpenZone)  
+> ⚠️ SUPERSEDED — Questo documento descrive una visione architetturale preliminare / non implementata (proposta monorepo e motore provvisorio "Cardine").
+> La fonte di verità sullo stato reale dell'implementazione è: [`docs/STATE.md`](../STATE.md) e [`docs/INVENTORY.md`](../INVENTORY.md).
+
+# BLUEPRINT ARCHITETTURALE (ARCHIVIATO): LAVAGNA TATTICA & MOTORE CARDINE
+> **Versione:** 2.0.0 (Fusione Unitaria OpenPitch + OpenZone — SUPERSEDED)  
 > **Data:** 30 Ottobre 2026  
-> **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xOPENPITCH_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
-> **Stato:** Proposta di Architettura & Specifica Esecutiva
+> **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+> **Stato:** ARCHIVIATO A SCOPO DI DOCUMENTAZIONE STORICA E DI ROADMAP CONCETTUALE
 
 ---
 
@@ -173,7 +176,7 @@ lavagna-tattica/
 │
 ├── prompts/                            # Prompt AI per orchestrazione con guardrail
 ├── docs/
-│   ├── BLUEPRINT.md                    # Questo documento
+│   ├── BLUEPRINT.md                    # Questo documento (ora archiviato in docs/ARCHIVE)
 │   ├── ARCHITECTURE.md                 # Dettagli di flusso e bus dati
 │   ├── METRICS.md                      # Trattazione matematica dei 6 Pilastri
 │   ├── ADR-MATH/                       # Decisioni Matematiche firmate da Marco Razzano
@@ -184,9 +187,9 @@ lavagna-tattica/
 │   ├── SOURCES.md                      # Licenze rigorose e open data policy
 │   └── STATE.md                        # Registro onesto Real vs Proxy vs Stub
 ├── scripts/
-│   └── audit_cardine.ts                # Audit matematico automatico a 8 test
-├── package.json                        # Root pnpm-workspace
-└── pnpm-workspace.yaml
+│   └── audit_real_vs_stub.ts           # Audit matematico automatico
+├── package.json
+└── vite.config.ts
 ```
 
 ---
@@ -218,7 +221,7 @@ Nessuna metrica simulata viene presentata come algoritmo completo. L'onestà int
 Se l'utente utilizza l'applicazione offline senza l'ambiente Python attivo, il modulo di warehouse sfrutta `duckdb-wasm` direttamente nel client per eseguire query SQL analitiche sui match open data (Serie A, campioni StatsBomb) senza richiedere alcun server locale attivo.
 
 ### Miglioria 5: Sigillo di Autorità Matematica nei Test di CI/CD
-Lo script di audit `scripts/audit_cardine.ts` viene eseguito ad ogni commit e verifica:
+Lo script di audit verifica:
 1. Errore di riproiezione omografica DLT 8×8 $= 0.0\text{ m}$.
 2. Conservazione probabilistica di Spearman: $P_{\text{home}} + P_{\text{away}} = 1.0000$.
 3. Convergenza monotona di Bellman xT con residuo $< 10^{-6}$.
@@ -233,27 +236,27 @@ Lo script di audit `scripts/audit_cardine.ts` viene eseguito ad ogni commit e ve
 
 | Modulo Originale | Provenienza | Collocazione Unitaria in Lavagna Tattica | Stato Scientifico |
 | :--- | :--- | :--- | :--- |
-| **Omografia DLT 8×8 + RANSAC** | OpenPitch | `packages/cardine-ts/src/math/homography.ts` | **Reale** |
-| **Pitch Control ODE (Spearman 2018)** | OpenPitch | `packages/cardine-ts/src/math/pitchControl.ts` | **Reale** |
-| **Expected Threat Markov (Singh 2018)**| OpenPitch | `packages/cardine-ts/src/math/xtMarkov.ts` | **Reale** |
-| **Resilienza Spettrale (Fiedler $\lambda_2$)**| OpenPitch | `packages/cardine-ts/src/math/fiedlerJacobi.ts` | **Reale** |
-| **Kalman EKF Balistico 4×4** | OpenPitch | `packages/cardine-ts/src/math/kalmanEkf.ts` | **Reale** |
-| **Chess.com Evaluation Engine** | OpenPitch | `packages/cardine-ts/src/math/chessEvaluation.ts` | **Reale** |
-| **Human-in-the-Loop Frame Simulator** | OpenPitch | `packages/cardine-ts/src/hitl/` | **Reale** |
-| **30 Tipologie Astratte di Giocatori** | OpenPitch | `packages/cardine-ts/src/presets/archetypes30.ts` | **Reale** |
-| **Catalogo Dottrinale 13 Maestri** | OpenPitch | `packages/cardine-ts/src/presets/doctrines.ts` | **Reale** |
-| **Pipeline CV a 9 Stadi** | OpenPitch | `packages/cardine-ts/src/cv/rolePipeline.ts` | **Reale** |
-| **Canvas Tattico 2D & Timeline 60 FPS** | OpenPitch | `apps/studio/src/screens/Lavagna/` | **Reale** |
-| **Tema Verde Prato & Bianco Crema** | OpenPitch | `packages/design-tokens/` & `apps/studio` | **Reale** |
-| **Laboratorio Didattico, Quiz & Puzzle**| OpenPitch | `apps/studio/src/screens/Educational/` | **Reale** |
-| **Glossario Metriche con Formule Esatte**| OpenPitch/Lavagna | `packages/contracts/src/metrics.ts` | **Reale** |
+| **Omografia DLT 8×8 + RANSAC** | OpenPitch | `src/engine/mathEngine.ts` | **Reale** |
+| **Pitch Control ODE (Spearman 2018)** | OpenPitch | `src/engine/mathEngine.ts` | **Reale** |
+| **Expected Threat Markov (Singh 2018)**| OpenPitch | `src/engine/mathEngine.ts` | **Reale** |
+| **Resilienza Spettrale (Fiedler $\lambda_2$)**| OpenPitch | `src/engine/mathEngine.ts` | **Reale** |
+| **Kalman EKF Balistico 4×4** | OpenPitch | `src/engine/kalmanEkf.ts` | **Reale** |
+| **Chess.com Evaluation Engine** | OpenPitch | `src/engine/mathEngine.ts` | **Reale** |
+| **Human-in-the-Loop Frame Simulator** | OpenPitch | `src/engine/humanInTheLoopEngine.ts` | **Reale** |
+| **30 Tipologie Astratte di Giocatori** | OpenPitch | `src/core/presets.ts` | **Reale** |
+| **Catalogo Dottrinale 13 Maestri** | OpenPitch | `src/core/tacticalStrategiesCatalog.ts` | **Reale** |
+| **Pipeline CV a 9 Stadi** | OpenPitch | `src/engine/cvRolePipeline.ts` | **Reale** |
+| **Canvas Tattico 2D & Timeline 60 FPS** | OpenPitch | `src/components/studio/TacticalPitchCanvas.tsx` | **Reale** |
+| **Tema Verde Prato & Bianco Crema** | OpenPitch | `src/core/pitchThemes.ts` | **Reale** |
+| **Laboratorio Didattico, Quiz & Puzzle**| OpenPitch | `src/components/educational/TacticalLearningLab.tsx` | **Reale** |
+| **Glossario Metriche con Formule Esatte**| OpenPitch/Lavagna | `src/core/tacticalGlossary.ts` | **Reale** |
 | **Prompt AI Versionati con Guardrail** | LavagnaTattica | `prompts/` | **Reale** |
-| **Ingestione Open Data (StatsBomb, PDDL)**| OpenZone | `packages/cardine-py/src/cardine/ingest/` | Da strutturare |
-| **Warehouse DuckDB** | OpenZone | `packages/cardine-py/src/cardine/warehouse/` | Da strutturare |
-| **Standardizzazione Kloppy** | OpenZone | `packages/cardine-py/src/cardine/standardize/` | Da strutturare |
-| **TDA Simpliciale (Gudhi H0/H1)** | OpenZone | `packages/cardine-py/src/cardine/tda/` | Da strutturare |
-| **Ghosting CVAE Generativo** | OpenZone | `packages/cardine-py/src/cardine/ghosting/` | Da strutturare |
-| **Server FastAPI** | OpenZone | `packages/cardine-py/src/cardine/api/` | Da strutturare |
+| **Ingestione Open Data (StatsBomb, PDDL)**| OpenZone | `packages/nucleo-py/src/nucleo/ingest/` | Da strutturare |
+| **Warehouse DuckDB** | OpenZone | `packages/nucleo-py/src/nucleo/warehouse/` | Da strutturare |
+| **Standardizzazione Kloppy** | OpenZone | `packages/nucleo-py/src/nucleo/standardize/` | Da strutturare |
+| **TDA Simpliciale (Gudhi H0/H1)** | OpenZone | `packages/nucleo-py/src/nucleo/tda/` | Da strutturare |
+| **Ghosting CVAE Generativo** | OpenZone | `packages/nucleo-py/src/nucleo/ghosting/` | Da strutturare |
+| **Server FastAPI** | OpenZone | `packages/nucleo-py/src/nucleo/api/` | Da strutturare |
 
 ---
 
@@ -262,27 +265,25 @@ Lo script di audit `scripts/audit_cardine.ts` viene eseguito ad ogni commit e ve
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ FASE 0: Sanificazione & Contratti                                           │
-│ • Setup pnpm-workspace monorepo (apps/studio, packages/contracts, cardine) │
-│ • Definizione schemi Zod e coordinate canoniche [-52.5, 52.5]x[-34, 34]     │
+│ • Coordinate canoniche e schemi Zod tipizzati                              │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ FASE 1: Isolamento del Pacchetto @cardine/client (Cardine-TS)               │
-│ • Spostamento del motore matematico puro (DLT, Spearman, Bellman, Jacobi)   │
-│ • Creazione del Web Worker dedicato per i 60 FPS su laptop modesti          │
+│ FASE 1: Isolamento del Motore Matematico (NucleoTattico)                    │
+│ • Formulazione esatta client-side (DLT, Spearman, Bellman, Jacobi, EKF)      │
 │ • Esecuzione audit automatico di verifica matematica                        │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ FASE 2: Consolidamento UI Studio & Schermata Lavagna                        │
-│ • Rifattorizzazione schermate apps/studio (Lavagna, VideoLab, Benchmark...) │
+│ • Rifattorizzazione schermate (Lavagna, VideoLab, Benchmark...)             │
 │ • Applicazione di default del tema Verde Prato & Bianco Crema d'autore      │
 │ • Integrazione completa catalogo dottrinale 13 maestri e flashcard offline  │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ FASE 3: Strutturazione Pacchetto Scientifico Cardine-PY                     │
-│ • Modulo Python cardine con ingest open data, DuckDB e API FastAPI         │
+│ FASE 3: Strutturazione Pacchetto Scientifico Nucleo-PY                       │
+│ • Modulo Python nucleo con ingest open data, DuckDB e API FastAPI           │
 │ • Implementazione client di fallback automatico (Modo A <-> Modo B)         │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        ▼

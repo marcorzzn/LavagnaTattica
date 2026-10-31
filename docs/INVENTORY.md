@@ -1,7 +1,7 @@
 # INVENTORY — LavagnaTattica / NucleoTattico
 
 **Data:** 31 ottobre 2026  
-**Commit di riferimento:** `09a5339`  
+**Commit di riferimento:** `758b582` (aggiornato a pre-Tauri cleanup)  
 **Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
 **Repo:** [https://github.com/marcorzzn/LavagnaTattica](https://github.com/marcorzzn/LavagnaTattica)  
 
@@ -11,7 +11,7 @@
 
 - **Progetto & UI**: LavagnaTattica
 - **Motore Matematico**: NucleoTattico
-- **Schermata Principale**: Lavagna Tattica (`/lavagna` o navigazione predefinita canvas)
+- **Schermata Principale**: Lavagna Tattica (Canvas operativo multi-dimensionale)
 - **Licenza Codice**: MIT
 - **Stato**: Pre-alpha (`0.1.0`)
 
@@ -23,23 +23,23 @@
 - **Bundler & Build Tool**: Vite (`^8.3.0` / v8.3.5)
 - **Styling**: Tailwind CSS v4 (`@tailwindcss/vite` `^4.3.3`) + Lucide Icons (`^0.546.0`)
 - **State Management**: Zustand (`^5.0.3`)
-- **Grafica & Spazio**: SVG Canvas nativo reattivo + Three.js (`^0.186.1` per visualizzatore 3D)
+- **Grafica & Spazio**: SVG Canvas nativo reattivo a 60 FPS con RequestAnimationFrame (`TacticalPitchCanvas.tsx`)
 - **Server / Backend Proxy**: Express (`^4.21.2`) + Google Gen AI SDK (`@google/genai` `^2.4.0`)
 - **Storage Locale Client**: IndexedDB (`idb` `^8.0.2`)
 - **Testing & Esecuzione**: Vitest + `tsx` (`^4.21.0`)
 
 ---
 
-## 3. File Tracciati
+## 3. File Tracciati (Totale: 56)
 
-Totale file tracciati: **58** (dopo rimozione `bun.lock` e asset orfani non usati):
+Elenco completo dei 56 file tracciati da Git:
 
 ```text
 .env.example
 .gitignore
 CHANGELOG.md
 README.md
-docs/BLUEPRINT.md
+docs/ARCHIVE/BLUEPRINT-v2-superseded.md
 docs/INVENTORY.md
 docs/STATE.md
 index.html
@@ -56,8 +56,6 @@ scripts/pre-build-check.sh
 server.ts
 src/App.tsx
 src/components/benchmark/Benchmark12Dimensions.tsx
-src/components/canvas/PitchCanvas2D.tsx
-src/components/canvas/PitchCanvas3D.tsx
 src/components/chat/OrchestratorPanel.tsx
 src/components/educational/EducationalAndKnowledge.tsx
 src/components/educational/GlossaryTaxonomy.tsx
@@ -68,7 +66,6 @@ src/components/studio/EditorToolbar.tsx
 src/components/studio/TacticalPitchCanvas.tsx
 src/components/studio/TacticalStudioWorkspace.tsx
 src/components/studio/TimelineBar.tsx
-src/components/studio/useStudioPlayback.ts
 src/components/video/UniversalVideoLab.tsx
 src/core/formationPresets.ts
 src/core/pitchThemes.ts
@@ -98,13 +95,17 @@ vite.config.ts
 
 ---
 
-## 4. Metriche del Codice
+## 4. Metriche del Codice & Chiarimento Conteggi
 
-- **File TypeScript / TSX**: 39 file
-- **Righe di Codice TS/TSX**: **16.353 righe**
-- **Test Unitari Animazione**: 93 righe (`src/engine/animationEngine.test.ts`, 7/7 test passati)
-- **Suite di Verifica Matematica**: 265 righe (`scripts/audit_real_vs_stub.ts`, 8 verifiche reali)
-- **Documentazione Markdown**: ~1.500 righe totali ([README.md](file:///c:/Progetti/OpenPitch/README.md), [CHANGELOG.md](file:///c:/Progetti/OpenPitch/CHANGELOG.md), [docs/STATE.md](file:///c:/Progetti/OpenPitch/docs/STATE.md), [docs/INVENTORY.md](file:///c:/Progetti/OpenPitch/docs/INVENTORY.md))
+Per evitare ambiguità, documentiamo con precisione le metriche per perimetro:
+
+| Perimetro | File | Righe di Codice | Note |
+|---|---|---|---|
+| **Totale TypeScript/TSX del Repo** | **37 file** | **16.544 righe** | Include `src/` (34 file) + `server.ts` (546 righe) + `scripts/audit_real_vs_stub.ts` (265 righe) + `vite.config.ts` (14 righe) |
+| **Audit Matematico (`audit_real_vs_stub.ts`)** | **36 file** | **16.279 righe** | Scansiona l'intero codebase escludendo lo script di audit stesso |
+| **Solo Applicazione Client (`src/`)** | **34 file** | **15.719 righe** | Esclusivo codice UI, motori matematici, store e cataloghi client-side |
+| **Test Unitari Animazione** | 1 file | 93 righe | `src/engine/animationEngine.test.ts` (7/7 pass) |
+| **Documentazione Markdown** | 4 file | ~1.800 righe | `README.md`, `CHANGELOG.md`, `STATE.md`, `INVENTORY.md` |
 
 ---
 
@@ -114,9 +115,9 @@ vite.config.ts
 2. **Pitch Control Deterministico (Spearman ODE 2018)**: `src/engine/mathEngine.ts` (integrazione $dPPCF/dt$ continua)
 3. **Expected Threat (xT) su Catena di Markov Assorbente**: `src/engine/mathEngine.ts` (Value Iteration di Bellman su griglia $16 \times 24$, residuo $< 10^{-6}$)
 4. **Spettro Laplaciano & Connettività di Fiedler $\lambda_2$**: `src/engine/mathEngine.ts` (rotazioni ortogonali di Jacobi su $L = D - W$)
-5. **Filtro di Kalman Esteso Balistico 4×4**: `src/engine/kalmanEkf.ts` (stato $[x, y, v_x, v_y]^T$, propagazione covarianza e abbattimento incertezza)
+5. **Filtro di Kalman Esteso Balistico 4×4**: `src/engine/kalmanEkf.ts` (stato $[x, y, v_x, v_y]^T$, propagazione covarianza ed eliminazione rumore)
 6. **Valutazione Composita Stile Chess.com**: `src/engine/mathEngine.ts` (funzionale convesso $J(a \mid s)$, ranking dinamico e mosse `!!`, `!`, `?!`, `?`)
-7. **Motore di Animazione a 3 Livelli**: `src/engine/animationEngine.ts` (Keyframe discreti + Azioni esplicite + Traiettorie Bézier quadratiche ed elevazione balistica 3D $z$, 60 FPS con rAF)
+7. **Motore di Animazione a 3 Livelli**: `src/engine/animationEngine.ts` (Keyframe discreti + Azioni esplicite + Traiettorie Bézier quadratiche ed elevazione balistica 3D $z$, 60 FPS con rAF in `src/hooks/useAnimationPlayback.ts`)
 8. **Human-in-the-Loop Frame Simulator**: `src/engine/humanInTheLoopEngine.ts`, `src/components/video/UniversalVideoLab.tsx` (modifica interattiva e ricalcolo balistico $P_{\text{succ}}$ da $49.3\%$ a $86\%$)
 9. **Catalogo 30 Tipologie Astratte di Giocatori**: `src/core/presets.ts`, `src/core/types.ts` (Zero Nomi Propri, parametri cine-dinamici)
 10. **Catalogo Dottrinale dei 13 Maestri**: `src/core/tacticalStrategiesCatalog.ts` (Klopp, Guardiola, Sarri, De Zerbi, Sacchi, Simeone, ecc.)
@@ -134,9 +135,9 @@ vite.config.ts
 
 ## 7. Moduli Mancanti / Roadmap Futura
 
-1. **Benchmark 12 Dimensioni**: riallineamento conteggio gol (il testo parla di 48, il corpus di benchmark elenca 26 righe)
+1. **Benchmark 12 Dimensioni**: riallineamento conteggio gol (il testo dichiara 48 gol ma mostra 26 righe nel fixture)
 2. **nucleo-py**: modulo scientifico Python (DuckDB, Kloppy, Gudhi)
-3. **Tauri Build**: configurazione pacchetto desktop `src-tauri` per `.exe` Windows
+3. **Tauri Build**: configurazione pacchetto desktop `src-tauri` per `.exe` Windows (in attesa di inizializzazione)
 4. **Persistenza UI con IndexedDB**: `src/lib/idb.ts` presente ma autosave completo non cablato a tutte le schermate
 5. **Export Raster Statico**: supporto export diretto PNG/GIF oltre al già presente JSON e WebM
 
@@ -146,26 +147,22 @@ vite.config.ts
 
 - **`npx tsc --noEmit`**: Exit 0 (zero errori)
 - **`npx tsx scripts/audit_real_vs_stub.ts`**: Exit 0 (8 verifiche reali + 7 test di animazione superati)
-- **`npm run build`**: Exit 0 (build di produzione Vite completata con successo)
+- **`npm run build`**: Exit 0 (build di produzione Vite completata in 3.7s, zero warning su dipendenze orfane)
 
 ---
 
-## 9. Igiene & Bonifica Eseguita
+## 9. Igiene & Bonifica Eseguita (Chiusura dei 4 Problemi)
 
-- [x] `.gitignore` arricchito e standardizzato (esclusi build, log, .env, lockfiles alternativi, OS, IDE, target Tauri)
-- [x] `bun.lock` rimosso dal tracking Git per evitare lockfile multipli incoerenti
-- [x] Risolto conflitto peer-dependency esbuild in `package.json` (`esbuild: "^0.28.0"`) permettendo un `npm install` pulito
-- [x] `package-lock.json` riallineato al nome `lavagna-tattica`
-- [x] Asset orfani eliminati da `public/assets/aistudio/`
-- [x] Nessun log (`*.log`) o segreto (`.env`) tracciato nel repository
-- [x] Riferimenti a `OpenPitch` e `Cardine` bonificati in tutto il codice e i file di interfaccia (rimasti unicamente nelle note storiche di CHANGELOG e README)
-- [x] `docs/STATE.md` aggiornato con la matrice onesta reale / proxy / mancante
+- [x] **Problema 1 (Blueprint superato)**: `docs/BLUEPRINT.md` archiviato in `docs/ARCHIVE/BLUEPRINT-v2-superseded.md` con avviso `SUPERSEDED` esplicito in testa; la sola fonte di verità è `docs/STATE.md`
+- [x] **Problema 2 (Discrepanza righe)**: chiarita e documentata la distinzione tra perimetro intero repo (16.544 righe su 37 file TS), perimetro audit (16.279 righe su 36 file) e perimetro solo client `src/` (15.719 righe su 34 file)
+- [x] **Problema 3 (Doppio hook playback)**: eliminato il file orfano `src/components/studio/useStudioPlayback.ts`; il player è consolidato unicamente in `src/hooks/useAnimationPlayback.ts` (60 FPS, easing cubico, Bézier, elevazione 3D)
+- [x] **Problema 4 (Canvas orfani)**: eliminati `src/components/canvas/PitchCanvas2D.tsx` e `src/components/canvas/PitchCanvas3D.tsx`; l'unico canvas operativo del progetto è `TacticalPitchCanvas.tsx` (`src/components/studio/TacticalPitchCanvas.tsx`); rimosse le dipendenze inutilizzate `three` e `@types/three`
+- [x] **Lockfile e Peer Dependencies**: eliminato `bun.lock`, risolto conflitto esbuild in `package.json`, `package-lock.json` pulito con 0 vulnerabilità
 
 ---
 
 ## 10. Prossimi Passi
 
-1. **Riallineamento Benchmark**: allineare la visualizzazione delle metriche sui 26 gol effettivi del corpus
-2. **Inizializzazione Tauri**: configurare `src-tauri` per la compilazione desktop nativa
-3. **Persistenza Completa IndexedDB**: collegare i salvataggi automatici della lavagna e delle sessioni studio
-4. **Export Grafico Statico (PNG/SVG)**: integrare screenshot diretto ad alta risoluzione del campo
+1. **Rebranding & Vetrina GitHub**: allineare `README.md` per presentare al meglio LavagnaTattica
+2. **Riallineamento Benchmark**: allineare la visualizzazione delle metriche sui 26 gol effettivi del corpus
+3. **Packaging Desktop con Tauri**: eseguire `tauri init` e compilare `.exe` quando deciso

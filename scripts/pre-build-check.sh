@@ -22,7 +22,7 @@ git ls-files "*.ts" "*.tsx" | xargs wc -l | tail -1
 echo ""
 
 echo "=== RIFERIMENTI RESIDUI ==="
-git grep -n -i "openpitch\|cardine" -- . ':!CHANGELOG.md' ':!docs/BLUEPRINT.md' ':!README.md' ':!*.log' || echo "Nessuno (eccetto note storiche)"
+git grep -n -i "openpitch\|cardine" -- . ':!CHANGELOG.md' ':!docs/ARCHIVE/*' ':!README.md' ':!*.log' ':!scripts/pre-build-check.*' || echo "Nessuno in codice attivo (eccetto note storiche)"
 echo ""
 
 echo "=== FILE SOSPETTI (log, env, node_modules) ==="

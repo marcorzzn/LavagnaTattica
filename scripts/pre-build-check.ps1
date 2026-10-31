@@ -17,16 +17,19 @@ Write-Host "Totale file tracciati: $($tracked.Count)"
 Write-Host ""
 
 Write-Host "=== RIGHE TS/TSX ===" -ForegroundColor Cyan
-$tsLines = (Get-ChildItem -Path src, scripts, server.ts -Recurse -Include *.ts,*.tsx | Get-Content | Measure-Object -Line).Lines
-Write-Host "Totale righe TS/TSX: $tsLines"
+$tsFiles = git ls-files "*.ts" "*.tsx"
+$totalLines = ($tsFiles | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum).Sum
+$srcLines = (git ls-files "src/**/*.ts" "src/**/*.tsx" | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum).Sum
+Write-Host "Totale file TS/TSX: $($tsFiles.Count) (di cui $($srcLines) righe in src/)"
+Write-Host "Totale righe TS/TSX intero repo: $totalLines"
 Write-Host ""
 
 Write-Host "=== RIFERIMENTI RESIDUI A OPENPITCH / CARDINE ===" -ForegroundColor Cyan
-$residui = git grep -n -i "openpitch\|cardine" -- . ':!CHANGELOG.md' ':!docs/BLUEPRINT.md' ':!README.md' ':!*.log'
+$residui = git grep -n -i "openpitch\|cardine" -- . ':!CHANGELOG.md' ':!docs/ARCHIVE/*' ':!README.md' ':!*.log' ':!scripts/pre-build-check.*'
 if ($residui) {
     Write-Host $residui -ForegroundColor Yellow
 } else {
-    Write-Host "Nessun riferimento residuo in codice (eccetto note storiche)" -ForegroundColor Green
+    Write-Host "Nessun riferimento residuo in codice attivo (eccetto note storiche in README e CHANGELOG)" -ForegroundColor Green
 }
 Write-Host ""
 

@@ -2,7 +2,7 @@
 
 **Versione:** 0.1.0  
 **Data:** 31 ottobre 2026  
-**Commit:** 09a5339  
+**Commit:** 758b582  
 **Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
 
 ## Mappa onesta dei moduli

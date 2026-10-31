@@ -21,8 +21,6 @@ import {
 } from './core/types';
 import { INITIAL_TACTICAL_STATE, PLAYER_ARCHETYPES_30 } from './core/presets';
 import { evaluateTacticalState } from './engine/mathEngine';
-import { PitchCanvas2D } from './components/canvas/PitchCanvas2D';
-import { PitchCanvas3D } from './components/canvas/PitchCanvas3D';
 import { OrchestratorPanel } from './components/chat/OrchestratorPanel';
 import { Benchmark12Dimensions } from './components/benchmark/Benchmark12Dimensions';
 import { EducationalAndKnowledge } from './components/educational/EducationalAndKnowledge';
