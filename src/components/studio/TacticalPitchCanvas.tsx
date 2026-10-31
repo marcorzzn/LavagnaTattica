@@ -49,6 +49,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const addStroke = useStudioStore((s) => s.addStroke);
   const addNote = useStudioStore((s) => s.addNote);
   const deleteElementById = useStudioStore((s) => s.deleteElementById);
+  const ballCarrierId = useStudioStore((s) => s.ballCarrierId);
+  const setBallCarrierId = useStudioStore((s) => s.setBallCarrierId);
 
   const activeTool = useSelectionStore((s) => s.activeTool);
   const activeArrowType = useSelectionStore((s) => s.activeArrowType);
@@ -69,6 +71,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const zoom = useViewportStore((s) => s.zoom);
   const tokenScale = useViewportStore((s) => s.tokenScale);
   const colorblindSafe = useViewportStore((s) => s.colorblindSafe);
+  const hiddenPlayerIds = useViewportStore((s) => s.hiddenPlayerIds);
+  const togglePlayerVisibility = useViewportStore((s) => s.togglePlayerVisibility);
   const theme = useViewportStore((s) => s.theme);
   const currentTheme = getPitchTheme(theme);
 
@@ -266,6 +270,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const visiblePlayers = players.filter((p) => {
     if (p.team === 'home' && !showHomeTeam) return false;
     if (p.team === 'away' && !showAwayTeam) return false;
+    if (hiddenPlayerIds.includes(p.id)) return false;
     return true;
   });
 
@@ -720,8 +725,34 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                     // Non eliminiamo i giocatori titolari
                   }
                 }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  togglePlayerVisibility(player.id);
+                }}
                 className="cursor-grab active:cursor-grabbing"
               >
+                {/* Indicatore Possesso Palla Agganciato (Magnet) */}
+                {ballCarrierId === player.id && (
+                  <g pointerEvents="none">
+                    <circle
+                      r={24 * tokenScale}
+                      fill="none"
+                      stroke="#FACC15"
+                      strokeWidth="2.5"
+                      strokeDasharray="4 2"
+                      className="animate-pulse"
+                    />
+                    <circle
+                      cx={13 * tokenScale}
+                      cy={-13 * tokenScale}
+                      r={4.5}
+                      fill="#FACC15"
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                  </g>
+                )}
+
                 {/* Alone di selezione */}
                 {isSelected && (
                   <circle
@@ -786,7 +817,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
             );
           })}
 
-          {/* 11. Token Pallone (Draggable) */}
+          {/* 11. Token Pallone (Draggable con Snap Magnetico al Portatore) */}
           {(() => {
             const ballSvg = statsbombToSvg(ball.x, ball.y);
             return (
@@ -798,9 +829,14 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                     setDraggingEntity({ type: 'ball', id: 'ball', recordedHistory: false });
                   }
                 }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setBallCarrierId(null);
+                }}
                 className="cursor-grab active:cursor-grabbing"
               >
-                <circle r="12" fill="#FACC15" fillOpacity="0.25" />
+                <title>{ballCarrierId ? "Doppio clic per liberare il possesso" : "Trascina su un giocatore per agganciare la palla"}</title>
+                <circle r={ballCarrierId ? "15" : "12"} fill="#FACC15" fillOpacity={ballCarrierId ? "0.4" : "0.25"} className={ballCarrierId ? "animate-pulse" : ""} />
                 <circle r="7.5" fill="#FFFFFF" stroke="#000000" strokeWidth="1.5" />
                 <circle r="2.5" fill="#000000" />
               </g>

@@ -238,6 +238,54 @@ const FORMATION_PROS_CONS: Record<
     ],
     keyZone: 'Corridoio Intermedio Difensivo (X: 38–62)',
   },
+  '2-3-1': {
+    strengths: [
+      'Equilibrio classico del 7v7 con linea a 3 a supporto del perno offensivo',
+      'Ottima ampiezza offerta dai due esterni di centrocampo',
+      'Facilità di rotazione triangolare in fase di possesso palla',
+    ],
+    weaknesses: [
+      'Transizioni difensive vulnerabili se i due esterni non ripiegano subito',
+      'Centrocampista centrale esposto in transizione negativa se preso in mezzo',
+    ],
+    keyZone: 'Centrocampo & Corsie Laterali 7v7',
+  },
+  '3-2-1': {
+    strengths: [
+      'Solidità difensiva ferrea con linea a 3 bloccata',
+      'Protezione totale dell’area e ripartenze rapide sulle corsie esterne',
+      'Controllo geometrico e sicurezza nella propria metà campo',
+    ],
+    weaknesses: [
+      'Rischio di isolamento dell’unica punta centrale',
+      'Minore densità e presenza nella metà campo offensiva',
+    ],
+    keyZone: 'Prima Costruzione & Linea a 3 Difensiva',
+  },
+  '1-2-1': {
+    strengths: [
+      'Rombo (Diamante) perfetto per il 5v5 con linee di passaggio continue',
+      'Perno centrale per scarico e inserimento continuo delle due ali',
+      'Massima fluidità di rotazione posizionale e gioco relazionale',
+    ],
+    weaknesses: [
+      'Basta un ritardo di marcatura dell’ultimo per concedere un tiro pulito',
+      'Richiede sincronismo assoluto nelle scalate difensive',
+    ],
+    keyZone: 'Vertice & Diamante Centrale (Futsal / 5v5)',
+  },
+  '2-2': {
+    strengths: [
+      'Doppia coppia simmetrica (2 difensori + 2 attaccanti)',
+      'Facile interscambiabilità e marcature dirette uomo su uomo',
+      'Grande stabilità nelle transizioni veloci',
+    ],
+    weaknesses: [
+      'Spazio centrale vuoto tra le due coppie sfruttabile dagli avversari',
+      'Meno linee di passaggio diagonali rispetto al rombo (1-2-1)',
+    ],
+    keyZone: 'Zone Centrali & Interscambi 2v2',
+  },
 };
 
 interface TacticalLearningLabProps {

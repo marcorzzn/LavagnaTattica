@@ -356,6 +356,8 @@ export type TacticalTheme =
   | 'blueprint'
   | 'minimal'
   | 'light';
+export type GameFormat = '11v11' | '7v7' | '5v5';
+
 export type FormationPreset =
   | '4-3-3'
   | '4-2-3-1'
@@ -363,7 +365,11 @@ export type FormationPreset =
   | '4-4-2'
   | '3-4-3'
   | '5-3-2'
-  | '4-1-4-1';
+  | '4-1-4-1'
+  | '2-3-1'
+  | '3-2-1'
+  | '1-2-1'
+  | '2-2';
 
 export interface BoardArrow {
   id: string;

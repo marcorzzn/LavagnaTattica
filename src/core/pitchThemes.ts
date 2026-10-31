@@ -117,3 +117,4 @@ export const PITCH_THEMES: Record<string, PitchThemeConfig> = {
 export function getPitchTheme(themeKey: string): PitchThemeConfig {
   return PITCH_THEMES[themeKey] || PITCH_THEMES.grass_cream;
 }
+

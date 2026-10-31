@@ -16,6 +16,7 @@ interface ViewportState {
   theme: TacticalTheme;
   tokenScale: number;
   colorblindSafe: boolean;
+  hiddenPlayerIds: string[];
   setZoom: (zoom: number) => void;
   resetViewport: () => void;
   toggleGrid: () => void;
@@ -29,6 +30,9 @@ interface ViewportState {
   setTheme: (theme: TacticalTheme) => void;
   setTokenScale: (scale: number) => void;
   toggleColorblindSafe: () => void;
+  togglePlayerVisibility: (playerId: string) => void;
+  setPlayersVisibility: (playerIds: string[], visible: boolean) => void;
+  showAllPlayers: () => void;
 }
 
 export const useViewportStore = create<ViewportState>((set) => ({
@@ -46,6 +50,7 @@ export const useViewportStore = create<ViewportState>((set) => ({
   theme: 'grass_cream',
   tokenScale: 1.0,
   colorblindSafe: false,
+  hiddenPlayerIds: [],
   setZoom: (zoom) => set({ zoom: Math.max(0.75, Math.min(2.0, Number(zoom.toFixed(2)))) }),
   resetViewport: () => set({ zoom: 1, panX: 0, panY: 0 }),
   toggleGrid: () => set((s) => ({ gridVisible: !s.gridVisible })),
@@ -59,5 +64,18 @@ export const useViewportStore = create<ViewportState>((set) => ({
   setTheme: (theme) => set({ theme }),
   setTokenScale: (tokenScale) => set({ tokenScale }),
   toggleColorblindSafe: () => set((s) => ({ colorblindSafe: !s.colorblindSafe })),
+  togglePlayerVisibility: (playerId) =>
+    set((s) => ({
+      hiddenPlayerIds: s.hiddenPlayerIds.includes(playerId)
+        ? s.hiddenPlayerIds.filter((id) => id !== playerId)
+        : [...s.hiddenPlayerIds, playerId],
+    })),
+  setPlayersVisibility: (playerIds, visible) =>
+    set((s) => ({
+      hiddenPlayerIds: visible
+        ? s.hiddenPlayerIds.filter((id) => !playerIds.includes(id))
+        : Array.from(new Set([...s.hiddenPlayerIds, ...playerIds])),
+    })),
+  showAllPlayers: () => set({ hiddenPlayerIds: [] }),
 }));
 

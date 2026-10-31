@@ -109,6 +109,38 @@ export const CANONICAL_FORMATION_TEMPLATES: Record<FormationPreset, FormationSlo
     { number: 11, archetypeId: 15, role: 'Ala Invertita SX', xSb: 74, ySb: 14 },
     { number: 9, archetypeId: 20, role: 'Centravanti Mobile', xSb: 91, ySb: 40 },
   ],
+  '2-3-1': [
+    { number: 1, archetypeId: 2, role: 'Portiere Sweeper', xSb: 8, ySb: 40 },
+    { number: 2, archetypeId: 4, role: 'Difensore SX', xSb: 28, ySb: 26 },
+    { number: 3, archetypeId: 5, role: 'Difensore DX', xSb: 28, ySb: 54 },
+    { number: 4, archetypeId: 10, role: 'Centrocampista Centrale', xSb: 50, ySb: 40 },
+    { number: 5, archetypeId: 15, role: 'Esterno SX', xSb: 54, ySb: 18 },
+    { number: 6, archetypeId: 16, role: 'Esterno DX', xSb: 54, ySb: 62 },
+    { number: 7, archetypeId: 20, role: 'Centravanti Mobile', xSb: 82, ySb: 40 },
+  ],
+  '3-2-1': [
+    { number: 1, archetypeId: 1, role: 'Portiere Classico', xSb: 8, ySb: 40 },
+    { number: 2, archetypeId: 7, role: 'Terzino SX', xSb: 27, ySb: 18 },
+    { number: 3, archetypeId: 6, role: 'Difensore Centrale', xSb: 24, ySb: 40 },
+    { number: 4, archetypeId: 7, role: 'Terzino DX', xSb: 27, ySb: 62 },
+    { number: 5, archetypeId: 12, role: 'Centrocampista SX', xSb: 52, ySb: 30 },
+    { number: 6, archetypeId: 11, role: 'Centrocampista DX', xSb: 52, ySb: 50 },
+    { number: 7, archetypeId: 19, role: 'Centravanti Boa', xSb: 80, ySb: 40 },
+  ],
+  '1-2-1': [
+    { number: 1, archetypeId: 2, role: 'Portiere Futsal', xSb: 8, ySb: 40 },
+    { number: 2, archetypeId: 4, role: 'Centrale Ultimo', xSb: 28, ySb: 40 },
+    { number: 3, archetypeId: 15, role: 'Laterale SX', xSb: 52, ySb: 20 },
+    { number: 4, archetypeId: 16, role: 'Laterale DX', xSb: 52, ySb: 60 },
+    { number: 5, archetypeId: 19, role: 'Pivot Boa', xSb: 76, ySb: 40 },
+  ],
+  '2-2': [
+    { number: 1, archetypeId: 1, role: 'Portiere', xSb: 8, ySb: 40 },
+    { number: 2, archetypeId: 4, role: 'Difensore SX', xSb: 28, ySb: 26 },
+    { number: 3, archetypeId: 5, role: 'Difensore DX', xSb: 28, ySb: 54 },
+    { number: 4, archetypeId: 20, role: 'Attaccante SX', xSb: 66, ySb: 26 },
+    { number: 5, archetypeId: 18, role: 'Attaccante DX', xSb: 66, ySb: 54 },
+  ],
 };
 
 export function buildFormationPlayers(

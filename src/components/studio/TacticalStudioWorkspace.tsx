@@ -14,6 +14,9 @@ import {
   Wand2,
   Play,
   RotateCcw,
+  Sliders,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useStudioStore } from '../../stores/studioStore';
 import { useViewportStore } from '../../stores/viewportStore';
@@ -41,8 +44,19 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
   const getTacticalState = useStudioStore((s) => s.getTacticalState);
   const activeStrategyId = useStudioStore((s) => s.activeStrategyId);
   const applyCoachingStrategy = useStudioStore((s) => s.applyCoachingStrategy);
+  const teamSliders = useStudioStore((s) => s.teamSliders);
+  const updateTeamSlider = useStudioStore((s) => s.updateTeamSlider);
+  const resetTeamSliders = useStudioStore((s) => s.resetTeamSliders);
+  const ballCarrierId = useStudioStore((s) => s.ballCarrierId);
+  const setBallCarrierId = useStudioStore((s) => s.setBallCarrierId);
 
-  const [leftTab, setLeftTab] = useState<'strategies' | 'roster'>('strategies');
+  const hiddenPlayerIds = useViewportStore((s) => s.hiddenPlayerIds);
+  const togglePlayerVisibility = useViewportStore((s) => s.togglePlayerVisibility);
+  const setPlayersVisibility = useViewportStore((s) => s.setPlayersVisibility);
+  const showAllPlayers = useViewportStore((s) => s.showAllPlayers);
+
+  const [leftTab, setLeftTab] = useState<'strategies' | 'roster' | 'sliders'>('strategies');
+  const [sliderTeam, setSliderTeam] = useState<'home' | 'away'>('home');
   const [strategySearch, setStrategySearch] = useState('');
   const [strategySchool, setStrategySchool] = useState<string>('all');
 
@@ -66,6 +80,29 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
       PLAYER_ARCHETYPES_30[0]
     );
   }, [selectedPlayer]);
+
+  const ballCarrier = useMemo(() => {
+    if (!ballCarrierId) return null;
+    return players.find((p) => p.id === ballCarrierId) || null;
+  }, [players, ballCarrierId]);
+
+  const handleFilterReparto = (group: 'ALL' | 'NONE' | 'GK' | 'DEF' | 'MID' | 'FWD') => {
+    if (group === 'ALL') {
+      showAllPlayers();
+      triggerNotification('Mostrate tutte le pedine in campo');
+      return;
+    }
+    if (group === 'NONE') {
+      setPlayersVisibility(players.map((p) => p.id), false);
+      triggerNotification('Tutte le pedine nascoste dalla lavagna');
+      return;
+    }
+    const matching = players.filter((p) => p.positionGroup === group).map((p) => p.id);
+    const nonMatching = players.filter((p) => p.positionGroup !== group).map((p) => p.id);
+    setPlayersVisibility(matching, true);
+    setPlayersVisibility(nonMatching, false);
+    triggerNotification(`Filtro reparto attivo: ${group}`);
+  };
 
   const triggerNotification = (msg: string) => {
     setNotification(msg);
@@ -110,31 +147,46 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start flex-1">
         {/* COLONNA SINISTRA (3 colonne): Libreria Strategie & Allenatori oppure Roster Tipologie */}
         <aside className="lg:col-span-3 flex flex-col gap-2.5 rounded-xl border border-slate-800/90 bg-slate-900/90 p-3 shadow-xl max-h-[780px] overflow-hidden">
-          {/* Tabs Sinistra */}
+          {/* Tabs Sinistra (3 tabs: Maestri, Pedine & Visibilità, Assetto & Slider) */}
           <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-lg shrink-0">
             <button
               type="button"
               onClick={() => setLeftTab('strategies')}
-              className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+              title="Libreria Maestri del Calcio & Dottrine Tattiche"
+              className={`flex-1 py-1.5 px-1.5 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1 truncate ${
                 leftTab === 'strategies'
                   ? 'bg-cyan-400 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>Maestri & Strategie</span>
+              <BookOpen className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Maestri</span>
             </button>
             <button
               type="button"
               onClick={() => setLeftTab('roster')}
-              className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+              title="Elenco Pedine, Ruoli e Filtri di Visibilità"
+              className={`flex-1 py-1.5 px-1.5 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1 truncate ${
                 leftTab === 'roster'
                   ? 'bg-cyan-400 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Users className="h-3.5 w-3.5" />
-              <span>22 Pedine</span>
+              <Users className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Pedine</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeftTab('sliders')}
+              title="Assetto di Squadra: Slider Parametrici e Possesso Palla"
+              className={`flex-1 py-1.5 px-1.5 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1 truncate ${
+                leftTab === 'sliders'
+                  ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sliders className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Assetto</span>
             </button>
           </div>
 
@@ -238,32 +290,92 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
             </div>
           )}
 
-          {/* VISTA 2: ROSTER 22 PEDINE (30 ARCHETIPI ASTRATTI) */}
+          {/* VISTA 2: ROSTER PEDINE & FILTRI VISIBILITÀ REPARTO */}
           {leftTab === 'roster' && (
             <div className="flex flex-col gap-2 flex-1 overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 shrink-0">
-                <span className="text-xs font-bold text-slate-200">22 Tipologie in Campo</span>
+                <span className="text-xs font-bold text-slate-200">
+                  {players.length} Pedine in Campo
+                </span>
                 <span className="font-mono text-[11px] text-cyan-400 font-semibold">{homeFormation}</span>
               </div>
 
+              {/* Barra Filtri Visibilità Rapida Reparti */}
+              <div className="space-y-1 shrink-0 bg-slate-950/70 p-1.5 rounded-lg border border-slate-800">
+                <div className="text-[10px] font-semibold text-slate-400 flex items-center justify-between">
+                  <span>Filtro Visibilità Reparto:</span>
+                  <span className="text-[9px] text-slate-500">(doppio clic su pedina)</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('ALL')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold transition-colors"
+                  >
+                    Tutti
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('GK')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  >
+                    Solo GK
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('DEF')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  >
+                    Solo DEF
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('MID')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  >
+                    Solo MID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('FWD')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  >
+                    Solo ATT
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFilterReparto('NONE')}
+                    className="py-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-300 font-medium transition-colors"
+                  >
+                    Nascondi
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista Pedine con Switch Occhio / Selezione */}
               <div className="space-y-1 overflow-y-auto flex-1 pr-1">
                 {players.map((p) => {
                   const isSel = p.id === selectedPlayerId;
                   const isHome = p.team === 'home';
+                  const isHidden = hiddenPlayerIds.includes(p.id);
+                  const isCarrier = ballCarrierId === p.id;
                   return (
-                    <button
+                    <div
                       key={p.id}
-                      onClick={() => {
-                        setSelectedPlayerId(p.id);
-                        setRightTab('player');
-                      }}
-                      className={`w-full px-2 py-1.5 rounded-lg text-left flex items-center justify-between text-xs transition-colors ${
+                      className={`w-full px-2 py-1 rounded-lg flex items-center justify-between text-xs transition-colors ${
                         isSel
                           ? 'bg-cyan-500/15 border border-cyan-400 text-white font-semibold'
                           : 'hover:bg-slate-800 text-slate-300 border border-transparent'
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPlayerId(p.id);
+                          setRightTab('player');
+                        }}
+                        className="flex items-center gap-1.5 min-w-0 flex-1 text-left"
+                      >
                         <span
                           className={`font-mono font-bold text-[11px] ${
                             isHome ? 'text-cyan-400' : 'text-rose-400'
@@ -271,12 +383,37 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                         >
                           #{p.number}
                         </span>
-                        <span className="truncate">{p.archetypeName}</span>
+                        <span className={`truncate text-[11px] ${isHidden ? 'line-through opacity-40' : ''}`}>
+                          {p.archetypeName}
+                        </span>
+                        {isCarrier && (
+                          <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-bold shrink-0">
+                            ⚽ Palla
+                          </span>
+                        )}
+                      </button>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="font-mono text-[9px] px-1 py-0.5 rounded bg-slate-950 text-slate-500">
+                          {p.positionGroup}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePlayerVisibility(p.id);
+                          }}
+                          title={isHidden ? 'Mostra pedina sulla lavagna' : 'Nascondi pedina dalla lavagna'}
+                          className={`p-1 rounded transition-colors ${
+                            isHidden
+                              ? 'text-slate-600 hover:text-slate-300'
+                              : 'text-cyan-400 hover:text-cyan-200'
+                          }`}
+                        >
+                          {isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </button>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-500 shrink-0">
-                        ({Math.round(p.x)},{Math.round(p.y)})
-                      </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -294,6 +431,186 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                   <Zap className="h-3.5 w-3.5" />
                   <span>Overlay xT Markov (16×24)</span>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* VISTA 3: ASSETTO DI SQUADRA (SLIDER PARAMETRICI & AGGANCIO MAGNETICO PALLA) */}
+          {leftTab === 'sliders' && (
+            <div className="flex flex-col gap-2.5 flex-1 overflow-hidden">
+              {/* Selettore Squadra Casa / Ospite */}
+              <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-lg shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSliderTeam('home')}
+                  className={`flex-1 py-1 px-2 text-xs font-semibold rounded transition-colors flex items-center justify-center gap-1.5 ${
+                    sliderTeam === 'home'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                  <span>Squadra Casa</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSliderTeam('away')}
+                  className={`flex-1 py-1 px-2 text-xs font-semibold rounded transition-colors flex items-center justify-center gap-1.5 ${
+                    sliderTeam === 'away'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span className="h-2 w-2 rounded-full bg-rose-400" />
+                  <span>Squadra Ospite</span>
+                </button>
+              </div>
+
+              {/* Contenuto Slider Scrollabile */}
+              <div className="space-y-2.5 overflow-y-auto flex-1 pr-1">
+                {/* Box Info Trasformazione Affine */}
+                <div className="rounded-lg bg-slate-950/80 p-2 border border-slate-800 text-[11px] text-slate-400 leading-tight">
+                  <span className="font-semibold text-slate-300">Omotetia Centroidale:</span>{' '}
+                  Regola l'altezza della linea, l'ampiezza o sposta il baricentro del blocco squadra sul campo.
+                </div>
+
+                {/* Slider 1: Profondità (Line Height / Compressione) */}
+                <div className="space-y-1 rounded-lg bg-slate-950 p-2.5 border border-slate-800">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-slate-200">Profondità Blocco</span>
+                    <span className="font-mono text-cyan-400 font-bold">{teamSliders[sliderTeam].depth}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    value={teamSliders[sliderTeam].depth}
+                    onChange={(e) => updateTeamSlider(sliderTeam, 'depth', Number(e.target.value))}
+                    className="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Compatto (Pressing)</span>
+                    <span>Allungato (Transizione)</span>
+                  </div>
+                </div>
+
+                {/* Slider 2: Ampiezza (Width / Flank Spread) */}
+                <div className="space-y-1 rounded-lg bg-slate-950 p-2.5 border border-slate-800">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-slate-200">Ampiezza Blocco</span>
+                    <span className="font-mono text-cyan-400 font-bold">{teamSliders[sliderTeam].width}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    value={teamSliders[sliderTeam].width}
+                    onChange={(e) => updateTeamSlider(sliderTeam, 'width', Number(e.target.value))}
+                    className="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Stretto (Densità Centrale)</span>
+                    <span>Largo (Gioco sulle Fasce)</span>
+                  </div>
+                </div>
+
+                {/* Slider 3: Baricentro X (Forward / Back) */}
+                <div className="space-y-1 rounded-lg bg-slate-950 p-2.5 border border-slate-800">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-slate-200">Baricentro (Avanzamento X)</span>
+                    <span className="font-mono text-cyan-400 font-bold">{teamSliders[sliderTeam].shiftX}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    value={teamSliders[sliderTeam].shiftX}
+                    onChange={(e) => updateTeamSlider(sliderTeam, 'shiftX', Number(e.target.value))}
+                    className="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Arretrato (Blocco Basso)</span>
+                    <span>Avanzato (Recupero Alto)</span>
+                  </div>
+                </div>
+
+                {/* Slider 4: Scorrimento Y (Lateral Shift) */}
+                <div className="space-y-1 rounded-lg bg-slate-950 p-2.5 border border-slate-800">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-slate-200">Scorrimento Laterale Y</span>
+                    <span className="font-mono text-cyan-400 font-bold">{teamSliders[sliderTeam].shiftY}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    value={teamSliders[sliderTeam].shiftY}
+                    onChange={(e) => updateTeamSlider(sliderTeam, 'shiftY', Number(e.target.value))}
+                    className="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Fascia Sinistra</span>
+                    <span>Fascia Destra</span>
+                  </div>
+                </div>
+
+                {/* Reset Slider Squadra */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetTeamSliders(sliderTeam);
+                    triggerNotification(`Ripristinati slider per ${sliderTeam === 'home' ? 'Squadra Casa' : 'Squadra Ospite'}`);
+                  }}
+                  className="w-full py-1.5 px-3 rounded-lg border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-500 flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Reset Slider {sliderTeam === 'home' ? 'Casa' : 'Ospite'}</span>
+                </button>
+
+                {/* Sezione Possesso Palla & Blocco Magnetico */}
+                <div className="rounded-lg bg-slate-950 p-2.5 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
+                      <span>⚽ Possesso & Blocco Magnetico</span>
+                    </span>
+                    {ballCarrier ? (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Agganciato
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                        Libera
+                      </span>
+                    )}
+                  </div>
+
+                  {ballCarrier ? (
+                    <div className="flex items-center justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-200 truncate">
+                          #{ballCarrier.number} {ballCarrier.archetypeName}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {ballCarrier.team === 'home' ? 'Squadra Casa' : 'Squadra Ospite'} · ({Math.round(ball.x)}, {Math.round(ball.y)})
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBallCarrierId(null);
+                          triggerNotification('Palla liberata dal portatore');
+                        }}
+                        className="px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-semibold hover:bg-rose-500/30 transition-colors shrink-0"
+                      >
+                        Libera
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 leading-snug">
+                      Trascina la palla vicino a un giocatore (&lt;3.6m) per agganciarla magneticamente. Spostare il giocatore muoverà la palla.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}

@@ -23,22 +23,32 @@ import { useSelectionStore, EditorTool } from '../../stores/selectionStore';
 import { useViewportStore } from '../../stores/viewportStore';
 import { useStudioStore } from '../../stores/studioStore';
 import { useHistoryStore } from '../../stores/historyStore';
-import { ArrowType, FormationPreset, TacticalTheme } from '../../core/types';
+import { ArrowType, FormationPreset, GameFormat, TacticalTheme } from '../../core/types';
 import { COACHING_STRATEGIES_CATALOG } from '../../core/tacticalStrategiesCatalog';
 
 interface EditorToolbarProps {
   onNotify?: (msg: string) => void;
 }
 
-const FORMATIONS: FormationPreset[] = [
-  '4-3-3',
-  '4-2-3-1',
-  '3-5-2',
-  '4-4-2',
-  '3-4-3',
-  '5-3-2',
-  '4-1-4-1',
-];
+const FORMATIONS_BY_FORMAT: Record<GameFormat, FormationPreset[]> = {
+  '11v11': [
+    '4-3-3',
+    '4-2-3-1',
+    '3-5-2',
+    '4-4-2',
+    '3-4-3',
+    '5-3-2',
+    '4-1-4-1',
+  ],
+  '7v7': [
+    '2-3-1',
+    '3-2-1',
+  ],
+  '5v5': [
+    '1-2-1',
+    '2-2',
+  ],
+};
 
 const COLORS = [
   { hex: '#00E5FF', label: 'Cyan' },
@@ -74,9 +84,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
 
   const homeFormation = useStudioStore((s) => s.homeFormation);
   const awayFormation = useStudioStore((s) => s.awayFormation);
+  const gameFormat = useStudioStore((s) => s.gameFormat);
   const activeStrategyId = useStudioStore((s) => s.activeStrategyId);
   const setHomeFormation = useStudioStore((s) => s.setHomeFormation);
   const setAwayFormation = useStudioStore((s) => s.setAwayFormation);
+  const setGameFormat = useStudioStore((s) => s.setGameFormat);
+  const resetKickoff = useStudioStore((s) => s.resetKickoff);
+  const resetPositions = useStudioStore((s) => s.resetPositions);
   const clearCanvasDrawings = useStudioStore((s) => s.clearCanvasDrawings);
   const resetToInitialPreset = useStudioStore((s) => s.resetToInitialPreset);
   const applyCoachingStrategy = useStudioStore((s) => s.applyCoachingStrategy);
@@ -302,7 +316,25 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
         </select>
       </div>
 
-      {/* Gruppo 5: Moduli Fissi */}
+      {/* Gruppo 5: Formato di Gioco (11v11, 7v7, 5v5) */}
+      <div className="flex items-center gap-1.5 border-l border-slate-800 pl-2">
+        <label className="text-[11px] font-semibold text-slate-400">Formato:</label>
+        <select
+          value={gameFormat}
+          onChange={(e) => {
+            const nextFormat = e.target.value as GameFormat;
+            setGameFormat(nextFormat);
+            onNotify?.(`Formato di gioco impostato su ${nextFormat}`);
+          }}
+          className="rounded-lg border border-lime-500/50 bg-slate-800 px-2 py-1 text-xs font-mono font-bold text-lime-300 focus:outline-none focus:border-lime-400"
+        >
+          <option value="11v11">11 vs 11</option>
+          <option value="7v7">7 vs 7</option>
+          <option value="5v5">5 vs 5</option>
+        </select>
+      </div>
+
+      {/* Gruppo 6: Moduli Fissi */}
       <div className="flex items-center gap-1.5">
         <label className="text-[11px] font-semibold text-slate-400">Modulo:</label>
         <select
@@ -313,12 +345,40 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }}
           className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-mono font-medium text-cyan-300 focus:outline-none focus:border-cyan-400"
         >
-          {FORMATIONS.map((f) => (
+          {(FORMATIONS_BY_FORMAT[gameFormat] || FORMATIONS_BY_FORMAT['11v11']).map((f) => (
             <option key={`h_${f}`} value={f}>
               {f}
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Gruppo 7: Azioni Rapide Tattiche (Kickoff & Reset Modulo) */}
+      <div className="flex items-center gap-1 border-l border-slate-800 pl-2">
+        <button
+          type="button"
+          onClick={() => {
+            resetKickoff();
+            onNotify?.("Calcio d'inizio: palla al centro (60,40) e squadre nelle proprie metà campo.");
+          }}
+          title="Calcio d'Inizio: Palla al centro (60,40) e squadre rigorosamente nelle proprie metà campo"
+          className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
+        >
+          <span>⚽ Kickoff</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            resetPositions();
+            onNotify?.('Posizioni e slider ripristinati al modulo iniziale.');
+          }}
+          title="Ripristina posizioni standard e azzera slider di blocco"
+          className="flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
+        >
+          <RotateCcw className="h-3 w-3" />
+          <span>Reset</span>
+        </button>
       </div>
 
       {/* Gruppo 6: Viewport Toggles (Grid, Snap, Half-Spaces, Blind Mode) */}
