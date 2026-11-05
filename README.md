@@ -44,26 +44,6 @@ Combina la versatilità di una lavagna 2D a 60 FPS con un **Video Match Lab Huma
 
 ---
 
-## 📸 Galleria dell'Applicazione
-
-<div align="center">
-
-### Valutazione Tattica Stile Chess.com & Pitch Control su Fermo Immagine
-*Visualizzazione del controllo spaziale continuo, barra di valutazione bicolore (Squadra A vs Squadra B) e alternative tattiche ordinate per valore atteso.*
-
-![Analisi Tattica e Valutazione Chess.com](docs/assets/screenshot-tactical-analysis-eval.jpg)
-
-<br/>
-
-### Setup Camera, Omografia DLT 8x8 & Riconoscimento Modulo
-*Calibrazione prospettica proiettiva $H \in \text{PGL}(3, \mathbb{R})$, proiezione sul rettangolo FIFA $105\text{m} \times 68\text{m}$ e clustering automatico dello schieramento.*
-
-![Setup Camera e Omografia DLT](docs/assets/screenshot-video-lab-calibration.jpg)
-
-</div>
-
----
-
 ## 🖥️ Le 3 Aree di Lavoro
 
 L'applicazione è organizzata in tre moduli coesi e privi di frammentazione:
