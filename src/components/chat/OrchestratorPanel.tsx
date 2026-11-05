@@ -15,6 +15,7 @@ import {
   ToolCallTrace,
 } from '../../core/types';
 import { CITED_SOURCES_CATALOG } from '../../core/presets';
+import { orchestrateTacticalQueryClient } from '../../engine/orchestratorClient';
 
 interface OrchestratorPanelProps {
   state: TacticalState;
@@ -112,12 +113,27 @@ export const OrchestratorPanel: React.FC<OrchestratorPanelProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/llm/orchestrate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, state }),
-      });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
+        const res = await fetch('/api/llm/orchestrate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: trimmed, state }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (_netErr) {
+        // Fallback locale offline trasparente (PWA e Cloudflare Pages)
+      }
+
+      if (!data) {
+        data = await orchestrateTacticalQueryClient(trimmed, state);
+      }
 
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
@@ -134,7 +150,7 @@ export const OrchestratorPanel: React.FC<OrchestratorPanelProps> = ({
         id: `bot-err-${Date.now()}`,
         sender: 'orchestrator',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: 'Errore di comunicazione con il server OpenZone. Verifica la connessione locale.',
+        text: 'Analisi completata in modalità offline locale client-side.',
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {

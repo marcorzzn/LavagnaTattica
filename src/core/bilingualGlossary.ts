@@ -318,3 +318,4 @@ export function searchBilingualGlossary(query: string, lang: 'it' | 'en' = 'it')
     );
   });
 }
+

@@ -71,3 +71,4 @@ export async function clearLocalLogs(): Promise<void> {
   const db = await getLogDb();
   await db.clear(LOG_STORE_NAME);
 }
+

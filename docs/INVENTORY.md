@@ -135,28 +135,30 @@ Per evitare ambiguità, documentiamo con precisione le metriche per perimetro:
 
 ## 7. Moduli Mancanti / Roadmap Futura
 
-1. **Benchmark 12 Dimensioni**: riallineamento conteggio gol (il testo dichiara 48 gol ma mostra 26 righe nel fixture)
-2. **nucleo-py**: modulo scientifico Python (DuckDB, Kloppy, Gudhi)
-3. **Tauri Build**: configurazione pacchetto desktop `src-tauri` per `.exe` Windows (in attesa di inizializzazione)
-4. **Persistenza UI con IndexedDB**: `src/lib/idb.ts` presente ma autosave completo non cablato a tutte le schermate
-5. **Export Raster Statico**: supporto export diretto PNG/GIF oltre al già presente JSON e WebM
+1. **Packaging Desktop con Tauri**: configurazione pacchetto desktop `src-tauri` per `.exe` Windows (in attesa di inizializzazione)
+2. **Export Raster Statico**: supporto export diretto PNG/GIF oltre al già presente JSON e WebM
+3. **nucleo-py**: modulo scientifico opzionale per analisi batch offline (DuckDB, Kloppy, Gudhi)
 
 ---
 
 ## 8. Verifiche di Integrità & Test
 
 - **`npx tsc --noEmit`**: Exit 0 (zero errori)
-- **`npx tsx scripts/audit_real_vs_stub.ts`**: Exit 0 (8 verifiche reali + 7 test di animazione superati)
-- **`npm run build`**: Exit 0 (build di produzione Vite completata in 3.7s, zero warning su dipendenze orfane)
+- **`npx tsx scripts/audit_real_vs_stub.ts`**: Exit 0 (15/15 verifiche reali superate)
+- **`npm run build`**: Exit 0 (build di produzione Vite completata, PWA service worker generato)
 
 ---
 
-## 9. Igiene & Bonifica Eseguita (Chiusura dei 4 Problemi)
+## 9. Igiene & Bonifica Eseguita (Chiusura Problemi)
 
+- [x] **Riallineamento Benchmark**: eliminato il falso "48 gol"; corpus canonico allineato ai 26 gol reali (22 con dettaglio tipo tiro/piede, 20 assist + 4 rigori + 2 non assistiti)
+- [x] **PWA Offline**: registrato `registerSW({ immediate: true })` in `src/main.tsx` e tipo `vite-plugin-pwa/client` in `tsconfig.json`
+- [x] **Orchestrator Client-Side**: chat LLM ed esecuzione 6 pilastri operano 100% in-browser offline senza dipendere da `server.ts`
+- [x] **Flusso Botoniera Bidirezionale**: tag video → scenario lavagna e lavagna → nuovo tag video
 - [x] **Problema 1 (Blueprint superato)**: `docs/BLUEPRINT.md` archiviato in `docs/ARCHIVE/BLUEPRINT-v2-superseded.md` con avviso `SUPERSEDED` esplicito in testa; la sola fonte di verità è `docs/STATE.md`
-- [x] **Problema 2 (Discrepanza righe)**: chiarita e documentata la distinzione tra perimetro intero repo (16.544 righe su 37 file TS), perimetro audit (16.279 righe su 36 file) e perimetro solo client `src/` (15.719 righe su 34 file)
-- [x] **Problema 3 (Doppio hook playback)**: eliminato il file orfano `src/components/studio/useStudioPlayback.ts`; il player è consolidato unicamente in `src/hooks/useAnimationPlayback.ts` (60 FPS, easing cubico, Bézier, elevazione 3D)
-- [x] **Problema 4 (Canvas orfani)**: eliminati `src/components/canvas/PitchCanvas2D.tsx` e `src/components/canvas/PitchCanvas3D.tsx`; l'unico canvas operativo del progetto è `TacticalPitchCanvas.tsx` (`src/components/studio/TacticalPitchCanvas.tsx`); rimosse le dipendenze inutilizzate `three` e `@types/three`
+- [x] **Problema 2 (Discrepanza righe)**: chiarita e documentata la distinzione tra perimetro intero repo, perimetro audit e client `src/`
+- [x] **Problema 3 (Doppio hook playback)**: eliminato il file orfano `useStudioPlayback.ts`; player consolidato in `src/hooks/useAnimationPlayback.ts`
+- [x] **Problema 4 (Canvas orfani)**: eliminati canvas non utilizzati; unico canvas è `TacticalPitchCanvas.tsx`
 - [x] **Lockfile e Peer Dependencies**: eliminato `bun.lock`, risolto conflitto esbuild in `package.json`, `package-lock.json` pulito con 0 vulnerabilità
 
 ---

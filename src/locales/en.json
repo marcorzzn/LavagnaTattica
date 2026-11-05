@@ -41,14 +41,36 @@
     "toolbar": {
       "select": "Select",
       "move": "Move",
-      "arrow": "Tactical Arrow",
-      "pen": "Free Draw",
-      "zone": "Rectangular Zone",
-      "note": "Tactical Note",
-      "clear": "Clear Drawings",
+      "arrow": "Arrow",
+      "pen": "Pen",
+      "zone": "Zone",
+      "note": "Note",
+      "eraser": "Eraser",
+      "clear": "Clear",
+      "clear_drawings": "Clear Drawings",
       "theme": "Pitch Theme",
       "format": "Game Format",
-      "formation": "Formation Preset"
+      "formation": "Formation Preset",
+      "strategy_coach": "Coach Strategy",
+      "kickoff": "Kickoff",
+      "reset": "Reset",
+      "pass": "Pass",
+      "run": "Run",
+      "cross": "Cross",
+      "pressing": "Pressing",
+      "curved": "Curved (Bézier)",
+      "rect": "Rectangle",
+      "circle": "Ellipse"
+    },
+    "tabs": {
+      "masters": "Masters",
+      "players": "Players",
+      "shape": "Shape",
+      "chess": "Chess.com",
+      "orchestrator": "Orchestrator",
+      "pillars": "6 Pillars",
+      "player_card": "Profile",
+      "open_archetypes": "30 Archetypes Catalog"
     },
     "timeline": {
       "step": "Step",
@@ -147,3 +169,4 @@
     }
   }
 }
+

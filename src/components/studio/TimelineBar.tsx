@@ -15,6 +15,7 @@ import {
   Repeat,
   Download,
   FileCode,
+  BookmarkPlus,
 } from 'lucide-react';
 import { useStudioStore } from '../../stores/studioStore';
 import { useViewportStore } from '../../stores/viewportStore';
@@ -50,6 +51,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({ onNotify }) => {
   const setAnimation = useStudioStore((s) => s.setAnimation);
   const seekAnimation = useStudioStore((s) => s.seekAnimation);
   const togglePlayAnimation = useStudioStore((s) => s.togglePlayAnimation);
+  const createTagFromCurrentBoard = useStudioStore((s) => s.createTagFromCurrentBoard);
 
   const onionSkinEnabled = useViewportStore((s) => s.onionSkinEnabled);
   const ghostTrailsEnabled = useViewportStore((s) => s.ghostTrailsEnabled);
@@ -197,6 +199,19 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({ onNotify }) => {
           >
             <FileCode className="h-3.5 w-3.5 text-amber-400" />
             <span>JSON</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const created = createTagFromCurrentBoard();
+              onNotify?.(`Creato Tag: "${created.title}" (visibile in Botoniera)`);
+            }}
+            title="Salva la configurazione attuale come Tag Tattico per l'Analisi Video e Botoniera"
+            className="flex items-center gap-1 rounded-md border border-amber-500/50 bg-amber-500/15 px-2.5 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/25 transition-colors"
+          >
+            <BookmarkPlus className="h-3.5 w-3.5 text-amber-400" />
+            <span>Tag</span>
           </button>
 
           <button

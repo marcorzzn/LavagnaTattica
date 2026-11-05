@@ -14,6 +14,7 @@ import {
   TacticalAction,
   TacticalState,
   TacticalTag,
+  TagCategory,
 } from '../core/types';
 import { CANONICAL_TACTICAL_TAGS } from '../core/tacticalTagPresets';
 import { INITIAL_ABSTRACT_PLAYERS, PLAYER_ARCHETYPES_30 } from '../core/presets';
@@ -26,6 +27,7 @@ import {
   normalizeKeyframePlayers,
   interpolateAt,
 } from '../engine/animationEngine';
+import { evaluateTacticalState } from '../engine/mathEngine';
 
 export interface TeamBlockSliders {
   depth: number;  // 0..100 (50 neutral)
@@ -65,6 +67,7 @@ interface StudioState {
   addTacticalTag: (tag: TacticalTag) => void;
   setActiveTag: (tagId: string | null) => void;
   loadTagScenario: (tagId: string) => void;
+  createTagFromCurrentBoard: (customTitle?: string) => TacticalTag;
   setGameFormat: (fmt: GameFormat) => void;
   setHomeFormation: (fmt: FormationPreset) => void;
   setAwayFormation: (fmt: FormationPreset) => void;
@@ -273,24 +276,97 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     if (!tag) return;
     useHistoryStore.getState().pushSnapshot(get());
     set((state) => {
-      // Se il tag contiene uno scenario specifico, carichiamo le pedine o posizioniamo la palla sulle coordinate del tag
       const ballPos = { x: tag.pitchCoordinates.x, y: tag.pitchCoordinates.y };
+      const actorInvolvement = tag.playersInvolved.find((p) => p.role === 'actor');
+      let updatedPlayers = state.players;
+      let newCarrierId = state.ballCarrierId;
+
+      if (actorInvolvement) {
+        newCarrierId = actorInvolvement.playerId;
+        updatedPlayers = state.players.map((p) => {
+          if (p.id === actorInvolvement.playerId) {
+            return {
+              ...p,
+              x: Math.max(4, Math.min(116, tag.pitchCoordinates.x - 1.5)),
+              y: tag.pitchCoordinates.y,
+            };
+          }
+          return p;
+        });
+      }
+
+      // Freccia tattica rappresentativa dell'azione
+      const targetX = tag.category === 'shot' ? 120 : Math.min(116, tag.pitchCoordinates.x + 16);
+      const targetY = tag.category === 'shot' ? 40 : Math.max(10, Math.min(70, tag.pitchCoordinates.y - 6));
+      const newArrow: BoardArrow = {
+        id: `arrow-tag-${tag.id}`,
+        fromX: tag.pitchCoordinates.x,
+        fromY: tag.pitchCoordinates.y,
+        toX: targetX,
+        toY: targetY,
+        type: tag.category === 'shot' ? 'pass' : 'run',
+        style: 'curved',
+        color: '#00E5FF',
+        strokeWidth: 2,
+      };
+
       const newNotes = [
         ...state.notes,
         {
           id: `note-${tag.id}`,
           x: tag.pitchCoordinates.x,
-          y: tag.pitchCoordinates.y + 4,
-          text: `[TAG] ${tag.title} (${tag.category})`,
-          color: '#FFE600',
+          y: Math.min(76, tag.pitchCoordinates.y + 4),
+          text: `[TAG SCENARIO] ${tag.title}`,
+          color: '#00E5FF',
         },
       ];
+
       return {
         activeTagId: tag.id,
         ball: ballPos,
+        ballCarrierId: newCarrierId,
+        players: updatedPlayers,
+        arrows: [...state.arrows, newArrow],
         notes: newNotes,
       };
     });
+  },
+
+  createTagFromCurrentBoard: (customTitle) => {
+    const s = get();
+    const ballCarrier = s.players.find((p) => p.id === s.ballCarrierId);
+    const category: TagCategory = s.ball.x > 80 ? 'shot' : s.ball.x > 50 ? 'pass' : 'recovery';
+    const tacticalState = s.getTacticalState();
+    const { metrics } = evaluateTacticalState(tacticalState);
+    const bestMove = metrics.chessAlternatives[0];
+
+    const newTag: TacticalTag = {
+      id: `tag-${Date.now()}`,
+      matchId: s.id,
+      timestampSec: Number((s.animation.currentTime / 1000).toFixed(1)),
+      category,
+      eventType: category === 'shot' ? 'shot_creation' : 'pass_progression',
+      title: customTitle || `${category.toUpperCase()} da ${ballCarrier?.archetypeName || 'Pedina'} (${s.ball.x.toFixed(0)}, ${s.ball.y.toFixed(0)})`,
+      pitchCoordinates: { x: s.ball.x, y: s.ball.y },
+      playersInvolved: ballCarrier
+        ? [{ playerId: ballCarrier.id, archetypeId: String(ballCarrier.archetypeId), role: 'actor' }]
+        : [],
+      metricsSnapshot: {
+        xtDelta: bestMove?.deltaXt || 0.02,
+        pitchControlAdvantage: (metrics.homePitchControlPct - 50) / 100,
+        evalScore: bestMove?.compositeScore || 0.3,
+        qualitativeBadge: 'best_move',
+      },
+      glossaryReferenceId: category === 'shot' ? 'expected-threat' : 'pitch-control',
+      createdAt: new Date().toISOString(),
+    };
+
+    set((state) => ({
+      tags: [newTag, ...state.tags],
+      activeTagId: newTag.id,
+    }));
+
+    return newTag;
   },
 
   setGameFormat: (fmt) => {

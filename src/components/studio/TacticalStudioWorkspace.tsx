@@ -21,6 +21,7 @@ import {
 import { useStudioStore } from '../../stores/studioStore';
 import { useViewportStore } from '../../stores/viewportStore';
 import { evaluateTacticalState } from '../../engine/mathEngine';
+import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from './EditorToolbar';
 import { TacticalPitchCanvas } from './TacticalPitchCanvas';
 import { TimelineBar } from './TimelineBar';
@@ -37,6 +38,7 @@ interface TacticalStudioWorkspaceProps {
 export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = ({
   onSwitchToVideoCV,
 }) => {
+  const { t } = useTranslation();
   const players = useStudioStore((s) => s.players);
   const ball = useStudioStore((s) => s.ball);
   const homeFormation = useStudioStore((s) => s.homeFormation);
@@ -163,7 +165,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
               }`}
             >
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Maestri</span>
+              <span className="truncate">{t('lavagna.tabs.masters', 'Maestri')}</span>
             </button>
             <button
               type="button"
@@ -176,7 +178,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
               }`}
             >
               <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Pedine</span>
+              <span className="truncate">{t('lavagna.tabs.players', 'Pedine')}</span>
             </button>
             <button
               type="button"
@@ -189,7 +191,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
               }`}
             >
               <Sliders className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Assetto</span>
+              <span className="truncate">{t('lavagna.tabs.shape', 'Assetto')}</span>
             </button>
           </div>
 
@@ -640,22 +642,22 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
           <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl">
             {(
               [
-                { id: 'chess_eval', label: 'Chess.com' },
-                { id: 'chat', label: 'Orchestrator' },
-                { id: 'pillars', label: '6 Pilastri' },
-                { id: 'player', label: 'Scheda' },
+                { id: 'chess_eval', label: t('lavagna.tabs.chess', 'Chess.com') },
+                { id: 'chat', label: t('lavagna.tabs.orchestrator', 'Orchestrator') },
+                { id: 'pillars', label: t('lavagna.tabs.pillars', '6 Pilastri') },
+                { id: 'player', label: t('lavagna.tabs.player_card', 'Scheda') },
               ] as const
-            ).map((t) => (
+            ).map((tabItem) => (
               <button
-                key={t.id}
-                onClick={() => setRightTab(t.id)}
+                key={tabItem.id}
+                onClick={() => setRightTab(tabItem.id)}
                 className={`flex-1 py-1 px-1.5 text-xs font-semibold rounded-lg transition-colors truncate ${
-                  rightTab === t.id
+                  rightTab === tabItem.id
                     ? 'bg-cyan-400 text-slate-950 shadow-sm'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t.label}
+                {tabItem.label}
               </button>
             ))}
           </div>
@@ -868,7 +870,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                 className="w-full mt-2 py-2 px-3 rounded-lg bg-[#00E5FF]/15 border border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF]/25 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
               >
                 <Users className="w-4 h-4" />
-                <span>Catalogo 30 Archetipi (Drawer)</span>
+                <span>{t('lavagna.tabs.open_archetypes', 'Catalogo 30 Archetipi')}</span>
               </button>
             </div>
           )}

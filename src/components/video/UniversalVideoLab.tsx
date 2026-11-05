@@ -44,6 +44,7 @@ import {
 import { PLAYER_ARCHETYPES_30 } from '../../core/presets';
 import { Benchmark12Dimensions } from '../benchmark/Benchmark12Dimensions';
 import { TaggingPad } from './TaggingPad';
+import { useTranslation } from 'react-i18next';
 
 interface UniversalVideoLabProps {
   tacticalState: TacticalState;
@@ -72,6 +73,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   onOpenScenarioOnBoard,
   onOpenGlossaryEntry,
 }) => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'analysis' | 'certification'>('analysis');
   // Sorgente Frame (Screenshot Immagine, Video in Pausa o Frame Tattico Riferimento)
   const [mediaSourceType, setMediaSourceType] = useState<
@@ -402,7 +404,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Analisi Video & Botoniera Tag</span>
+            <span>{t('video.mode_analysis', 'Analisi Video & Botoniera Tag')}</span>
           </button>
 
           <button
@@ -414,7 +416,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Certificazione Benchmark (12 Dimensioni & IC 95%)</span>
+            <span>{t('video.mode_benchmark', 'Certificazione Benchmark (12 Dimensioni & IC 95%)')}</span>
           </button>
         </div>
 

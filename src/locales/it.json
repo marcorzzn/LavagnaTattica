@@ -41,14 +41,36 @@
     "toolbar": {
       "select": "Seleziona",
       "move": "Sposta",
-      "arrow": "Freccia Tattica",
-      "pen": "Disegno Libero",
-      "zone": "Zona Rettangolare",
-      "note": "Nota Tattica",
-      "clear": "Pulisci Disegni",
+      "arrow": "Freccia",
+      "pen": "Penna",
+      "zone": "Zona",
+      "note": "Nota",
+      "eraser": "Gomma",
+      "clear": "Pulisci",
+      "clear_drawings": "Cancella disegni",
       "theme": "Tema Campo",
       "format": "Formato di Gioco",
-      "formation": "Modulo Formazione"
+      "formation": "Modulo Formazione",
+      "strategy_coach": "Strategia Coach",
+      "kickoff": "Calcio d'inizio",
+      "reset": "Reset",
+      "pass": "Passaggio",
+      "run": "Corsa",
+      "cross": "Cross",
+      "pressing": "Pressing",
+      "curved": "Curva (Bézier)",
+      "rect": "Rettangolo",
+      "circle": "Ellisse"
+    },
+    "tabs": {
+      "masters": "Maestri",
+      "players": "Pedine",
+      "shape": "Assetto",
+      "chess": "Chess.com",
+      "orchestrator": "Orchestrator",
+      "pillars": "6 Pilastri",
+      "player_card": "Scheda",
+      "open_archetypes": "Catalogo 30 Archetipi"
     },
     "timeline": {
       "step": "Passo",
@@ -147,3 +169,4 @@
     }
   }
 }
+

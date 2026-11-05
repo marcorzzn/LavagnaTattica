@@ -35,7 +35,7 @@ Copertura sotto-corpus Ospite: ${BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubset
 - **Pilastro VI (Trasporto Ottimo & Ghosting)**: Costo Wasserstein W₁ = ${metrics.wassersteinBlockCostMeters}m | Smarcamento Ghost: ${metrics.ghostTrajectory.playerName} (+${metrics.ghostTrajectory.xtGain} xT)
 - **Best Move Chess.com (ADR-Math-003)**: ${metrics.chessAlternatives[0].actionType} da ${metrics.chessAlternatives[0].actorArchetype} a ${metrics.chessAlternatives[0].targetArchetype} (Score +${metrics.chessAlternatives[0].compositeScore})
 
-## 2. Validazione Rigorosa Benchmark 48 Gol (Squadra Casa 22 + Squadra Ospite 26)
+## 2. Validazione Rigorosa Benchmark 26 Gol (22 con dettaglio tipo tiro)
 - **Test Ipotesi Testa vs Destro (Wilson 95% CI, ADR-Math-004)**:
   - Destro: 13 gol su 94 tiri (13.8%, IC 95% [8.3%, 22.2%], G - xG = +1.20) [evidence: row_body_right]
   - Testa: 9 gol su 50 tiri (18.0%, IC 95% [9.8%, 30.8%], G - xG = +1.90) [evidence: row_body_head]
@@ -60,7 +60,7 @@ Copertura sotto-corpus Ospite: ${BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubset
           <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
             <span className="font-mono text-[#00F2FF]">12 DIMENSIONI & ADR-MATH-004 (ZERO NOMI PROPRI)</span>
             <span>·</span>
-            <span>Fixture Canonica: 48 Gol (Casa 22 + Ospite 26)</span>
+            <span>Fixture Canonica: 26 Gol (22 con tracciamento tipo tiro)</span>
             <span>·</span>
             <span className="font-mono text-[#B4FF39]">
               Copertura Totale: {BENCHMARK_FIXTURE_DATA.corpusSummary.coveragePct}% (Sotto-corpus: {BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubsetCoveragePct}%)
@@ -122,7 +122,7 @@ Copertura sotto-corpus Ospite: ${BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubset
               <div>
                 <span className="text-[11px] font-mono text-[#00F2FF]">DIMENSIONE 1 & 2</span>
                 <h3 className="text-base font-semibold text-zinc-100">
-                  Rete Assist→Gol & Tipologia di Assist (n = 42 assist, 4 rigori, 2 non assistiti)
+                  Rete Assist→Gol & Tipologia di Assist (n = 20 assist, 4 rigori, 2 non assistiti = 26 gol)
                 </h3>
               </div>
               <span className="text-xs font-mono text-zinc-400">Somma = 100.0%</span>

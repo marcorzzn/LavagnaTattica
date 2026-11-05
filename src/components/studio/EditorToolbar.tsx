@@ -25,6 +25,7 @@ import { useStudioStore } from '../../stores/studioStore';
 import { useHistoryStore } from '../../stores/historyStore';
 import { ArrowType, FormationPreset, GameFormat, TacticalTheme } from '../../core/types';
 import { COACHING_STRATEGIES_CATALOG } from '../../core/tacticalStrategiesCatalog';
+import { useTranslation } from 'react-i18next';
 
 interface EditorToolbarProps {
   onNotify?: (msg: string) => void;
@@ -59,6 +60,7 @@ const COLORS = [
 ];
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
+  const { t } = useTranslation();
   const activeTool = useSelectionStore((s) => s.activeTool);
   const activeArrowType = useSelectionStore((s) => s.activeArrowType);
   const activeArrowStyle = useSelectionStore((s) => s.activeArrowStyle);
@@ -131,13 +133,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <MousePointer className="h-3.5 w-3.5" />
-          <span>Sposta</span>
+          <span>{t('lavagna.toolbar.move', 'Sposta')}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTool('arrow')}
-          title="Disegna Freccia Tattica"
+          title={t('lavagna.toolbar.arrow', 'Disegna Freccia Tattica')}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             activeTool === 'arrow'
               ? 'bg-cyan-500 text-slate-950 shadow-sm'
@@ -145,13 +147,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <ArrowRight className="h-3.5 w-3.5" />
-          <span>Freccia</span>
+          <span>{t('lavagna.toolbar.arrow', 'Freccia')}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTool('zone')}
-          title="Disegna Zona Tattica"
+          title={t('lavagna.toolbar.zone', 'Disegna Zona Tattica')}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             activeTool === 'zone'
               ? 'bg-cyan-500 text-slate-950 shadow-sm'
@@ -159,13 +161,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <Square className="h-3.5 w-3.5" />
-          <span>Zona</span>
+          <span>{t('lavagna.toolbar.zone', 'Zona')}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTool('pen')}
-          title="Tratto a Mano Libera"
+          title={t('lavagna.toolbar.pen', 'Tratto a Mano Libera')}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             activeTool === 'pen'
               ? 'bg-cyan-500 text-slate-950 shadow-sm'
@@ -173,7 +175,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <PenTool className="h-3.5 w-3.5" />
-          <span>Penna</span>
+          <span>{t('lavagna.toolbar.pen', 'Penna')}</span>
         </button>
 
         <button
@@ -187,13 +189,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <Highlighter className="h-3.5 w-3.5" />
-          <span>Evidenzia</span>
+          <span>{t('lavagna.toolbar.highlighter', 'Evidenzia')}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTool('note')}
-          title="Inserisci Nota Tattica"
+          title={t('lavagna.toolbar.note', 'Inserisci Nota Tattica')}
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             activeTool === 'note'
               ? 'bg-cyan-500 text-slate-950 shadow-sm'
@@ -201,13 +203,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <StickyNote className="h-3.5 w-3.5" />
-          <span>Nota</span>
+          <span>{t('lavagna.toolbar.note', 'Nota')}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTool('eraser')}
-          title="Gomma: clicca su un elemento per rimuoverlo"
+          title="Gomma"
           className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             activeTool === 'eraser'
               ? 'bg-rose-500 text-slate-950 shadow-sm'
@@ -215,7 +217,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           }`}
         >
           <Eraser className="h-3.5 w-3.5" />
-          <span>Gomma</span>
+          <span>{t('lavagna.toolbar.eraser', 'Gomma')}</span>
         </button>
       </div>
 
@@ -233,10 +235,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {type === 'pass' && 'Passaggio'}
-              {type === 'run' && 'Corsa'}
-              {type === 'cross' && 'Cross'}
-              {type === 'pressing' && 'Pressing'}
+              {type === 'pass' && t('lavagna.toolbar.pass', 'Passaggio')}
+              {type === 'run' && t('lavagna.toolbar.run', 'Corsa')}
+              {type === 'cross' && t('lavagna.toolbar.cross', 'Cross')}
+              {type === 'pressing' && t('lavagna.toolbar.pressing', 'Pressing')}
             </button>
           ))}
           <div className="h-4 w-px bg-slate-700 mx-1" />
@@ -249,7 +251,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
                 : 'border-slate-700 text-slate-400'
             }`}
           >
-            Curva (Bézier)
+            {t('lavagna.toolbar.curved', 'Curva (Bézier)')}
           </button>
         </div>
       )}
@@ -263,7 +265,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
               activeZoneShape === 'rect' ? 'bg-cyan-400 text-slate-950 font-bold' : 'text-slate-400'
             }`}
           >
-            <Square className="h-3 w-3" /> Rettangolo
+            <Square className="h-3 w-3" /> {t('lavagna.toolbar.rect', 'Rettangolo')}
           </button>
           <button
             type="button"
@@ -272,7 +274,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
               activeZoneShape === 'circle' ? 'bg-cyan-400 text-slate-950 font-bold' : 'text-slate-400'
             }`}
           >
-            <Circle className="h-3 w-3" /> Ellisse
+            <Circle className="h-3 w-3" /> {t('lavagna.toolbar.circle', 'Ellisse')}
           </button>
         </div>
       )}
@@ -296,7 +298,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
       {/* Gruppo 4: DOTTRINA & STRATEGIE ALLENATORI (Klopp, Sarri, Guardiola, De Zerbi, Sacchi, etc.) */}
       <div className="flex items-center gap-1.5 rounded-lg bg-cyan-950/40 px-2.5 py-1 border border-cyan-500/40">
         <BookOpen className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-        <label className="text-[11px] font-bold text-cyan-300 shrink-0">Strategia Coach:</label>
+        <label className="text-[11px] font-bold text-cyan-300 shrink-0">{t('lavagna.toolbar.strategy_coach', 'Strategia Coach')}:</label>
         <select
           value={activeStrategyId || ''}
           onChange={(e) => {
@@ -318,13 +320,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
 
       {/* Gruppo 5: Formato di Gioco (11v11, 7v7, 5v5) */}
       <div className="flex items-center gap-1.5 border-l border-slate-800 pl-2">
-        <label className="text-[11px] font-semibold text-slate-400">Formato:</label>
+        <label className="text-[11px] font-semibold text-slate-400">{t('lavagna.toolbar.format', 'Formato')}:</label>
         <select
           value={gameFormat}
           onChange={(e) => {
             const nextFormat = e.target.value as GameFormat;
             setGameFormat(nextFormat);
-            onNotify?.(`Formato di gioco impostato su ${nextFormat}`);
+            onNotify?.(`Formato di gioco: ${nextFormat}`);
           }}
           className="rounded-lg border border-lime-500/50 bg-slate-800 px-2 py-1 text-xs font-mono font-bold text-lime-300 focus:outline-none focus:border-lime-400"
         >
@@ -336,12 +338,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
 
       {/* Gruppo 6: Moduli Fissi */}
       <div className="flex items-center gap-1.5">
-        <label className="text-[11px] font-semibold text-slate-400">Modulo:</label>
+        <label className="text-[11px] font-semibold text-slate-400">{t('lavagna.toolbar.formation', 'Modulo')}:</label>
         <select
           value={homeFormation}
           onChange={(e) => {
             setHomeFormation(e.target.value as FormationPreset);
-            onNotify?.(`Modulo Casa impostato su ${e.target.value}`);
+            onNotify?.(`Modulo: ${e.target.value}`);
           }}
           className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-mono font-medium text-cyan-300 focus:outline-none focus:border-cyan-400"
         >
@@ -364,7 +366,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           title="Calcio d'Inizio: Palla al centro (60,40) e squadre rigorosamente nelle proprie metà campo"
           className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
         >
-          <span>⚽ Kickoff</span>
+          <span>⚽ {t('lavagna.toolbar.kickoff', 'Kickoff')}</span>
         </button>
 
         <button
@@ -377,7 +379,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           className="flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
         >
           <RotateCcw className="h-3 w-3" />
-          <span>Reset</span>
+          <span>{t('lavagna.toolbar.reset', 'Reset')}</span>
         </button>
       </div>
 

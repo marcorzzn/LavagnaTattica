@@ -85,3 +85,4 @@ Dopo il deploy:
    - `Analisi Video & Botoniera Tag`: canvas video con omografia DLT 8x8, botoniera tag e modalità Certificazione Benchmark 12D.
    - `Teoria & Riferimenti`: didattica "Impara" (quiz e puzzle) e consulta "Glossario Bilingue con KaTeX", "Registro ADR-Math (Marco Razzano)" e "30 Archetipi".
 3. **Verifica PWA Offline**: Apri DevTools → Application → Service Workers: lo script `sw.js` deve risultare attivo e funzionante.
+
