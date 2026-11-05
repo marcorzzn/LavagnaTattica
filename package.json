@@ -31,12 +31,16 @@
     "@vitejs/plugin-react": "^6.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "i18next": "^26.7.2",
+    "i18next-browser-languagedetector": "^8.3.0",
     "idb": "^8.0.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-i18next": "^17.1.13",
     "vite": "^8.3.0",
+    "vite-plugin-pwa": "^2.0.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

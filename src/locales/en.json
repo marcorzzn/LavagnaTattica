@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "brand": "LavagnaTattica",
+    "lavagna": "Tactics Board",
+    "video": "Video Analysis & Tags",
+    "teoria": "Theory & References",
+    "export": "Export JSON",
+    "language": "Language",
+    "lang_it": "IT",
+    "lang_en": "EN"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search...",
+    "category": "Category",
+    "source": "Source",
+    "details": "Details",
+    "export": "Export",
+    "import": "Import",
+    "reset": "Reset",
+    "verify": "Verify",
+    "tag": "Tag",
+    "tags": "Tactical Tags",
+    "actions": "Actions",
+    "archetype": "Archetype",
+    "archetypes": "30 Abstract Archetypes",
+    "formula": "Mathematical Formalism",
+    "speed": "Speed",
+    "height": "Height",
+    "curve": "Curve",
+    "duration": "Duration"
+  },
+  "lavagna": {
+    "title": "2D Tactics Board",
+    "subtitle": "Augmented 60 FPS tactics canvas with 3-level animation engine",
+    "toolbar": {
+      "select": "Select",
+      "move": "Move",
+      "arrow": "Tactical Arrow",
+      "pen": "Free Draw",
+      "zone": "Rectangular Zone",
+      "note": "Tactical Note",
+      "clear": "Clear Drawings",
+      "theme": "Pitch Theme",
+      "format": "Game Format",
+      "formation": "Formation Preset"
+    },
+    "timeline": {
+      "step": "Step",
+      "play": "Play Animation",
+      "pause": "Pause",
+      "speed": "Speed",
+      "loop": "Continuous Loop",
+      "add_keyframe": "+ Save Keyframe",
+      "export_json": "Export Animation JSON",
+      "action_editor": "Ballistic Action Parameters"
+    },
+    "roster": {
+      "title": "Roster & Archetypes",
+      "home": "Home Team",
+      "away": "Away Team",
+      "inspect": "Inspect Archetype Spec",
+      "sliders": "Team Block Shape",
+      "depth": "Depth",
+      "width": "Width",
+      "shiftX": "Height of Block (Forward/Deep)",
+      "shiftY": "Lateral Shift"
+    },
+    "eval": {
+      "title": "Chess-Style Evaluation Engine",
+      "eval_bar": "Evaluation Bar",
+      "best_move": "Best Move (!!)",
+      "good_move": "Good Move (!)",
+      "inaccuracy": "Inaccuracy (?!)",
+      "mistake": "Mistake (?)",
+      "alternatives": "Counterfactual Alternatives"
+    }
+  },
+  "video": {
+    "title": "Video Analysis & Universal Calibration",
+    "subtitle": "8×8 DLT Homography, Action Tagging Pad, and Benchmark Certification",
+    "mode_analysis": "Frame Analysis & Tagging",
+    "mode_benchmark": "Benchmark Certification (12D)",
+    "botoniera": {
+      "title": "Instant Tactical Tag Pad",
+      "tag_pass": "Through Ball / Pass",
+      "tag_shot": "Shot / Chance",
+      "tag_press": "Gegenpressing / Trap",
+      "tag_recovery": "Ball Recovery",
+      "tag_cutback": "Cutback Pass",
+      "tag_thirdman": "Third Man Run",
+      "create_tag": "+ Create Tag at Current Timestamp",
+      "open_in_lavagna": "Open Scenario on Tactics Board",
+      "no_tags": "No tags logged for this video clip. Press a pad button to capture an action."
+    },
+    "homography": {
+      "title": "DLT Projective Calibration",
+      "reprojection_error": "Mean Reprojection Error",
+      "points_selected": "Calibration Points Selected",
+      "reset_points": "Reset Points"
+    },
+    "benchmark": {
+      "title": "Statistical Benchmark Validation",
+      "subtitle": "Hypothesis testing with 95% Wilson confidence intervals and orthogonal partitions",
+      "wilson_ci": "Wilson 95% CI",
+      "orthogonal_partitions": "Orthogonal Partitions (Disjoint)",
+      "export_report": "Download Certified Report (.md)"
+    }
+  },
+  "teoria": {
+    "title": "Tactical Theory, Education & Mathematical Governance",
+    "subtitle": "Learn through interactive tracks and consult immutable technical specifications",
+    "tab_impara": "Learn (Education & Quiz)",
+    "tab_consulta": "Consult (Glossary, ADR-Math, Archetypes)",
+    "learning": {
+      "tracks": "Learning Pathways",
+      "quiz": "On-Pitch Situational Quiz",
+      "puzzle": "Third Man Puzzle (3 Touches)",
+      "verify_solution": "Verify Answer"
+    },
+    "glossary": {
+      "title": "Bilingual Technical Glossary & Taxonomy",
+      "subtitle": "Each metric is defined with exact KaTeX formulas and verified citations",
+      "search_placeholder": "Search metric or spatial concept...",
+      "all": "All Entries",
+      "metrics": "Spatial Metrics (xT, PC, Fiedler)",
+      "tactical": "Tactical Principles (Third Man, Gegenpressing)"
+    },
+    "governance": {
+      "title": "Mathematical Governance (ADR-Math)",
+      "subtitle": "No formula operates without an Architecture Decision Record digitally signed by Marco Razzano",
+      "founder": "Founder & Supreme Mathematical Authority: Marco Razzano",
+      "hash": "0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY"
+    },
+    "archetypes": {
+      "title": "Catalog of the 30 Abstract Archetypes",
+      "subtitle": "Non-Negotiable Rule: Zero Real Player or Club Names",
+      "cine_params": "Kinematic Parameters",
+      "vmax": "Max Speed (v_max)",
+      "amax": "Acceleration (a_max)",
+      "reaction": "Reaction Time (τ_reaz)"
+    }
+  }
+}

@@ -13,16 +13,20 @@ import {
   Eye,
   RotateCcw,
   ArrowUpRight,
+  ShieldCheck,
+  Tag as TagIcon,
 } from 'lucide-react';
 import {
   CalibrationKeypoint,
   PlayerNode,
   TacticalState,
+  TacticalTag,
 } from '../../core/types';
 import {
   computePitchControlGrid,
   computePlanarHomographyDLT,
   projectImageToPitch,
+  evaluateTacticalState,
 } from '../../engine/mathEngine';
 import {
   ContactExecutionStyle,
@@ -38,6 +42,8 @@ import {
   estimateBiomechanicalPose17,
 } from '../../engine/cvRolePipeline';
 import { PLAYER_ARCHETYPES_30 } from '../../core/presets';
+import { Benchmark12Dimensions } from '../benchmark/Benchmark12Dimensions';
+import { TaggingPad } from './TaggingPad';
 
 interface UniversalVideoLabProps {
   tacticalState: TacticalState;
@@ -46,6 +52,8 @@ interface UniversalVideoLabProps {
     inferredHomeForm: string,
     inferredAwayForm: string
   ) => void;
+  onOpenScenarioOnBoard?: (tag: TacticalTag) => void;
+  onOpenGlossaryEntry?: (glossaryId: string) => void;
 }
 
 const DEFAULT_KEYPOINTS: CalibrationKeypoint[] = [
@@ -56,12 +64,15 @@ const DEFAULT_KEYPOINTS: CalibrationKeypoint[] = [
 ];
 
 type InteractionToolMode = 'drag_players' | 'draw_action' | 'calibrate_homography';
-type RightPanelTab = 'analisi' | 'calibrazione' | 'tipologie';
+type RightPanelTab = 'analisi' | 'botoniera' | 'calibrazione' | 'tipologie';
 
 export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   tacticalState,
   onSyncTrackedPositionsToLab,
+  onOpenScenarioOnBoard,
+  onOpenGlossaryEntry,
 }) => {
+  const [viewMode, setViewMode] = useState<'analysis' | 'certification'>('analysis');
   // Sorgente Frame (Screenshot Immagine, Video in Pausa o Frame Tattico Riferimento)
   const [mediaSourceType, setMediaSourceType] = useState<
     'synthetic_frame' | 'uploaded_image' | 'uploaded_video'
@@ -168,6 +179,11 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   const actionEvaluation = useMemo(
     () => evaluateHumanDrawnAction(liveState, actionProps),
     [liveState, actionProps]
+  );
+
+  const { metrics: liveMetrics } = useMemo(
+    () => evaluateTacticalState(liveState),
+    [liveState]
   );
 
   const pipelineDiag = useMemo(
@@ -374,8 +390,50 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* TOP BAR PULITA DEL SIMULATORE: CONTESTO + AZIONI RAPIDE */}
-      <div className="px-4 py-3 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
+      {/* Sub-Nav Modalità: Analisi Video & Botoniera vs Certificazione Benchmark 12D */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-[#0d0d12] border border-zinc-800">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('analysis')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+              viewMode === 'analysis'
+                ? 'bg-[#00E5FF] text-zinc-950 shadow-md'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Analisi Video & Botoniera Tag</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('certification')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+              viewMode === 'certification'
+                ? 'bg-amber-400 text-zinc-950 shadow-md'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Certificazione Benchmark (12 Dimensioni & IC 95%)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px]">
+            Wilson CI 95% (ADR-004)
+          </span>
+          <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
+            Audit: 15/15 PASS
+          </span>
+        </div>
+      </div>
+
+      {viewMode === 'certification' ? (
+        <Benchmark12Dimensions state={liveState} metrics={liveMetrics} />
+      ) : (
+        <>
+          {/* TOP BAR PULITA DEL SIMULATORE: CONTESTO + AZIONI RAPIDE */}
+          <div className="px-4 py-3 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-xs">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500" />
@@ -972,13 +1030,14 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
           </div>
         </div>
 
-        {/* COLONNA DESTRA (~30% -> 4 su 12 colonne): PANNELLO A SCHEDE [ ANALISI ] [ CALIBRAZIONE ] [ TIPOLOGIE ] */}
+        {/* COLONNA DESTRA (~30% -> 4 su 12 colonne): PANNELLO A SCHEDE [ ANALISI ] [ BOTONIERA ] [ CALIBRAZIONE ] [ TIPOLOGIE ] */}
         <div className="lg:col-span-4 rounded-xl bg-[#111116] border border-zinc-800/80 overflow-hidden">
           {/* Intestazione Schede (Tabs) */}
-          <div className="grid grid-cols-3 border-b border-zinc-800 bg-[#0C0C10]">
+          <div className="grid grid-cols-4 border-b border-zinc-800 bg-[#0C0C10]">
             {(
               [
                 { id: 'analisi', label: 'Analisi' },
+                { id: 'botoniera', label: 'Botoniera' },
                 { id: 'calibrazione', label: 'Calibrazione' },
                 { id: 'tipologie', label: 'Tipologie' },
               ] as const
@@ -986,7 +1045,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setRightTab(tab.id)}
-                className={`py-3 text-xs font-semibold transition-colors border-b-2 ${
+                className={`py-3 text-[11px] sm:text-xs font-semibold transition-colors border-b-2 truncate px-1 ${
                   rightTab === tab.id
                     ? 'border-blue-500 text-zinc-100 bg-[#111116]'
                     : 'border-transparent text-zinc-500 hover:text-zinc-300'
@@ -1266,6 +1325,17 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
             )}
 
             {/* ================================================================
+                SCHEDA BOTONIERA: TAGGING PAD ISTANTANEO (COLLANTE VIDEO-LAVAGNA-TEORIA)
+               ================================================================ */}
+            {rightTab === 'botoniera' && (
+              <TaggingPad
+                currentTimestampSec={currentTimeSec}
+                onOpenScenarioOnBoard={(tag) => onOpenScenarioOnBoard?.(tag)}
+                onOpenGlossaryEntry={(glossaryId) => onOpenGlossaryEntry?.(glossaryId)}
+              />
+            )}
+
+            {/* ================================================================
                 SCHEDA 2: CALIBRAZIONE (SETUP CAMERA & MATRICE OMOGRAFICA H)
                ================================================================ */}
             {rightTab === 'calibrazione' && (
@@ -1448,6 +1518,8 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

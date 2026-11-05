@@ -28,6 +28,7 @@ import { OrchestratorPanel } from '../chat/OrchestratorPanel';
 import { PLAYER_ARCHETYPES_30 } from '../../core/presets';
 import { SuggestedModification } from '../../core/types';
 import { COACHING_STRATEGIES_CATALOG, CoachingStrategy } from '../../core/tacticalStrategiesCatalog';
+import { ArchetypeDrawer } from './ArchetypeDrawer';
 
 interface TacticalStudioWorkspaceProps {
   onSwitchToVideoCV?: () => void;
@@ -41,6 +42,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
   const homeFormation = useStudioStore((s) => s.homeFormation);
   const awayFormation = useStudioStore((s) => s.awayFormation);
   const movePlayer = useStudioStore((s) => s.movePlayer);
+  const updatePlayerArchetype = useStudioStore((s) => s.updatePlayerArchetype);
   const getTacticalState = useStudioStore((s) => s.getTacticalState);
   const activeStrategyId = useStudioStore((s) => s.activeStrategyId);
   const applyCoachingStrategy = useStudioStore((s) => s.applyCoachingStrategy);
@@ -62,6 +64,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>('home-06');
   const [rightTab, setRightTab] = useState<'chess_eval' | 'chat' | 'pillars' | 'player'>('chess_eval');
+  const [isArchetypeDrawerOpen, setIsArchetypeDrawerOpen] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
   const [showXtOverlay, setShowXtOverlay] = useState(false);
@@ -858,10 +861,32 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                 <span>Altezza: {selectedPlayer.heightCm} cm</span>
                 <span>Piede: {selectedPlayer.foot}</span>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsArchetypeDrawerOpen(true)}
+                className="w-full mt-2 py-2 px-3 rounded-lg bg-[#00E5FF]/15 border border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF]/25 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                <span>Catalogo 30 Archetipi (Drawer)</span>
+              </button>
             </div>
           )}
         </aside>
       </div>
+
+      {/* Drawer Trasversale 30 Archetipi */}
+      <ArchetypeDrawer
+        isOpen={isArchetypeDrawerOpen}
+        onClose={() => setIsArchetypeDrawerOpen(false)}
+        selectedPlayer={selectedPlayer}
+        onSelectArchetype={(archetypeId) => {
+          if (selectedPlayerId) {
+            updatePlayerArchetype(selectedPlayerId, archetypeId);
+            triggerNotification(`Assegnato Archetipo #${archetypeId} a pedina #${selectedPlayer.number}`);
+          }
+        }}
+      />
     </div>
   );
 };

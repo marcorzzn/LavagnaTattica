@@ -13,8 +13,10 @@ import {
   PlayerNode,
   TacticalAction,
   TacticalState,
+  TacticalTag,
 } from '../core/types';
-import { INITIAL_ABSTRACT_PLAYERS } from '../core/presets';
+import { CANONICAL_TACTICAL_TAGS } from '../core/tacticalTagPresets';
+import { INITIAL_ABSTRACT_PLAYERS, PLAYER_ARCHETYPES_30 } from '../core/presets';
 import { buildFormationPlayers } from '../core/formationPresets';
 import { COACHING_STRATEGIES_CATALOG, CoachingStrategy } from '../core/tacticalStrategiesCatalog';
 import { useHistoryStore } from './historyStore';
@@ -56,11 +58,17 @@ interface StudioState {
   activeKeyframeIndex: number;
   activeStrategyId: string | null;
   animation: AnimationPlaybackState;
+  tags: TacticalTag[];
+  activeTagId: string | null;
 
   // Actions
+  addTacticalTag: (tag: TacticalTag) => void;
+  setActiveTag: (tagId: string | null) => void;
+  loadTagScenario: (tagId: string) => void;
   setGameFormat: (fmt: GameFormat) => void;
   setHomeFormation: (fmt: FormationPreset) => void;
   setAwayFormation: (fmt: FormationPreset) => void;
+  updatePlayerArchetype: (playerId: string, archetypeId: number) => void;
   movePlayer: (id: string, x: number, y: number, pushHistory?: boolean) => void;
   moveBall: (x: number, y: number, pushHistory?: boolean) => void;
   setBallCarrierId: (carrierId: string | null) => void;
@@ -246,6 +254,44 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     speed: 1,
     loop: true,
   },
+  tags: CANONICAL_TACTICAL_TAGS,
+  activeTagId: null,
+
+  addTacticalTag: (tag) => {
+    set((state) => ({
+      tags: [tag, ...state.tags],
+      activeTagId: tag.id,
+    }));
+  },
+
+  setActiveTag: (tagId) => {
+    set({ activeTagId: tagId });
+  },
+
+  loadTagScenario: (tagId) => {
+    const tag = get().tags.find((t) => t.id === tagId);
+    if (!tag) return;
+    useHistoryStore.getState().pushSnapshot(get());
+    set((state) => {
+      // Se il tag contiene uno scenario specifico, carichiamo le pedine o posizioniamo la palla sulle coordinate del tag
+      const ballPos = { x: tag.pitchCoordinates.x, y: tag.pitchCoordinates.y };
+      const newNotes = [
+        ...state.notes,
+        {
+          id: `note-${tag.id}`,
+          x: tag.pitchCoordinates.x,
+          y: tag.pitchCoordinates.y + 4,
+          text: `[TAG] ${tag.title} (${tag.category})`,
+          color: '#FFE600',
+        },
+      ];
+      return {
+        activeTagId: tag.id,
+        ball: ballPos,
+        notes: newNotes,
+      };
+    });
+  },
 
   setGameFormat: (fmt) => {
     useHistoryStore.getState().pushSnapshot(get());
@@ -302,6 +348,26 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       const updatedBase = [...state.basePlayers.filter((p) => p.team === 'home'), ...newAway];
       return { awayFormation: fmt, players: updated, basePlayers: updatedBase };
     });
+  },
+
+  updatePlayerArchetype: (playerId, archetypeId) => {
+    const arch = PLAYER_ARCHETYPES_30.find((a) => a.id === archetypeId);
+    if (!arch) return;
+    set((state) => ({
+      players: state.players.map((p) => {
+        if (p.id !== playerId) return p;
+        return {
+          ...p,
+          archetypeId: arch.id,
+          archetypeName: arch.name,
+          role: `${arch.name} (#${p.number})`,
+          positionGroup: arch.positionGroup,
+          heightCm: arch.defaultHeightCm,
+          foot: arch.defaultFoot,
+          attributes: { ...arch.defaultStats },
+        };
+      }),
+    }));
   },
 
   setBallCarrierId: (carrierId) => {

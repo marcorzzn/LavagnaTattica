@@ -481,3 +481,61 @@ export interface AnimationPlaybackState {
   speed: 0.5 | 1 | 1.5 | 2;
   loop: boolean;
 }
+
+// ============================================================================
+// MODELLO UNIFICATO TAG TATTICO (Collante trasversale tra Video, Lavagna e Teoria)
+// ============================================================================
+
+export type TagCategory =
+  | 'pass'
+  | 'shot'
+  | 'recovery'
+  | 'pressing'
+  | 'transition'
+  | 'set_piece'
+  | 'duel'
+  | 'off_ball';
+
+export interface TagPlayerInvolvement {
+  playerId: string;
+  archetypeId: string;
+  role: 'actor' | 'target' | 'interceptor' | 'decoy';
+  coords?: { x: number; y: number };
+}
+
+export interface TagMetricsSnapshot {
+  xtDelta?: number;
+  pitchControlAdvantage?: number;
+  fiedlerConnectivity?: number;
+  evalScore?: number;
+  qualitativeBadge?: 'best_move' | 'good_move' | 'inaccuracy' | 'mistake';
+}
+
+export interface TacticalTag {
+  id: string;
+  matchId: string;
+  timestampSec: number;
+  frameNumber?: number;
+  category: TagCategory;
+  eventType: string;
+  title: string;
+  description?: string;
+  pitchCoordinates: {
+    x: number;
+    y: number;
+  };
+  playersInvolved: TagPlayerInvolvement[];
+  metricsSnapshot: TagMetricsSnapshot;
+  linkedScenario?: {
+    tacticalState?: Partial<TacticalState>;
+    keyframes?: Keyframe[];
+    actions?: TacticalAction[];
+  };
+  glossaryReferenceId?: string;
+  certification?: {
+    wilsonCi95?: [number, number];
+    verifiedByBenchmark: boolean;
+  };
+  createdAt: string;
+}
+

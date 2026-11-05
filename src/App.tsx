@@ -1,137 +1,45 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  RotateCcw,
-  Undo2,
   Download,
-  Clock,
-  CheckCircle2,
+  Languages,
+  LayoutGrid,
   Video,
-  Award,
-  Sparkles,
-  FileSignature,
+  BookOpen,
 } from 'lucide-react';
 import {
-  ChessStyleAlternative,
-  MatchEvent,
-  OverlayType,
   PlayerNode,
-  SuggestedModification,
-  TacticalPhase,
   TacticalState,
+  TacticalTag,
 } from './core/types';
-import { INITIAL_TACTICAL_STATE, PLAYER_ARCHETYPES_30 } from './core/presets';
+import { INITIAL_TACTICAL_STATE } from './core/presets';
 import { evaluateTacticalState } from './engine/mathEngine';
-import { OrchestratorPanel } from './components/chat/OrchestratorPanel';
-import { Benchmark12Dimensions } from './components/benchmark/Benchmark12Dimensions';
-import { EducationalAndKnowledge } from './components/educational/EducationalAndKnowledge';
 import { UniversalVideoLab } from './components/video/UniversalVideoLab';
-import { GovernanceAndArchetypes } from './components/governance/GovernanceAndArchetypes';
 import { TacticalStudioWorkspace } from './components/studio/TacticalStudioWorkspace';
+import { UnifiedTheoryView } from './components/educational/UnifiedTheoryView';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { useStudioStore } from './stores/studioStore';
 
-type MainWorkspaceView =
-  | 'tactical_lab'
-  | 'video_cv_lab'
-  | 'benchmark_12'
-  | 'governance_adr'
-  | 'knowledge_educational';
+type MainWorkspaceView = 'lavagna' | 'video' | 'teoria';
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('tactical_lab');
+  const { t, i18n } = useTranslation();
+  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('lavagna');
+  const [selectedGlossaryId, setSelectedGlossaryId] = useState<string | null>(null);
+
   const [state, setState] = useState<TacticalState>(INITIAL_TACTICAL_STATE);
   const [history, setHistory] = useState<TacticalState[]>([]);
 
-  const [canvasMode, setCanvasMode] = useState<'2d' | '3d'>('2d');
-  const [activeOverlays, setActiveOverlays] = useState<OverlayType[]>([
-    'pitch_control',
-    'pass_network',
-    'tda_gaps',
-  ]);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>('home-06');
-  const [rightTab, setRightTab] = useState<'chess_eval' | 'chat' | 'pillars' | 'player'>('chess_eval');
+  const loadTagScenario = useStudioStore((s) => s.loadTagScenario);
 
-  // Recompute the 6 Mathematical Pillars + Chess.com Evaluation Engine in real time
-  const { metrics, updatedEdges } = useMemo(() => evaluateTacticalState(state), [state]);
+  // Calcolo 6 Pilastri Matematici + Motore Chess.com
+  const { metrics } = useMemo(() => evaluateTacticalState(state), [state]);
 
-  const handleMovePlayer = (id: string, x: number, y: number) => {
-    setState((prev) => ({
-      ...prev,
-      players: prev.players.map((p) => (p.id === id ? { ...p, x, y } : p)),
-    }));
-  };
+  const currentLang = (i18n.language?.startsWith('en') ? 'en' : 'it') as 'it' | 'en';
 
-  const handleMoveBall = (x: number, y: number) => {
-    setState((prev) => ({
-      ...prev,
-      ballX: x,
-      ballY: y,
-    }));
-  };
-
-  const toggleOverlay = (ov: OverlayType) => {
-    setActiveOverlays((prev) =>
-      prev.includes(ov) ? prev.filter((x) => x !== ov) : [...prev, ov]
-    );
-  };
-
-  const enableSingleOverlay = (ov: OverlayType) => {
-    setActiveOverlays((prev) => (prev.includes(ov) ? prev : [...prev, ov]));
-  };
-
-  const handleApplyModification = (mod: SuggestedModification) => {
-    setHistory((h) => [...h.slice(-8), state]);
-    setState((prev) => ({
-      ...prev,
-      players: prev.players.map((p) => {
-        const move = mod.moves.find((m) => m.playerId === p.id);
-        if (!move) return p;
-        return {
-          ...p,
-          x: move.x,
-          y: move.y,
-          role: move.role || p.role,
-        };
-      }),
-    }));
-  };
-
-  const handleExecuteChessAlternative = (alt: ChessStyleAlternative) => {
-    setHistory((h) => [...h.slice(-8), state]);
-    setState((prev) => ({
-      ...prev,
-      ballX: alt.toX,
-      ballY: alt.toY,
-      players: prev.players.map((p) => {
-        if (alt.targetId && p.id === alt.targetId) {
-          return { ...p, x: alt.toX, y: alt.toY };
-        }
-        return p;
-      }),
-    }));
-  };
-
-  const handleAssignArchetypeToSelected = (archetypeId: number) => {
-    const arch = PLAYER_ARCHETYPES_30.find((a) => a.id === archetypeId);
-    if (!arch || !selectedPlayerId) return;
-    setHistory((h) => [...h.slice(-8), state]);
-    setState((prev) => ({
-      ...prev,
-      players: prev.players.map((p) =>
-        p.id === selectedPlayerId
-          ? {
-              ...p,
-              archetypeId: arch.id,
-              archetypeName: arch.name,
-              role: `${arch.name} (#${p.number})`,
-              positionGroup: arch.positionGroup,
-              heightCm: arch.defaultHeightCm,
-              foot: arch.defaultFoot,
-              attributes: { ...arch.defaultStats },
-            }
-          : p
-      ),
-    }));
-    setActiveNav('tactical_lab');
-    setRightTab('player');
+  const toggleLanguage = () => {
+    const nextLang = currentLang === 'it' ? 'en' : 'it';
+    i18n.changeLanguage(nextLang);
   };
 
   const handleSyncVideoTracksToLab = (
@@ -149,23 +57,10 @@ export default function App() {
     }));
   };
 
-  const handleUndo = () => {
-    if (history.length === 0) return;
-    const previous = history[history.length - 1];
-    setHistory((h) => h.slice(0, -1));
-    setState(previous);
-  };
-
-  const handleReset = () => {
-    setHistory((h) => [...h.slice(-8), state]);
-    setState(INITIAL_TACTICAL_STATE);
-  };
-
   const applyTacticalPreset = (presetId: string) => {
     setHistory((h) => [...h.slice(-8), state]);
     if (presetId === 'libero_moderno_build_up') {
       setState(INITIAL_TACTICAL_STATE);
-      setActiveOverlays(['pitch_control', 'pass_network']);
     } else if (presetId === 'tda_gap_attack') {
       setState((prev) => ({
         ...prev,
@@ -178,7 +73,6 @@ export default function App() {
           return p;
         }),
       }));
-      setActiveOverlays(['tda_gaps', 'ghost_trajectory', 'xt_grid']);
     } else if (presetId === 'anti_cross_shield') {
       setState((prev) => ({
         ...prev,
@@ -192,27 +86,8 @@ export default function App() {
           return p;
         }),
       }));
-      setActiveOverlays(['pitch_control', 'tda_gaps']);
     }
-    setActiveNav('tactical_lab');
-  };
-
-  const handleSelectTimelineEvent = (ev: MatchEvent) => {
-    setHistory((h) => [...h.slice(-8), state]);
-    setState((prev) => ({
-      ...prev,
-      minute: ev.minute,
-      phase: ev.phase,
-      ballX: ev.x,
-      ballY: ev.y,
-      players: prev.players.map((p) => {
-        if (p.id === ev.playerId) return { ...p, x: ev.x, y: ev.y };
-        if (ev.recipientId && p.id === ev.recipientId && ev.endX && ev.endY) {
-          return { ...p, x: ev.endX, y: ev.endY };
-        }
-        return p;
-      }),
-    }));
+    setActiveNav('lavagna');
   };
 
   const exportTacticalStateJson = () => {
@@ -234,120 +109,117 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const selectedPlayer: PlayerNode =
-    state.players.find((p) => p.id === selectedPlayerId) || state.players[2];
-
-  const epvBarPct = Math.round(((metrics.epvValue + 1) / 2) * 100);
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#09090B] text-zinc-100">
-      {/* Strict 3-Zone Top Bar Contract */}
-      <header className="flex items-center justify-between gap-8 px-6 py-3.5 border-b border-zinc-800/90 bg-[#0B0B10]">
-        {/* Zone 1: Single text element wordmark */}
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveNav('tactical_lab');
-          }}
-          className="text-lg font-bold tracking-tight text-zinc-100 font-display whitespace-nowrap shrink-0"
-        >
-          LavagnaTattica
-        </a>
-
-        {/* Zone 2: 5 concise single-line text navigation links */}
-        <nav className="flex items-center gap-6 text-sm font-medium text-zinc-400 overflow-x-auto">
-          <button
-            onClick={() => setActiveNav('tactical_lab')}
-            className={`hover:text-zinc-100 transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-              activeNav === 'tactical_lab' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
-            }`}
-          >
-            Laboratorio Tattico
-          </button>
-          <button
-            onClick={() => setActiveNav('video_cv_lab')}
-            className={`hover:text-zinc-100 transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-              activeNav === 'video_cv_lab' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
-            }`}
-          >
-            Simulatore su Frame (Human-in-the-Loop)
-          </button>
-          <button
-            onClick={() => setActiveNav('benchmark_12')}
-            className={`hover:text-zinc-100 transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-              activeNav === 'benchmark_12' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
-            }`}
-          >
-            12 Dimensioni
-          </button>
-          <button
-            onClick={() => setActiveNav('governance_adr')}
-            className={`hover:text-zinc-100 transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-              activeNav === 'governance_adr' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
-            }`}
-          >
-            Governance & 30 Tipologie
-          </button>
-          <button
-            onClick={() => setActiveNav('knowledge_educational')}
-            className={`hover:text-zinc-100 transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-              activeNav === 'knowledge_educational' ? 'text-[#00F2FF] border-b border-[#00F2FF]' : ''
-            }`}
-          >
-            Educational & KB
-          </button>
-        </nav>
-
-        {/* Zone 3: 1 primary action */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={exportTacticalStateJson}
-            className="px-4 py-2 text-xs font-semibold text-zinc-950 bg-[#00F2FF] rounded-lg hover:bg-[#00F2FF]/90 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Esporta Stato JSON
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content Container */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4">
-        {activeNav === 'tactical_lab' && (
-          <TacticalStudioWorkspace onSwitchToVideoCV={() => setActiveNav('video_cv_lab')} />
-        )}
-
-        {/* VIEW 2: UNIVERSAL VIDEO INGESTION & COMPUTER VISION LAB */}
-        {activeNav === 'video_cv_lab' && (
-          <UniversalVideoLab
-            tacticalState={state}
-            onSyncTrackedPositionsToLab={(updatedPlayers, homeForm, awayForm) => {
-              handleSyncVideoTracksToLab(updatedPlayers, homeForm, awayForm);
+    <ErrorBoundary>
+      <div className="min-h-screen flex flex-col bg-[#09090B] text-zinc-100">
+        {/* Strict 3-Zone Top Bar: Brand, 3 Canonical Views, Actions & Language */}
+        <header className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-zinc-800/90 bg-[#0B0B10] sticky top-0 z-40 backdrop-blur">
+          {/* Zone 1: Single text element wordmark */}
+          <a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveNav('lavagna');
             }}
-          />
-        )}
+            className="text-lg font-bold tracking-tight text-zinc-100 font-display whitespace-nowrap shrink-0 hover:text-[#00E5FF] transition-colors"
+          >
+            LavagnaTattica
+          </a>
 
-        {/* VIEW 3: 12 DIMENSIONS & BENCHMARK FIXTURE */}
-        {activeNav === 'benchmark_12' && (
-          <Benchmark12Dimensions state={state} metrics={metrics} />
-        )}
+          {/* Zone 2: 3 Canonical Navigation Views (Costruisci, Verifichi, Capisci) */}
+          <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium text-zinc-400 overflow-x-auto">
+            <button
+              onClick={() => setActiveNav('lavagna')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeNav === 'lavagna'
+                  ? 'text-zinc-950 bg-[#00E5FF] font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span>{t('nav.lavagna')}</span>
+            </button>
+            <button
+              onClick={() => setActiveNav('video')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeNav === 'video'
+                  ? 'text-zinc-950 bg-[#00E5FF] font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+              }`}
+            >
+              <Video className="w-4 h-4" />
+              <span>{t('nav.video')}</span>
+            </button>
+            <button
+              onClick={() => setActiveNav('teoria')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeNav === 'teoria'
+                  ? 'text-zinc-950 bg-[#00E5FF] font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>{t('nav.teoria')}</span>
+            </button>
+          </nav>
 
-        {/* VIEW 4: GOVERNANCE ADR-MATH (MARCO RAZZANO) & 30 PLAYER ARCHETYPES */}
-        {activeNav === 'governance_adr' && (
-          <GovernanceAndArchetypes
-            onAssignArchetypeToSelectedPlayer={handleAssignArchetypeToSelected}
-            selectedPlayerLabel={`${selectedPlayer.archetypeName} (#${selectedPlayer.number})`}
-          />
-        )}
+          {/* Zone 3: Language Switcher (IT/EN) & Primary Action */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              onClick={toggleLanguage}
+              title={currentLang === 'it' ? 'Passa alla lingua inglese (EN)' : 'Switch to Italian (IT)'}
+              className="px-2.5 py-1.5 text-xs font-mono font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <Languages className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <span>{currentLang.toUpperCase()}</span>
+            </button>
 
-        {/* VIEW 5: KNOWLEDGE BASE & EDUCATIONAL MODE */}
-        {activeNav === 'knowledge_educational' && (
-          <EducationalAndKnowledge
-            onLoadPresetScenario={applyTacticalPreset}
-            onNavigateToStudio={() => setActiveNav('tactical_lab')}
-          />
-        )}
-      </main>
-    </div>
+            <button
+              onClick={exportTacticalStateJson}
+              className="px-3.5 py-1.5 text-xs font-semibold text-zinc-950 bg-[#00E5FF] rounded-lg hover:bg-[#00E5FF]/90 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t('common.exportJson')}</span>
+              <span className="sm:hidden">JSON</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content Container */}
+        <main className="flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
+          {/* VIEW 1: LAVAGNA TATTICA (COSTRUISCI) */}
+          {activeNav === 'lavagna' && (
+            <TacticalStudioWorkspace onSwitchToVideoCV={() => setActiveNav('video')} />
+          )}
+
+          {/* VIEW 2: ANALISI VIDEO & BOTONIERA TAG / CERTIFICAZIONE (VERIFICHI) */}
+          {activeNav === 'video' && (
+            <UniversalVideoLab
+              tacticalState={state}
+              onSyncTrackedPositionsToLab={handleSyncVideoTracksToLab}
+              onOpenScenarioOnBoard={(tag: TacticalTag) => {
+                loadTagScenario(tag.id);
+                setActiveNav('lavagna');
+              }}
+              onOpenGlossaryEntry={(glossaryId: string) => {
+                setSelectedGlossaryId(glossaryId);
+                setActiveNav('teoria');
+              }}
+            />
+          )}
+
+          {/* VIEW 3: TEORIA, DIDATTICA & CONSULTA RIFERIMENTI (CAPISCI) */}
+          {activeNav === 'teoria' && (
+            <UnifiedTheoryView
+              initialGlossaryId={selectedGlossaryId}
+              onLoadScenarioOnBoard={(presetId: string) => {
+                applyTacticalPreset(presetId);
+                setActiveNav('lavagna');
+              }}
+            />
+          )}
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }
