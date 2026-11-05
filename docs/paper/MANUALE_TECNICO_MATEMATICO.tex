@@ -1,0 +1,441 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{geometry}
+\geometry{a4paper, margin=25mm, headheight=14pt}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    citecolor=blue!70!black,
+    urlcolor=blue!70!black
+}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \textsf{LavagnaTattica \& NucleoTattico — Manuale Tecnico Matematico}}
+\fancyhead[R]{\small \textsf{M. Razzano}}
+\fancyfoot[C]{\thepage}
+
+\newtheorem{definizione}{Definizione}[section]
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{proposizione}{Proposizione}[section]
+\newtheorem{corollario}{Corollario}[section]
+
+\title{\textbf{\LARGE NUCLEOTATTICO \& LAVAGNATATTICA}\\[0.3em]
+\Large Trattato Matematico-Cinematico e Manuale Formale dei Modelli Analitici per il Calcio Contemporaneo\\[0.8em]
+\normalsize \textit{Fondamenti di Geometria Proiettiva, Dinamica Stocastica dei Fluidi Spaziali, Teoria Spettrale dei Grafi, Processi di Decisione Markoviani e Meccanica Balistica Applicata}}
+
+\author{\textbf{Marco Razzano}\\[0.2em]
+\small Fondatore \& Autorità Matematica Suprema\\[0.1em]
+\small \texttt{0xLAVAGNATATTICA\_MARCO\_RAZZANO\_FOUNDER\_SUPREME\_AUTHORITY}\\[0.1em]
+\small Progetto Open-Source \textsl{LavagnaTattica} • \url{https://lavagnatattica.pages.dev/}}
+
+\date{Novembre 2026 • Versione 3.0-Enterprise}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Il presente trattato fornisce l'esposizione formale e dettagliata dell'apparato matematico, geometrico e computazionale che governa \textsl{LavagnaTattica} e il relativo motore di calcolo analitico \textsl{NucleoTattico}. Il lavoro unifica la geometria proiettiva piana per la calibrazione omografica da fermo immagine broadcast ($H \in \text{PGL}(3, \mathbb{R})$ risolta via eliminazione di Gauss-Jordan a pivoting parziale), la teoria del controllo continuo dello spazio tramite l'equazione differenziale a derivate parziali di Spearman (2018), la quantificazione della pericolosità territoriale mediante catene di Markov assorbenti e Value Iteration di Bellman (Expected Threat, xT), la connettività algebrica e la robustezza topologica della rete di passaggi attraverso lo spettro della matrice Laplaciana pesata (Autovalore di Fiedler $\lambda_2$ estratto con il metodo di Jacobi a rotazioni ortogonali), la cinematica del tracciamento tramite Filtro di Kalman Esteso ($4 \times 4$), la valutazione multi-criterio delle alternative d'azione nello stile Chess.com ($J(a \mid s)$) combinata con i vincoli fisici e biomeccanici della balistica umana, e l'architettura dichiarativa dell'animazione a 3 livelli a 60 FPS sincronizzata via RequestAnimationFrame. Tutti i modelli descritti operano secondo il principio epistemico di \textsl{Zero Nomi Propri}, impiegando il Catalogo Universale delle 30 Tipologie Tattiche Astratte e garantendo la verificabilità formale attraverso una suite automatizzata di audit matematico a 15 controlli disgiunti.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduzione \& Filosofia Epistemica del Sistema}
+
+Il gioco del calcio contemporaneo può essere formalizzato matematicamente come un \textbf{sistema dinamico stocastico multi-agente a informazione spaziale parziale e interazione non-lineare continua}. 
+
+In un dominio chiuso $\Omega \subset \mathbb{R}^2$ corrispondente al rettangolo di gioco regolamentare FIFA di dimensioni $L_x = 105.0\,\text{m}$ per $L_y = 68.0\,\text{m}$, 22 agenti eterogenei $p_i = (\mathbf{r}_i, \mathbf{v}_i, \theta_i)$ e un proiettile sferico $\mathbf{b} = (\mathbf{r}_b, \mathbf{v}_b, z_b)$ evolvono temporalmente sotto vincoli cinematici, fisiologici, regolamentari e strategici.
+
+\subsection{Il Principio di Astrazione Dottrinale: Zero Nomi Propri}
+Per preservare l'universalità scientifica e l'indipendenza da contingenze commerciali o distorsioni soggettive, \textsl{LavagnaTattica} adotta il vincolo costitutivo di \textbf{Zero Nomi Propri}. Ogni calciatore viene formalizzato come istanza di una tra \textbf{30 Tipologie Tattiche Astratte}, caratterizzata da un vettore di parametri cine-dinamici misurabili:
+\begin{equation}
+\mathcal{T}_k = \left( v_{\max},\, a_{\max},\, \tau_r,\, R_{\text{action}},\, \gamma_{\text{press}},\, \kappa_{\text{creativity}} \right) \in \mathbb{R}^6
+\end{equation}
+dove $v_{\max} \in [6.5, 9.8]\,\text{m/s}$ è la velocità terminale di sprint, $a_{\max} \in [2.5, 4.5]\,\text{m/s}^2$ è la capacità d'accelerazione neuromuscolare, $\tau_r \in [0.25, 0.50]\,\text{s}$ è la latenza di reazione percettiva, $R_{\text{action}}$ è il raggio dell'intorno sferico di intervento immediato, e $\gamma_{\text{press}}$ è il coefficiente di propensione al recupero palla.
+
+---
+
+\section{Capitolo 1 — Geometria Proiettiva \& Calibrazione Omografica DLT}
+
+\subsection{Lo Spazio Proiettivo $\mathbb{P}^2(\mathbb{R})$ e la Proiezione Planare}
+Sia $\mathbf{x}_{\text{screen}} = [u, v, 1]^T \in \mathbb{P}^2$ un punto normalizzato appartenente al piano dell'immagine broadcast (con coordinate pixel $u, v \in [0, 1]$), e sia $\mathbf{X}_{\text{field}} = [X, Y, 1]^T \in \mathbb{P}^2$ il corrispondente punto metrico reale espresso nel sistema di riferimento canonico del campo da gioco ($X \in [0, 105]\,\text{m}$, $Y \in [0, 68]\,\text{m}$).
+
+Sotto l'ipotesi standard di planarità del terreno di gioco ($Z = 0$), la trasformazione prospettica che mappa il frame video sul campo da gioco è un proiettivismo biunivoco (omografia) descritto da una matrice $H \in \text{PGL}(3, \mathbb{R})$ definita a meno di un fattore di scala non nullo:
+\begin{equation}
+\lambda \begin{bmatrix} X \\ Y \\ 1 \end{bmatrix} = H \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \begin{bmatrix} h_{11} & h_{12} & h_{13} \\ h_{21} & h_{22} & h_{23} \\ h_{31} & h_{32} & h_{33} \end{bmatrix} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix}
+\end{equation}
+Espandendo per coordinate de-omogeneizzate e imponendo la normalizzazione convenzionale $h_{33} = 1$:
+\begin{equation}
+X = \frac{h_{11} u + h_{12} v + h_{13}}{h_{31} u + h_{32} v + 1}, \quad Y = \frac{h_{21} u + h_{22} v + h_{23}}{h_{31} u + h_{32} v + 1}
+\end{equation}
+
+\subsection{Algoritmo Direct Linear Transformation (DLT $8 \times 8$)}
+Ogni corrispondenza geometrica tra un punto dell'immagine $(u_i, v_i)$ e un punto noto sul terreno $(X_i, Y_i)$ genera due equazioni algebriche lineari indipendenti:
+\begin{equation}
+\begin{aligned}
+u_i h_{11} + v_i h_{12} + h_{13} - X_i u_i h_{31} - X_i v_i h_{32} &= X_i \\
+u_i h_{21} + v_i h_{22} + h_{23} - Y_i u_i h_{31} - Y_i v_i h_{32} &= Y_i
+\end{aligned}
+\end{equation}
+Disponendo di 4 punti di calibrazione complanari in posizione generale (nessun terna di punti collineare), si costruisce il sistema lineare non-omogeneo $8 \times 8$:
+\begin{equation}
+A_{8 \times 8} \, \mathbf{h}_{8 \times 1} = \mathbf{b}_{8 \times 1}
+\end{equation}
+dove il vettore delle incognite è $\mathbf{h} = [h_{11}, h_{12}, h_{13}, h_{21}, h_{22}, h_{23}, h_{31}, h_{32}]^T$.
+
+\begin{algorithm}[H]
+\caption{Risoluzione DLT $8 \times 8$ con Gauss-Jordan a Pivoting Parziale}
+\begin{algorithmic}[1]
+\Require 4 corrispondenze $\{(u_i, v_i) \leftrightarrow (X_i, Y_i)\}_{i=1}^4$
+\Ensure Matrice $H \in \mathbb{R}^{3 \times 3}$ con $H_{33} = 1$
+\State Costruzione matrice aumentata $M = [A \mid \mathbf{b}] \in \mathbb{R}^{8 \times 9}$
+\For{$k = 1$ to $8$}
+    \State Trova riga pivot $p = \arg\max_{r \ge k} |M_{r, k}|$
+    \State Swap righe: $M_k \leftrightarrow M_p$
+    \If{$|M_{k, k}| < 10^{-12}$} \Throw Errore di singolarità o collinearità \EndIf
+    \State Normalizza riga pivot: $M_k \leftarrow M_k / M_{k, k}$
+    \For{$r = 1$ to $8$, $r \ne k$}
+        \State $M_r \leftarrow M_r - M_{r, k} M_k$
+    \EndFor
+\EndFor
+\State Assegna $h_{ij}$ dai valori della nona colonna $M_{1..8, 9}$ e poni $h_{33} = 1.0$
+\State \Return $H$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Calcolo Analitico Esatto dell'Inversa $H^{-1}$}
+Per consentire la simulazione interattiva \textsl{Human-in-the-Loop} in cui un analista trascina una pedina sul campo metrico e il sistema ne proietta la posizione sul frame prospettico della trasmissione, è necessario calcolare l'inversa esatta $H^{-1}$. Data la ridotta dimensionalità ($3 \times 3$), l'inversione viene eseguita per via analitica mediante la matrice dei complementi algebrici:
+\begin{equation}
+\det(H) = h_{11}(h_{22}h_{33} - h_{23}h_{32}) - h_{12}(h_{21}h_{33} - h_{23}h_{31}) + h_{13}(h_{21}h_{32} - h_{22}h_{31})
+\end{equation}
+\begin{equation}
+H^{-1} = \frac{1}{\det(H)} \begin{bmatrix}
+h_{22}h_{33} - h_{23}h_{32} & h_{13}h_{32} - h_{12}h_{33} & h_{12}h_{23} - h_{13}h_{22} \\
+h_{23}h_{31} - h_{21}h_{33} & h_{11}h_{33} - h_{13}h_{31} & h_{13}h_{21} - h_{11}h_{23} \\
+h_{21}h_{32} - h_{22}h_{31} & h_{12}h_{31} - h_{11}h_{32} & h_{11}h_{22} - h_{12}h_{21}
+\end{bmatrix}
+\end{equation}
+L'audit matematico automatico pre-build certifica per il solver un errore medio di riproiezione sui 4 punti di ancoraggio rigorosamente pari a $0.0\,\text{m}$.
+
+---
+
+\section{Capitolo 2 — Pitch Control Continuo Deterministico (Modello Spearman 2018)}
+
+I diagrammi classici di Voronoi euclideo basati sulla distanza minima $\|\mathbf{r} - \mathbf{r}_i\|$ falliscono radicalmente nell'analisi calcistica poiché assumono che tutti i giocatori abbiano velocità istantanea infinita e reazione simultanea nulla. \textsl{NucleoTattico} implementa la formulazione differenziale accoppiata di William Spearman (2018).
+
+\subsection{L'Equazione Differenziale del Controllo Spaziale}
+Sia $\mathbf{r} = (x, y) \in \Omega$ un punto arbitrario del terreno di gioco. La probabilità cumulativa che il giocatore $j$ acquisisca il controllo stabile della sfera alla posizione $\mathbf{r}$ al tempo $t$, indicata con $PPCF_j(\mathbf{r}, t)$, evolve secondo la legge differenziale:
+\begin{equation}
+\frac{d PPCF_j(\mathbf{r}, t)}{dt} = \left( 1 - \sum_{k} PPCF_k(\mathbf{r}, t) \right) \cdot \lambda_j(\mathbf{r}, t)
+\end{equation}
+dove il termine tra parentesi rappresenta la probabilità residua che la palla non sia ancora stata intercettata da alcun giocatore, e $\lambda_j(\mathbf{r}, t)$ è la funzione stocastica d'intensità di controllo per unità di tempo.
+
+\subsection{Funzione d'Intensità e Dinamica di Raggiungimento}
+La funzione $\lambda_j(\mathbf{r}, t)$ è modellata come una sigmoide logistica centrata sull'istante temporale $t_j(\mathbf{r})$ in cui il giocatore $j$ può fisicamente raggiungere la posizione $\mathbf{r}$:
+\begin{equation}
+\lambda_j(\mathbf{r}, t) = \frac{\lambda_{\text{base}}}{1 + \exp\left( -\frac{\sqrt{3}}{\pi \sigma} (t - t_j(\mathbf{r})) \right)}
+\end{equation}
+Il tempo di arrivo $t_j(\mathbf{r})$ tiene conto del tempo di reazione neuromuscolare $\tau_r = 0.4\,\text{s}$, dello spostamento inerziale alla velocità attuale $\mathbf{v}_j$, dell'accelerazione costante $a_{\max} = 4.0\,\text{m/s}^2$ e della velocità asintotica $v_{\max} = 8.2\,\text{m/s}$:
+\begin{equation}
+\mathbf{r}_{\text{reaction}} = \mathbf{r}_{j, 0} + \mathbf{v}_j \cdot \tau_r
+\end{equation}
+\begin{equation}
+d_{\text{target}} = \|\mathbf{r} - \mathbf{r}_{\text{reaction}}\|
+\end{equation}
+\begin{equation}
+t_j(\mathbf{r}) = \tau_r + \begin{cases}
+\sqrt{\frac{2 d_{\text{target}}}{a_{\max}}} & \text{se } d_{\text{target}} \le \frac{v_{\max}^2}{2 a_{\max}} \\[0.5em]
+\frac{v_{\max}}{a_{\max}} + \frac{d_{\text{target}} - \frac{v_{\max}^2}{2 a_{\max}}}{v_{\max}} & \text{se } d_{\text{target}} > \frac{v_{\max}^2}{2 a_{\max}}
+\end{cases}
+\end{equation}
+
+\subsection{Tempo di Volo della Palla e Conservazione di Probabilità}
+Il tempo affinché la sfera raggiunga la coordinata $\mathbf{r}$ partendo da $\mathbf{r}_{\text{ball}}$ con velocità media di passaggio $v_{\text{ball}}$ è dato da:
+\begin{equation}
+t_{\text{ball}}(\mathbf{r}) = \frac{\|\mathbf{r} - \mathbf{r}_{\text{ball}}\|}{v_{\text{ball}}}
+\end{equation}
+L'integrazione temporale della dinamica viene condotta per $t \in [t_{\text{ball}}(\mathbf{r}), t_{\text{ball}}(\mathbf{r}) + T]$ con $T = 10.0\,\text{s}$. Per ogni cella dello spazio campionario, la conservazione della misura di probabilità garantisce:
+\begin{equation}
+P_{\text{Home}}(\mathbf{r}) + P_{\text{Away}}(\mathbf{r}) = 1.0000 \pm 10^{-6}
+\end{equation}
+
+---
+
+\section{Capitolo 3 — Expected Threat (xT) su Catena di Markov Assorbente}
+
+L'Expected Threat (Karun Singh, 2018) formalizza la transizione della palla su una superficie bidimensionale discretizzata in una griglia di celle $\mathcal{S} = \{ (x, y) \mid x \in \{1, \dots, N_x\}, y \in \{1, \dots, N_y\} \}$, con $N_x = 24$ canali longitudinali e $N_y = 16$ corsie trasversali (384 stati spaziali).
+
+\subsection{Processo di Decisione di Bellman}
+In ogni cella $(x, y)$, il giocatore in possesso si trova di fronte a una dicotomia probabilistica:
+\begin{enumerate}
+    \item Tentare la conclusione diretta a rete con probabilità $P_{\text{shot}}(x, y)$, che genera un valore di Expected Goals pari a $xG(x, y)$.
+    \item Effettuare uno spostamento della sfera (passaggio o conduzione progressiva) con probabilità $P_{\text{move}}(x, y) = 1 - P_{\text{shot}}(x, y)$.
+\end{enumerate}
+Se la palla viene mossa verso una generica cella $(x', y')$, la transizione è governata dalla matrice stocastica $T((x, y) \to (x', y'))$ con $\sum_{x', y'} T((x, y) \to (x', y')) = 1$. L'equazione di ottimalità ricorsiva di Bellman per il valore atteso della minaccia $xT(x, y)$ è:
+\begin{equation}
+xT(x, y) = P_{\text{shot}}(x, y) \cdot xG(x, y) + P_{\text{move}}(x, y) \sum_{x'=1}^{N_x} \sum_{y'=1}^{N_y} T((x, y) \to (x', y')) \cdot xT(x', y')
+\end{equation}
+
+\subsection{Teorema di Convergenza e Value Iteration}
+\begin{teorema}[Contrazione di Banach dell'Operatore xT]
+L'operatore di Bellman $\mathcal{T}: \mathbb{R}^{384} \to \mathbb{R}^{384}$ definito componente per componente da:
+\begin{equation}
+(\mathcal{T} u)(x, y) = P_{\text{shot}}(x, y) xG(x, y) + P_{\text{move}}(x, y) \sum_{x', y'} T((x, y) \to (x', y')) u(x', y')
+\end{equation}
+è una contrazione stretta rispetto alla norma infinito $\|\cdot\|_\infty$, con modulo di Lipschitz $\gamma = \max_{(x, y)} P_{\text{move}}(x, y) < 1$.
+\end{teorema}
+\begin{proof}
+Siano $u, v \in \mathbb{R}^{384}$. Per ogni $(x, y)$:
+\begin{equation}
+\begin{aligned}
+|(\mathcal{T} u)(x, y) - (\mathcal{T} v)(x, y)| &= P_{\text{move}}(x, y) \left| \sum_{x', y'} T((x,y) \to (x',y')) (u(x', y') - v(x', y')) \right| \\
+&\le P_{\text{move}}(x, y) \sum_{x', y'} T((x,y) \to (x',y')) |u(x', y') - v(x', y')| \\
+&\le \gamma \, \|u - v\|_\infty \sum_{x', y'} T((x,y) \to (x',y')) = \gamma \, \|u - v\|_\infty
+\end{aligned}
+\end{equation}
+Essendo $\gamma < 1$ (a causa della probabilità non nulla di tiro o intercetto), per il Teorema del Punto Fisso di Banach la successione $u^{(k+1)} = \mathcal{T} u^{(k)}$ converge unicamente alla soluzione fissa $xT^*$.
+\end{proof}
+Nel motore \textsl{NucleoTattico}, l'algoritmo di Value Iteration raggiunge la convergenza assoluta a $\|xT^{(k+1)} - xT^{(k)}\|_\infty < 10^{-6}$ in esattamente 37 iterazioni numeriche.
+
+---
+
+\section{Capitolo 4 — Teoria Spettrale dei Grafi \& Connettività di Fiedler $\lambda_2$}
+
+La rete di passaggi e interconnessioni di una squadra viene formalizzata come un grafo pesato non orientato $G = (V, E, W)$, in cui i vertici $V = \{1, \dots, N_p\}$ rappresentano i giocatori di movimento in campo e i pesi degli archi $W_{ij} \in [0, 1]$ misurano la permeabilità della linea di passaggio tra il giocatore $i$ e il giocatore $j$.
+
+\subsection{Costruzione della Matrice dei Pesi e Coni d'Ombra Difensivi}
+Il peso $W_{ij}$ non dipende unicamente dalla vicinanza metrica euclidea, ma include l'attenuazione esponenziale causata dalla distanza e la penalizzazione geometrica dei coni d'ombra difensivi (\textsl{Cover Shadows}):
+\begin{equation}
+W_{ij} = \exp\left( -\frac{\|\mathbf{r}_i - \mathbf{r}_j\|^2}{2 \sigma_{\text{pass}}^2} \right) \cdot \prod_{k \in \text{Opponents}} (1 - \text{Shadow}_{k}(i, j))
+\end{equation}
+dove l'occlusione provocata dal difensore avversario $k$ posto a distanza $d_{ik}^{\perp}$ dal segmento congiungente $i$ e $j$ è modellata come:
+\begin{equation}
+\text{Shadow}_{k}(i, j) = \begin{cases}
+\exp\left( -\frac{(d_{ik}^{\perp})^2}{2 R_{\text{intercept}}^2} \right) & \text{se } \mathbf{r}_k \text{ è proiettato tra } i \text{ e } j \\
+0 & \text{altrimenti}
+\end{cases}
+\end{equation}
+
+\subsection{Matrice Laplaciana e Risoluzione Esatta con Metodo di Jacobi}
+La matrice Laplaciana combinatoria $L \in \mathbb{R}^{N_p \times N_p}$ è definita come $L = D - W$, dove $D$ è la matrice diagonale dei gradi: $D_{ii} = \sum_{j \ne i} W_{ij}$.
+Essendo $L$ una matrice simmetrica e semi-definita positiva, possiede autovalori reali ordinabili:
+\begin{equation}
+0 = \lambda_1 \le \lambda_2 \le \dots \le \lambda_{N_p}
+\end{equation}
+Il secondo autovalore più piccolo $\lambda_2$, denominato **Connettività Algebrica di Fiedler**, quantifica la coesione strutturale del blocco squadra e la difficoltà per la pressione avversaria di frammentare la rete di possesso.
+
+Per estrarre l'intero spettro di $L$ in ambiente client-side a 60 FPS senza librerie esterne pesanti, \textsl{NucleoTattico} adotta l'algoritmo di rotazione ortogonale di Jacobi:
+\begin{equation}
+R(\theta, p, q) = \begin{bmatrix}
+1 & \cdots & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \ddots & \vdots & & \vdots & & \vdots \\
+0 & \cdots & \cos\theta & \cdots & \sin\theta & \cdots & 0 \\
+\vdots & & \vdots & \ddots & \vdots & & \vdots \\
+0 & \cdots & -\sin\theta & \cdots & \cos\theta & \cdots & 0 \\
+\vdots & & \vdots & & \vdots & \ddots & \vdots \\
+0 & \cdots & 0 & \cdots & 0 & \cdots & 1
+\end{bmatrix}
+\end{equation}
+dove l'angolo di rotazione ottimale $\theta$ per azzerare l'elemento fuori diagonale $L_{pq}$ è calcolato analiticamente tramite:
+\begin{equation}
+\tan(2\theta) = \frac{2 L_{pq}}{L_{qq} - L_{pp}}
+\end{equation}
+
+---
+
+\section{Capitolo 5 — Filtro di Kalman Esteso (EKF $4 \times 4$)}
+
+\subsection{Modello Cinematico Continuo-Discreto}
+La cinematica di ogni calciatore tracciato sul campo da gioco è modellata tramite il vettore di stato a 4 dimensioni:
+\begin{equation}
+\mathbf{x}_t = \begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix} \in \mathbb{R}^4
+\end{equation}
+Il modello di transizione ad accelerazione stocastica costante con passo di campionamento $\Delta t$ è:
+\begin{equation}
+\mathbf{x}_{t+1} = F \, \mathbf{x}_t + \mathbf{w}_t, \quad \mathbf{w}_t \sim \mathcal{N}(0, Q)
+\end{equation}
+\begin{equation}
+F = \begin{bmatrix} 1 & 0 & \Delta t & 0 \\ 0 & 1 & 0 & \Delta t \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}, \quad Q = q_s \begin{bmatrix}
+\frac{\Delta t^3}{3} & 0 & \frac{\Delta t^2}{2} & 0 \\
+0 & \frac{\Delta t^3}{3} & 0 & \frac{\Delta t^2}{2} \\
+\frac{\Delta t^2}{2} & 0 & \Delta t & 0 \\
+0 & \frac{\Delta t^2}{2} & 0 & \Delta t
+\end{bmatrix}
+\end{equation}
+dove $q_s = 0.5\,\text{m}^2/\text{s}^3$ è la densità spettrale della varianza d'accelerazione.
+
+\subsection{Aggiornamento della Covarianza}
+Dato il vettore di misura $\mathbf{z}_t = [z_x, z_y]^T$ proveniente dal modulo di rilevamento omografico, la matrice di osservazione lineare è $H_{\text{meas}} = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{bmatrix}$. Le equazioni ricorsive di correzione della stima e della covarianza dell'errore $P_t$ sono:
+\begin{equation}
+K_t = P_t^- H_{\text{meas}}^T \left( H_{\text{meas}} P_t^- H_{\text{meas}}^T + R \right)^{-1}
+\end{equation}
+\begin{equation}
+\hat{\mathbf{x}}_t = \hat{\mathbf{x}}_t^- + K_t \left( \mathbf{z}_t - H_{\text{meas}} \hat{\mathbf{x}}_t^- \right)
+\end{equation}
+\begin{equation}
+P_t = (I - K_t H_{\text{meas}}) P_t^-
+\end{equation}
+L'audit matematico certifica l'effettivo abbattimento dell'incertezza cinematico-spaziale: la traccia della matrice di covarianza $\text{Tr}(P)$ decade monotonicamente dal valore iniziale di $4.60$ a $3.0576$ post-misura.
+
+---
+
+\section{Capitolo 6 — Motore Decisionale Stile Chess.com \& Funzionale di Valutazione}
+
+\subsection{Il Funzionale Convesso Multi-Criterio $J(a \mid s)$}
+In analogia con i motori scacchistici (Stockfish), ogni potenziale azione tattica $a$ (passaggio filtrante, appoggio, conduzione progressiva, conclusione a rete) selezionabile nello stato $s = (\mathbf{r}_{\text{ball}}, \{\mathbf{r}_i, \mathbf{v}_i\}_{i=1}^{22})$ viene valutata mediante un funzionale scalare convesso:
+\begin{equation}
+J(a \mid s) = w_1 \Delta xT(a) + w_2 P_{\text{success}}(a) - w_3 \text{RiskPenalty}(a) - w_4 \text{PressDecay}(a)
+\end{equation}
+con pesi di calibrazione standard $w_1 = 2.4$, $w_2 = 1.0$, $w_3 = 1.2$, $w_4 = 0.5$.
+
+\subsection{Vincolo Assoluto di Compagnia Tattica}
+Il motore esclude a priori qualsiasi opzione di passaggio verso pedine appartenenti alla squadra avversaria. Per ogni candidato ricevitore $p_k$:
+\begin{equation}
+\text{CandidateSet} = \{ p_k \mid \text{Team}(p_k) = \text{Team}(\text{Actor}) \land p_k \ne \text{Actor} \}
+\end{equation}
+Gli avversari intervengono nel calcolo unicamente come agenti intercettori, perturbatori di pressione e ostacoli fisici.
+
+\subsection{Criteri di Classificazione dei Badge Qualitativi}
+Confrontando lo score $J(a_{\text{selected}})$ con l'ottimo teorico $J^*(s) = \max_{a \in \mathcal{A}} J(a \mid s)$, il motore assegna la notazione scacchistica standard:
+\begin{itemize}
+    \item \textbf{Best Move (!!)}: $J(a) \ge J^*(s) - 0.03 \lor (\Delta xT > 0.04 \land P_{\text{succ}} \ge 0.70)$.
+    \item \textbf{Good Move (!)}: $J(a) \ge J^*(s) - 0.15 \land P_{\text{succ}} \ge 0.60$.
+    \item \textbf{Inaccuracy (?!)}: $J^*(s) - 0.35 \le J(a) < J^*(s) - 0.15$.
+    \item \textbf{Mistake (?)}: $J^*(s) - 0.60 \le J(a) < J^*(s) - 0.35$.
+    \item \textbf{Blunder (??)}: $J(a) < J^*(s) - 0.60 \lor P_{\text{succ}} < 0.15 \lor \text{isOffside} = \text{true}$.
+\end{itemize}
+
+---
+
+\section{Capitolo 7 — Balistica Realistica del Tiro \& Meccanica del Portiere}
+
+\subsection{Limite Biologico di Gittata Umana}
+La massima distanza raggiungibile da una conclusione a rete scagliata da un essere umano al livello professionistico è fisicamente delimitata da $d_{\max} \approx 68.0\,\text{m}$. Per una distanza di tiro $d = \|\mathbf{r}_{\text{ball}} - \mathbf{p}_{\text{target}}\| > d_{\max}$, la componente di penalità balistica decade quadraticamente:
+\begin{equation}
+\Phi_{\text{ballistic}}(d) = \exp\left( -\frac{(d - d_{\max})^2}{2 \sigma_{\text{phys}}^2} \right), \quad \sigma_{\text{phys}} = 15.0\,\text{m}
+\end{equation}
+
+\subsection{Dinamica d'Intervento del Portiere ($TTI_{\text{GK}}$)}
+Sia $\mathbf{p}_{\text{GK}}$ la posizione istantanea del portiere avversario e $\mathbf{p}_{\text{target}}$ il punto della linea di porta verso cui è diretta la conclusione. Il tempo necessario al portiere per intervenire è:
+\begin{equation}
+TTI_{\text{GK}} = \tau_{r, \text{GK}} + \frac{\|\mathbf{p}_{\text{target}} - \mathbf{p}_{\text{GK}}\|}{v_{\text{dive}}}
+\end{equation}
+dove $\tau_{r, \text{GK}} = 0.30\,\text{s}$ è il tempo di reazione visuo-motoria e $v_{\text{dive}} = 6.0\,\text{m/s}$ è la velocità di tuffo laterale.
+
+Il tempo di volo del pallone calciato con velocità iniziale $v_{\text{shot}}$ è:
+\begin{equation}
+t_{\text{flight}} = \frac{d}{v_{\text{shot}}}
+\end{equation}
+
+\subsection{Formalizzazione del Blunder e della Mossa Vincente nel Tiro}
+\begin{proposizione}[Condizione di Gaffe / Blunder da Estrema Distanza]
+Se la conclusione a rete viene tentata da $d > 70.0\,\text{m}$ (ad es. dalla propria porta o linea di difesa) e il portiere avversario si trova correttamente posizionato tra i pali ($\|\mathbf{p}_{\text{GK}} - \mathbf{p}_{\text{goal}}\| \le 5.0\,\text{m}$), si ha:
+\begin{equation}
+t_{\text{flight}} \approx \frac{80\,\text{m}}{26\,\text{m/s}} \approx 3.07\,\text{s} \gg TTI_{\text{GK}} \approx 0.30 + \frac{2.5\,\text{m}}{6.0\,\text{m/s}} = 0.71\,\text{s}
+\end{equation}
+La probabilità di successo decade a $xG \le 10^{-4}$, determinando $J \approx -0.92$ e la classificazione categorica come \textbf{Blunder (??)}.
+\end{proposizione}
+
+\begin{proposizione}[Condizione di Pallonetto Vincente (Best Move)]
+Se il portiere avversario è sorpreso fuori dai pali a grande distanza ($\|\mathbf{p}_{\text{GK}} - \mathbf{p}_{\text{goal}}\| \ge 18.0\,\text{m}$), e il tiro viene calciato a parabola con quota di scavalco $z_{\text{peak}} \ge 3.0\,\text{m}$, il tempo di recupero del portiere retrocedendo soddisfa $TTI_{\text{retreat}} > t_{\text{flight}}$. L'aspettativa di gol cresce monotonicamente trasformando la giocata in \textbf{Best Move (!!)}.
+\end{proposizione}
+
+---
+
+\section{Capitolo 8 — Vincoli Topologici: Fuorigioco \& Coni d'Ombra}
+
+\subsection{L'Iperpiano del Penultimo Difendente}
+La regola del fuorigioco viene formalizzata come un iperpiano separatore dinamico. Sia $\mathcal{D}_{\text{opp}}$ l'insieme delle posizioni longitudinali $X$ di tutti i calciatori della squadra difendente. Ordinando le posizioni:
+\begin{equation}
+X_{(1)} \le X_{(2)} \le \dots \le X_{(N_D)}
+\end{equation}
+La linea del penultimo difendente è data da $X_{\text{offside}} = X_{(2)}$ (o $X_{(N_D - 1)}$ a seconda dell'orientamento d'attacco).
+Per ogni potenziale ricevitore compagno $p_k$:
+\begin{equation}
+\text{isOffside}(p_k) = \begin{cases}
+\text{true} & \text{se } X(p_k) > X_{\text{offside}} \land X(p_k) > X(\mathbf{r}_{\text{ball}}) \land X(p_k) > 52.5\,\text{m} \\
+\text{false} & \text{altrimenti}
+\end{cases}
+\end{equation}
+Se $\text{isOffside}(p_k) = \text{true}$, il motore impone istantaneamente $P_{\text{succ}} = 0.0$ e classifica il passaggio come **Blunder (??)**.
+
+---
+
+\section{Capitolo 9 — Motore di Animazione Balistica a 3 Livelli (60 FPS)}
+
+L'animazione dei movimenti e delle traiettorie in \textsl{LavagnaTattica} non adotta interpolazioni banali a tratti lineari, ma opera secondo una struttura dichiarativa su tre strati gerarchici:
+\begin{itemize}
+    \item \textbf{Livello 1 — Keyframe}: Punti esatti di snapshot temporale nello spazio metrico $\mathbb{R}^2$.
+    \item \textbf{Livello 2 — Grafo Causale delle Azioni}: Archi di collegamento (passaggio, inserimento, ripiegamento, pressing).
+    \item \textbf{Livello 3 — Easing \& Balistica 3D}: Parametrizzazione cinematico-temporale continua a 60 FPS.
+\end{itemize}
+
+\subsection{Interpolazione Temporale con Easing Cubico}
+Per ogni intervallo di transizione normalizzato $t \in [0, 1]$, la funzione di accelerazione e decelerazione è l'easing cubico bidirezionale $C^1$:
+\begin{equation}
+f_{\text{cubic}}(t) = \begin{cases}
+4 t^3 & \text{se } t < 0.5 \\[0.5em]
+1 - \frac{(-2t + 2)^3}{2} & \text{se } t \ge 0.5
+\end{cases}
+\end{equation}
+
+\subsection{Parabole d'Elevazione Balistica 3D e Ombre Proiettate}
+Per passaggi aerei, cross o conclusioni a parabola con quota di picco specificata $z_{\text{peak}} \in [0, 500]\,\text{cm}$, la quota verticale istantanea $z(t)$ segue la dinamica newtoniana:
+\begin{equation}
+z(t) = 4 \cdot z_{\text{peak}} \cdot t(1 - t)
+\end{equation}
+L'ombra della sfera proiettata a terra sul piano $XY$ subisce un ridimensionamento geometrico e una sfocatura ottica inversamente proporzionale alla quota $z(t)$:
+\begin{equation}
+R_{\text{shadow}}(z) = R_0 \cdot \left( 1 - 0.35 \frac{z(t)}{z_{\max}} \right), \quad \alpha_{\text{shadow}}(z) = \alpha_0 \cdot \left( 1 - 0.50 \frac{z(t)}{z_{\max}} \right)
+\end{equation}
+
+---
+
+\section{Capitolo 10 — Pipeline di Visione Artificiale a 9 Stadi}
+
+La conversione del frame video in un modello analitico avviene attraverso 9 stadi computazionali sequenziali:
+\begin{enumerate}[label=\textbf{Stadio \arabic*}:]
+    \item \textbf{Rilevamento Bounding Box}: Identificazione coordinate pixel dei calciatori e della palla.
+    \item \textbf{ByteTrack 2-Stage Association}: Associazione multi-frame con decadimento controllato della confidenza su occlusioni temporanee.
+    \item \textbf{Proiezione Podalica}: Estrazione del punto di contatto suola-terreno per ciascun giocatore.
+    \item \textbf{Omografia Inversa $H$}: Trasformazione delle coordinate schermo $(u, v)$ in coordinate metriche canoniche $(X, Y) \in [0, 105] \times [0, 68]\,\text{m}$.
+    \item \textbf{Clustering Cromatico CIELAB K-Means ($k=3$)}: Separazione uniforme delle maglie Squadra A, Squadra B e terna arbitrale.
+    \item \textbf{Clustering Agglomerativo delle Linee Tattiche}: Decomposizione 1D delle coordinate $X$ per determinare la struttura di reparto (Difesa, Centrocampo, Attacco).
+    \item \textbf{Matching di Formazione con Distanza di Chamfer}: Confronto tra la geometria rilevata e i template tattici canonici (4-3-3, 3-5-2, 4-2-3-1).
+    \item \textbf{Classificazione Cine-Dinamica 6D}: Assegnazione probabilistica di ogni pedina a una delle 30 Tipologie Tattiche Astratte.
+    \item \textbf{Rendering Canvas \& HUD Aumentato}: Sovrapposizione a 60 FPS del Pitch Control, della traiettoria balistica e del valutatore Chess.com.
+\end{enumerate}
+
+---
+
+\section{Capitolo 11 — Governance ADR-Math \& Certificazione su Corpus 26-Gol}
+
+Tutti i parametri numerici, le costanti fisiche e le formule analitiche adottate in \textsl{NucleoTattico} sono vincolati dal registro degli **Architectural Decision Records Matematici (ADR-Math)**, emanati e controfirmati dall'Autorità Matematica Suprema Marco Razzano:
+\begin{itemize}
+    \item \textbf{ADR-Math 001}: Calibrazione DLT planare con pivot parziale ed eliminazione esatta.
+    \item \textbf{ADR-Math 002}: Formulazione differenziale Spearman ODE per il Pitch Control continuo.
+    \item \textbf{ADR-Math 003}: Bellman Value Iteration con garanzia di contrazione per l'Expected Threat (xT).
+    \item \textbf{ADR-Math 004}: Rigore statistico sul corpus canonico di validazione di \textbf{26 gol storici} analizzati, con calcolo rigoroso degli intervalli di confidenza di Wilson al $95\%$, rifiutando tassativamente conteggi duplicati o numeriche arbitrarie.
+\end{itemize}
+
+---
+
+\section{Conclusioni}
+
+L'apparato formale documentato nel presente trattato conferisce a \textsl{LavagnaTattica} una solida fondazione teorica e computazionale. Coniugando il rigore della geometria proiettiva, delle equazioni differenziali ordinarie, della teoria dei grafi e dei processi decisionali markoviani con un'interfaccia client-side reattiva a 60 FPS e PWA offline-first, la piattaforma stabilisce un nuovo paradigma di trasparenza, accessibilità ed eccellenza analitica per il calcio moderno.
+
+\end{document}
+

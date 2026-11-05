@@ -23,7 +23,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "audit": "tsx scripts/audit_real_vs_stub.ts"
+    "audit": "tsx scripts/audit_real_vs_stub.ts",
+    "build:paper": "tsx scripts/build_math_paper.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -45,11 +46,13 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/katex": "^0.16.8",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.28.0",
+    "katex": "^0.19.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"

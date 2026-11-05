@@ -52,6 +52,11 @@ npx tsx scripts/audit_real_vs_stub.ts
 if ($LASTEXITCODE -eq 0) { Write-Host "Audit Matematico OK (exit 0)" -ForegroundColor Green } else { Write-Host "Audit FALLITO" -ForegroundColor Red; exit 1 }
 Write-Host ""
 
+Write-Host "=== COMPILAZIONE PAPER MATEMATICO PDF (docs/paper/) ===" -ForegroundColor Cyan
+npx tsx scripts/build_math_paper.ts
+if ($LASTEXITCODE -eq 0) { Write-Host "Paper Matematico PDF OK (exit 0)" -ForegroundColor Green } else { Write-Host "Compilazione Paper FALLITA" -ForegroundColor Red; exit 1 }
+Write-Host ""
+
 Write-Host "=== VITE BUILD (npm run build) ===" -ForegroundColor Cyan
 npm run build
 if ($LASTEXITCODE -eq 0) { Write-Host "Build di produzione OK (exit 0)" -ForegroundColor Green } else { Write-Host "Build FALLITA" -ForegroundColor Red; exit 1 }

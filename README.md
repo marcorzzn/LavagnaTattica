@@ -11,11 +11,13 @@
 [![PWA](https://img.shields.io/badge/PWA-Offline%20First-4A154B?style=flat-square&logo=pwa&logoColor=white)](https://lavagnatattica.pages.dev/)
 [![Render](https://img.shields.io/badge/Render-60%20FPS%20rAF-2EA043?style=flat-square)](https://lavagnatattica.pages.dev/)
 [![Math Audit](https://img.shields.io/badge/Math%20Audit-15%2F15%20PASS-brightgreen?style=flat-square)](scripts/audit_real_vs_stub.ts)
+[![Paper PDF](https://img.shields.io/badge/Paper%20PDF-Manuale%20Tecnico%20Matematico-darkred?style=flat-square&logo=academia)](docs/paper/MANUALE_TECNICO_MATEMATICO.pdf)
 
 ### **Lavagna tattica aumentata e Video Match Lab per il calcio contemporaneo**
 *Alimentata dal motore matematico e analitico NucleoTattico.*
 
 [🌐 Live Demo](https://lavagnatattica.pages.dev/) •
+[📄 Trattato Matematico (PDF)](docs/paper/MANUALE_TECNICO_MATEMATICO.pdf) •
 [⚽ Panoramica](#-panoramica) •
 [🖥️ Le 3 Aree di Lavoro](#-le-3-aree-di-lavoro) •
 [📐 Motore Matematico](#-il-motore-matematico-nucleotattico) •
@@ -28,6 +30,7 @@
 ---
 
 > **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+> **Trattato Matematico & Manuale Formale:** [`docs/paper/MANUALE_TECNICO_MATEMATICO.pdf`](docs/paper/MANUALE_TECNICO_MATEMATICO.pdf) • [Sorgente LaTeX](docs/paper/MANUALE_TECNICO_MATEMATICO.tex)  
 > **Contratto di Trasparenza & Stato dei Moduli:** [`docs/STATE.md`](docs/STATE.md) • [`docs/INVENTORY.md`](docs/INVENTORY.md)  
 > **Applicazione Web Online:** [https://lavagnatattica.pages.dev/](https://lavagnatattica.pages.dev/)
 
@@ -151,6 +154,19 @@ Ciascuna tipologia possiede parametri cine-dinamici misurabili ($v_{\max}$, $a_{
 - **Esportazione & Ripristino Progetto (`.json`)**: Salva l'intero dossier (omografie, posizioni pedine, marker palla, annotazioni, frecce) in un unico file `.json` e riaprilo in qualsiasi momento su qualsiasi dispositivo.
 - **PWA Offline First**: Funziona completamente offline in assenza di connessione Internet grazie al ServiceWorker e allo storage client-side su IndexedDB.
 - **Bilinguismo Nativo**: Supporto completo per Italiano e Inglese con selettore istantaneo in intestazione.
+
+---
+
+## 📚 Trattato Matematico & Manuale Formale (PDF & LaTeX)
+
+Per studiosi, match analyst e sviluppatori che necessitano della formulazione analitica integrale, il progetto include il trattato accademico completo:
+
+- 📄 **[Manuale Tecnico Matematico (PDF)](docs/paper/MANUALE_TECNICO_MATEMATICO.pdf)**: Trattato formale impaginato in formato accademico A4, con equazioni numerate, box di definizioni e teoremi, tabelle cine-dinamiche e spiegazioni divulgative dettagliate.
+- 📜 **[Sorgente LaTeX (`.tex`)](docs/paper/MANUALE_TECNICO_MATEMATICO.tex)**: Codice sorgente compilabile con qualsiasi distribuzione TeX (`pdflatex`, `xelatex`, Overleaf).
+- 🔄 **Rigenerazione Automatica Lossless**: Il manuale si ricompila in PDF ad ogni evoluzione del codice tramite:
+  ```bash
+  npm run build:paper
+  ```
 
 ---
 
