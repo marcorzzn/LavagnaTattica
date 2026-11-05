@@ -1,7 +1,7 @@
 {
   "name": "lavagna-tattica",
   "version": "0.1.0",
-  "description": "Lavagna tattica aumentata con motore NucleoTattico",
+  "description": "Lavagna tattica aumentata e Video Match Lab per il calcio contemporaneo — Pitch Control (Spearman), xT (Markov-Bellman), Chess.com eval, DLT 8x8, animazioni a 3 livelli e PWA offline",
   "private": true,
   "type": "module",
   "engines": {
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/marcorzzn/LavagnaTattica.git"
   },
-  "homepage": "https://github.com/marcorzzn/LavagnaTattica#readme",
+  "homepage": "https://lavagnatattica.pages.dev/",
   "bugs": {
     "url": "https://github.com/marcorzzn/LavagnaTattica/issues"
   },

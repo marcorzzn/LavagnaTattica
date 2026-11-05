@@ -2,20 +2,26 @@
 
 <div align="center">
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-8.3-646CFF?logo=vite&logoColor=white)
-![60 FPS](https://img.shields.io/badge/Render-60%20FPS%20rAF-2EA043)
-![Math Audit](https://img.shields.io/badge/Math%20Audit-15%2F15%20PASS-brightgreen)
+[![Live Demo](https://img.shields.io/badge/Live%20Web%20App-lavagnatattica.pages.dev-0051C8?style=for-the-badge&logo=cloudflare&logoColor=white)](https://lavagnatattica.pages.dev/)
 
-**Lavagna tattica aumentata per il calcio contemporaneo, alimentata dal motore matematico NucleoTattico.**
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.3-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Offline%20First-4A154B?style=flat-square&logo=pwa&logoColor=white)](https://lavagnatattica.pages.dev/)
+[![Render](https://img.shields.io/badge/Render-60%20FPS%20rAF-2EA043?style=flat-square)](https://lavagnatattica.pages.dev/)
+[![Math Audit](https://img.shields.io/badge/Math%20Audit-15%2F15%20PASS-brightgreen?style=flat-square)](scripts/audit_real_vs_stub.ts)
 
-[Panoramica](#-visione--architettura) •
-[I 6 Pilastri Matematici](#-i-6-pilastri-di-nucleotattico) •
-[Motore di Animazione](#-motore-di-animazione-a-3-livelli) •
-[Audit Matematico](#-audit-matematico-e-verifica) •
-[Avvio Rapido](#-avvio-rapido)
+### **Lavagna tattica aumentata e Video Match Lab per il calcio contemporaneo**
+*Alimentata dal motore matematico e analitico NucleoTattico.*
+
+[🌐 Live Demo](https://lavagnatattica.pages.dev/) •
+[⚽ Panoramica](#-panoramica) •
+[🖥️ Le 3 Aree di Lavoro](#-le-3-aree-di-lavoro) •
+[📐 Motore Matematico](#-il-motore-matematico-nucleotattico) •
+[🎯 Valutatore Stile Chess.com](#-valutatore-stile-chesscom--fisica-balistica) •
+[🧪 Audit Matematico](#-audit-matematico--certificazione) •
+[🚀 Avvio Rapido](#-avvio-rapido)
 
 </div>
 
@@ -23,117 +29,149 @@
 
 > **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
 > **Contratto di Trasparenza & Stato dei Moduli:** [`docs/STATE.md`](docs/STATE.md) • [`docs/INVENTORY.md`](docs/INVENTORY.md)  
-> **Repository Ufficiale:** [https://github.com/marcorzzn/LavagnaTattica](https://github.com/marcorzzn/LavagnaTattica)
+> **Applicazione Web Online:** [https://lavagnatattica.pages.dev/](https://lavagnatattica.pages.dev/)
 
 ---
 
-## ⚽ Visione & Architettura
+## ⚽ Panoramica
 
-**LavagnaTattica** è l'omologo di Chess.com per l'analisi calcistica: una lavagna tattica interattiva reattiva a 60 FPS concepita per match analyst professionisti, allenatori, accademie e appassionati di tattica evoluta.
+**LavagnaTattica** è l'omologo di **Chess.com** per l'analisi calcistica moderna: una piattaforma interattiva ad alte prestazioni concepita per match analyst professionisti, allenatori, centri di formazione e appassionati di tattica applicata.
 
-Sotto la superficie, il motore **NucleoTattico** combina modelli stocastici, geometria proiettiva, teoria spettrale dei grafi ed equazioni differenziali in un runtime client-side ultra-fluido:
+Combina la versatilità di una lavagna 2D a 60 FPS con un **Video Match Lab Human-in-the-Loop** capace di calibrare qualsiasi frame o fermo immagine broadcast tramite omografia planare $8 \times 8$, sovrapporre il Pitch Control probabilistico continuo e valutare ogni scelta di gioco con una barra di valutazione dinamica e badge qualitativi (**Best Move !!**, **Good Move !**, **Inaccuracy ?!**, **Blunder ??**).
+
+---
+
+## 📸 Galleria dell'Applicazione
+
+<div align="center">
+
+### Valutazione Tattica Stile Chess.com & Pitch Control su Fermo Immagine
+*Visualizzazione del controllo spaziale continuo, barra di valutazione bicolore (Squadra A vs Squadra B) e alternative tattiche ordinate per valore atteso.*
+
+![Analisi Tattica e Valutazione Chess.com](docs/assets/screenshot-tactical-analysis-eval.jpg)
+
+<br/>
+
+### Setup Camera, Omografia DLT 8x8 & Riconoscimento Modulo
+*Calibrazione prospettica proiettiva $H \in \text{PGL}(3, \mathbb{R})$, proiezione sul rettangolo FIFA $105\text{m} \times 68\text{m}$ e clustering automatico dello schieramento.*
+
+![Setup Camera e Omografia DLT](docs/assets/screenshot-video-lab-calibration.jpg)
+
+</div>
+
+---
+
+## 🖥️ Le 3 Aree di Lavoro
+
+L'applicazione è organizzata in tre moduli coesi e privi di frammentazione:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                             LAVAGNATATTICA                             │
-│       Piattaforma di Intelligenza Tattica & Lavagna Aumentata          │
+│                  Architettura a 3 Moduli Specializzati                 │
 ├────────────────────────────────────────────────────────────────────────┤
-│  [1. Lavagna Tattica]  Canvas 2D, Timeline 60 FPS, Possession Lock,    │
-│                        Disegno Tattico, Temi Cromatici d'Autore        │
-│  [2. Video CV Lab]     Omografia DLT 8x8, Calibrazione Proiettiva,     │
-│                        Simulatore Human-in-the-Loop What-If su Frame   │
-│  [3. Benchmark 12D]    Analisi Multi-Dimensionale, Partizioni Disgiunte│
-│  [4. Governance]       Registro ADR-Math (Firma Razzano), 30 Archetipi │
-│  [5. Didattica]        Percorsi Formativi, Quiz Tattici, Terzo Uomo    │
+│  1. ANALISI VIDEO & MATCH LAB (Cuore Operativo)                        │
+│     • Calibrazione Omografica DLT 8x8 con errore riproiezione 0.0m     │
+│     • Gestione Dinamica Pedine (0-11 per squadra, ruoli e numeri)     │
+│     • Marker Palla dedicato con assegnazione possesso assistita        │
+│     • Barra di Valutazione Bicolore Chess.com (Blu vs Rosso)           │
+│     • Analisi delle Alternative: Filtrante, Sostegno, Tiro, Conduzione │
+│     • Fisica del Tiro con tempo d'intervento portiere (TTI_GK)         │
+│     • Rilevamento Dinamico del Fuorigioco sul penultimo difendente     │
+│     • Coni d'Ombra Difensivi (Cover Shadows) per passaggi rasoterra    │
+│     • Dossier Multi-Frame (Scene Strip) con persistenza totale         │
+│     • Esportazione & Re-importazione Progetto completo in JSON         │
 ├────────────────────────────────────────────────────────────────────────┤
-│                         MOTORE NUCLEOTATTICO                           │
-│  • Spearman ODE Pitch Control   • Value Iteration Markov xT (Bellman)  │
-│  • Connettività Fiedler λ₂      • Extended Kalman Filter Balistico 4x4 │
-│  • Valutatore Stile Chess.com   • Animazione a 3 Livelli (Bézier + 3D) │
-│  • 30 Tipologie Astratte        • Catalogo Dottrinale 13 Maestri       │
+│  2. TEORIA, MAESTRI & LAVAGNA (Sintesi Dottrinale & Studio)            │
+│     • 13 Scuole Tattiche (Guardiola, De Zerbi, Sarri, Klopp, Sacchi...)│
+│     • Lavagna Tattica 2D con animazione a 60 FPS direttamente integrata│
+│     • 3 Livelli di Animazione (Keyframe, Azioni, Balistica 3D ed Easing│
+│     • Percorsi Formativi e Quiz Didattici Interattivi                  │
+│     • Glossario Tattico Bilingue (Italiano / Inglese)                  │
+│     • Registro ADR-Math con governance firmata Marco Razzano           │
+├────────────────────────────────────────────────────────────────────────┤
+│  3. LAVAGNA LIBERA (Sandbox Tattico a 60 FPS)                          │
+│     • Canvas vettoriale 2D fluido con RequestAnimationFrame a 60 FPS   │
+│     • Disegno traiettorie, curve di Bézier, coni e zone di ricezione   │
+│     • Temi cromatici: Verde Prato & Crema, Cyber Dark, Gesso, Blueprint│
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📐 I 6 Pilastri di NucleoTattico
+## 📐 Il Motore Matematico NucleoTattico
 
-Ogni metrica e calcolo di LavagnaTattica è rigorosamente ancorato alla formulazione matematica approvata:
+Ogni metrica visualizzata da LavagnaTattica è rigorosamente ancorata a formulazioni analitiche verificabili:
 
-1. **Pilastro I — Geometria Proiettiva & Calibrazione DLT**:
-   Risoluzione esatta con eliminazione di Gauss-Jordan a pivoting parziale della matrice di omografia planare $H \in \text{PGL}(3, \mathbb{R})$ da 4+ punti di corrispondenza, con calcolo analitico dell'inversa $H^{-1}$ per proiettare istantaneamente qualsiasi frame video (smartphone, drone o broadcast) sulle coordinate metriche reali del campo FIFA ($105\text{m} \times 68\text{m}$).
-2. **Pilastro II — Pitch Control Deterministico (Spearman ODE 2018)**:
-   Integrazione numerica continua dell'equazione differenziale accoppiata $dPPCF/dt$ considerando tempo di reazione neuromuscolare $\tau_r = 0.4\text{s}$, spostamento inerziale $\vec{v}\tau_r$, accelerazione finita $a_{\max} = 4.0\text{ m/s}^2$ e tempo di volo balistico della palla $t_{\text{ball}}$.
-3. **Pilastro III — Expected Threat (xT) su Catena di Markov Assorbente**:
-   Griglia $16 \times 24$ celle con matrici di tiro, conversione e transizione. Soluzione iterativa di Bellman fino a convergenza $\|xT^{(k+1)} - xT^{(k)}\|_\infty < 10^{-6}$.
-4. **Pilastro IV — Teoria Spettrale dei Grafi (Fiedler $\lambda_2$)**:
+1. **Geometria Proiettiva & Calibrazione DLT**:
+   Risoluzione con eliminazione di Gauss-Jordan a pivoting parziale della matrice di omografia planare $H \in \text{PGL}(3, \mathbb{R})$ da 4 corrispondenze metriche sul frame, con calcolo analitico dell'inversa $H^{-1}$ per proiettare qualsiasi frame sui $105\text{m} \times 68\text{m}$ del rettangolo di gioco.
+2. **Pitch Control Deterministico (Spearman ODE 2018)**:
+   Integrazione numerica continua dell'equazione differenziale $dPPCF/dt$ considerando tempo di reazione neuromuscolare $\tau_r = 0.4\text{s}$, spostamento inerziale $\vec{v}\tau_r$, accelerazione finita $a_{\max} = 4.0\text{ m/s}^2$ e tempo di volo balistico della palla $t_{\text{ball}}$.
+3. **Expected Threat (xT) su Catena di Markov Assorbente**:
+   Griglia $16 \times 24$ celle con matrici di tiro, conversione e transizione. Risoluzione iterativa dell'equazione di Bellman fino a convergenza $\|xT^{(k+1)} - xT^{(k)}\|_\infty < 10^{-6}$.
+4. **Teoria Spettrale dei Grafi (Fiedler $\lambda_2$)**:
    Costruzione della matrice Laplaciana pesata $L = D - W$ (con penalizzazione per coni d'ombra difensivi) ed estrazione della connettività algebrica tramite il metodo di Jacobi a rotazioni ortogonali planari.
-5. **Pilastro V — Filtro di Kalman Esteso (EKF 4×4)**:
-   Modello cinematico per vettore di stato $\mathbf{x} = [x, y, v_x, v_y]^T$, propagazione dell'incertezza e stima delle velocità istantanee.
-6. **Pilastro VI — Motore di Valutazione Stile Chess.com**:
-   Funzionale scalare convesso $J(a \mid s)$ che ordina ogni giocata possibile (passaggio, filtrante, conduzione, cross) confrontando la scelta eseguita con le alternative migliori e assegnando badge qualitativi: **Best Move (!!)**, Good Move (!), Inaccuracy (?!), Mistake (?).
+5. **Filtro di Kalman Esteso (EKF 4×4)**:
+   Modello cinematico per vettore di stato $\mathbf{x} = [x, y, v_x, v_y]^T$, propagazione della matrice di covarianza ed eliminazione del rumore di tracciamento.
 
 ---
 
-## 🎬 Motore di Animazione a 3 Livelli
+## 🎯 Valutatore Stile Chess.com & Fisica Balistica
 
-Il movimento in LavagnaTattica non viene "campionato" alla cieca: è un'architettura dati dichiarativa a tre livelli:
+Il motore valuta la mossa del portatore di palla confrontando la sua scelta con lo spazio delle alternative possibili secondo un funzionale convesso multi-criterio:
 
-- **Livello 1 — Keyframe (Snapshot di Posizione)**: punti di ancoraggio temporale esatti per tutti i giocatori e la palla.
-- **Livello 2 — Azioni Tattiche**: passaggi rasoterra, filtranti, cross alti, tiri a giro, corse di smarcamento e pressing associati tra keyframe.
-- **Livello 3 — Parametri Balistici & Easing 3D**:
-  - Velocità palla regolabile da $15$ a $140\text{ km/h}$.
-  - Parabole d'elevazione balistica 3D con quota $z = 4 \cdot z_{\text{peak}} \cdot t(1-t)$ fino a $500\text{ cm}$ e ombra proiettata a terra.
-  - Traiettorie con curve di Bézier quadratiche e accelerazione fluida `easeInOutCubic`.
-  - Scrubbing a 60 FPS con RequestAnimationFrame ed esportazione/importazione JSON portabile (`azione_tattica_nucleo.json`).
+$$J(a \mid s) = w_1 \Delta xT(a) + w_2 P_{\text{success}}(a) - w_3 \text{RiskPenalty}(a)$$
+
+### Regole Tattiche & Vincoli Fisici Implementati:
+- **Passaggi Esclusivamente tra Compagni**: Il sistema non propone mai passaggi verso pedine avversarie. Gli avversari agiscono esclusivamente come barriere, intercettori e proiettori di coni d'ombra.
+- **Fisica Balistica del Tiro & Limite Umano**:
+  - Limite di gittata per il calcio umano parametrato ($d_{\max} \approx 68\text{m}$).
+  - Calcolo del tempo di volo della palla $t_{\text{flight}} = d / v_{\text{ball}}$ a confronto con il tempo d'intervento del portiere $TTI_{\text{GK}} = \tau_r + (d_{\text{GK}} / v_{\text{dive}})$.
+  - Un tiro da 90 metri con portiere posizionato viene penalizzato a $xG \approx 0.0001$ e classificato tassativamente come **Gaffe / Blunder (??)**.
+  - Se il portiere avversario è sorpreso fuori dai pali ($d_{\text{GK}} > 18\text{m}$), il pallonetto a scavalcare viene premiato come **Mossa Vincente (!!)**.
+- **Fuorigioco Dinamico**: Calcolo continuo della linea del penultimo difendente. Qualsiasi passaggio verso un compagno oltre la linea determina probabilità di successo zero e assegnazione immediata di **Blunder (??)**.
+- **Barra di Valutazione Bicolore**: Ispirata a Chess.com, usa direttamente il colore delle due formazioni (**Blu Squadra A** vs **Rosso Squadra B**) mostrando graficamente chi controlla il match.
 
 ---
 
 ## 👤 Zero Nomi Propri & 30 Tipologie Astratte
 
-In conformità ai principi di astrazione dottrinale di LavagnaTattica, il sistema **non fa uso di nomi propri di calciatori o club**, ma impiega **30 Tipologie Tattiche Astratte universali**:
-- *Costruzione*: Libero Moderno, Portiere Sweeper, Braccetto Aggressivo, Terzino Invertito.
-- *Rifinitura*: Mediano Metodista, Mezzala d'Inserimento, Regista Mobile, Trequartista Associativo.
-- *Finalizzazione*: Ala Invertita, Centravanti Boa, Seconda Punta di Raccordo, Attaccante di Profondità.
+In piena conformità con i principi di astrazione universale, LavagnaTattica non usa nomi di giocatori registrati ma adotta **30 Tipologie Tattiche Astratte**:
+- **Costruzione**: Libero Moderno, Portiere Sweeper, Braccetto Aggressivo, Terzino Invertito.
+- **Rifinitura**: Mediano Metodista, Mezzala d'Inserimento, Regista Mobile, Trequartista Associativo.
+- **Finalizzazione**: Ala Invertita, Centravanti Boa, Seconda Punta di Raccordo, Attaccante di Profondità.
 
-Ogni tipologia possiede attributi cine-dinamici misurabili ($v_{\max}$, $a_{\max}$, $\tau_{\text{reaz}}$, raggio d'azione, propensione al pressing).
-
----
-
-## 🏛️ Catalogo Dottrinale dei 13 Maestri
-
-LavagnaTattica integra 13 scuole tattiche storiche e contemporanee preconfigurate, complete di keyframe e principi applicati:
-- **Gegenpressing** (Klopp) · **Gioco di Posizione** (Guardiola) · **Catena di Sinistra & Cutback** (Sarri)
-- **Costruzione Provocatoria** (De Zerbi) · **Blocco Compatto Sacchiano** (Sacchi)
-- **Blocco Basso & Transizione** (Simeone) · **3-4-1-2 a Uomo** (Gasperini)
-- **Calcio Totale** (Cruyff/Michels) · **Box Midfield** (Arteta) · **Rotazioni Continue** (Bielsa)
-
-Supporta nativamente formati di gioco **11v11**, **7v7** e **5v5** con temi visivi dedicati (**Verde Prato & Bianco Crema**, Cyber Dark, Lavagna Gesso, Blueprint).
+Ciascuna tipologia possiede parametri cine-dinamici misurabili ($v_{\max}$, $a_{\max}$, tempo di reazione neuromuscolare, raggio d'azione, propensione al pressing).
 
 ---
 
-## 🧪 Audit Matematico e Verifica
+## 💾 Dossier Multi-Frame & Esportazione JSON
 
-Il progetto include una suite di verifica automatizzata che valida l'assenza di scorciatoie o stub:
+- **Scene Strip Multi-Frame**: Possibilità di creare molteplici scene all'interno dello stesso progetto (es. *Transizione offensiva al 75'*, *Ripiegamento al 78'*), passando liberamente da una scena all'altra senza alcuna perdita di dati o di stato.
+- **Esportazione & Ripristino Progetto (`.json`)**: Salva l'intero dossier (omografie, posizioni pedine, marker palla, annotazioni, frecce) in un unico file `.json` e riaprilo in qualsiasi momento su qualsiasi dispositivo.
+- **PWA Offline First**: Funziona completamente offline in assenza di connessione Internet grazie al ServiceWorker e allo storage client-side su IndexedDB.
+- **Bilinguismo Nativo**: Supporto completo per Italiano e Inglese con selettore istantaneo in intestazione.
+
+---
+
+## 🧪 Audit Matematico & Certificazione
+
+Tutti i moduli matematici sono coperti da una suite di test rigorosi che certifica l'assenza di scorciatoie o stub:
 
 ```bash
-# Esegue il pre-build check completo (Typecheck + 15 Test Matematici + Build Vite)
+# Esegue Typecheck, Math Audit 15/15 e Build di Produzione
 powershell -ExecutionPolicy Bypass -File scripts/pre-build-check.ps1
-
-# Oppure su Linux/macOS
-./scripts/pre-build-check.sh
 ```
 
 Verifiche coperte dall'audit (`scripts/audit_real_vs_stub.ts`):
-- [x] Zero modelli inesistenti o allucinati (usa Gemini 2.5 Flash con fallback deterministico completo)
-- [x] Errore medio riproiezione omografica DLT $= 0.0\text{ m}$
-- [x] Conservazione probabilistica Spearman ($P_{\text{home}} + P_{\text{away}} = 1.0000$)
-- [x] Convergenza Bellman xT in 37 iterazioni (residuo $< 10^{-6}$)
-- [x] Autovalori del Laplaciano ortogonali di Jacobi ($\lambda_1 = 0$, $\lambda_2 > 0$)
-- [x] Abbattimento covarianza EKF 4×4 post-misura
-- [x] Valutazione Chess.com dinamica (punteggi e best moves variano coerentemente allo stato)
-- [x] Simulatore HITL su frame: aumento $P_{\text{succ}}$ del filtrante da $49.3\%$ a $86\%$ spostando il difensore
-- [x] 7/7 test matematici del motore di animazione passati (interpolazione, Bézier, picco parabolico $z$)
+- [x] Zero modelli allucinati (integrazione Gemini con fallback deterministico completo)
+- [x] Errore medio di riproiezione omografica DLT $= 0.0\text{ m}$
+- [x] Conservazione probabilistica Spearman ODE ($P_{\text{home}} + P_{\text{away}} = 1.0000$)
+- [x] Convergenza Bellman Markov xT in 37 iterazioni (residuo $< 10^{-6}$)
+- [x] Autovalori Laplaciano Jacobi ($\lambda_1 = 0$, $\lambda_2 > 0$)
+- [x] Abbattimento covarianza EKF post-misura
+- [x] Valutazione Chess.com dinamica con penalità balistica realistica per tiri impossibili
+- [x] 7/7 test del motore di animazione a 3 livelli superati con successo
 
 ---
 
@@ -143,26 +181,35 @@ Verifiche coperte dall'audit (`scripts/audit_real_vs_stub.ts`):
 - **Node.js** $\ge 20$
 - **npm** $\ge 10$
 
-### Installazione
+### Installazione Locale
 ```bash
 # 1. Clona il repository
 git clone https://github.com/marcorzzn/LavagnaTattica.git
 cd LavagnaTattica
 
-# 2. Installa le dipendenze (pulito, 0 vulnerabilità)
+# 2. Installa le dipendenze
 npm install
 
 # 3. Avvia l'ambiente di sviluppo locale
 npm run dev
 
-# 4. Avvia il server proxy opzionale per l'LLM Orchestrator
-npm run server
+# 4. Verifica typecheck e audit matematico
+npm run lint
+npm run audit
 ```
 
-L'applicazione sarà attiva su: `http://localhost:3000` (o `http://localhost:5173`).
+L'applicazione si aprirà su `http://localhost:3000` (o `http://localhost:5173`).
+
+### Deploy su Cloudflare Pages
+L'applicazione è configurata nativamente per essere distribuita su **Cloudflare Pages** ad ogni push su `main`:
+- **Build command:** `npm run build`
+- **Build output directory:** `dist`
+- **Node.js version:** `20`
+
+Consulta [`docs/CLOUDFLARE_DEPLOY.md`](docs/CLOUDFLARE_DEPLOY.md) per la guida dettagliata.
 
 ---
 
 ## 📄 Licenza
 
-Distribuito sotto licenza **MIT**. Consulta `LICENSE` per i dettagli.
+Distribuito sotto licenza **MIT**. Consulta [`LICENSE`](LICENSE) per i dettagli.
