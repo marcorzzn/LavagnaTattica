@@ -24,7 +24,7 @@ type MainWorkspaceView = 'lavagna' | 'video' | 'teoria';
 
 export default function App() {
   const { t, i18n } = useTranslation();
-  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('lavagna');
+  const [activeNav, setActiveNav] = useState<MainWorkspaceView>('video');
   const [selectedGlossaryId, setSelectedGlossaryId] = useState<string | null>(null);
 
   const [state, setState] = useState<TacticalState>(INITIAL_TACTICAL_STATE);
@@ -91,20 +91,14 @@ export default function App() {
   };
 
   const exportTacticalStateJson = () => {
-    const payload = {
-      openCoreVersion: '2.0.0-SUPREME',
-      founderAuthority: 'Marco Razzano — 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
-      exportedAt: new Date().toISOString(),
-      tacticalState: state,
-      sixPillarsEvaluation: metrics,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    const jsonStr = useStudioStore.getState().exportProjectJson();
+    const blob = new Blob([jsonStr], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `lavagnatattica_supreme_${state.matchId}_min${state.minute}.json`;
+    a.download = `lavagnatattica_progetto_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -119,15 +113,37 @@ export default function App() {
             href="#top"
             onClick={(e) => {
               e.preventDefault();
-              setActiveNav('lavagna');
+              setActiveNav('video');
             }}
             className="text-lg font-bold tracking-tight text-zinc-100 font-display whitespace-nowrap shrink-0 hover:text-[#00E5FF] transition-colors"
           >
             LavagnaTattica
           </a>
 
-          {/* Zone 2: 3 Canonical Navigation Views (Costruisci, Verifichi, Capisci) */}
+          {/* Zone 2: Navigation Views (Analisi Video Primaria, Teoria & Maestri, Lavagna Libera) */}
           <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium text-zinc-400 overflow-x-auto">
+            <button
+              onClick={() => setActiveNav('video')}
+              className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeNav === 'video'
+                  ? 'text-zinc-950 bg-[#00E5FF] font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+              }`}
+            >
+              <Video className="w-4 h-4" />
+              <span>Analisi Video & Match Lab</span>
+            </button>
+            <button
+              onClick={() => setActiveNav('teoria')}
+              className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeNav === 'teoria'
+                  ? 'text-zinc-950 bg-[#00E5FF] font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Teoria, Maestri & Lavagna</span>
+            </button>
             <button
               onClick={() => setActiveNav('lavagna')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
@@ -137,29 +153,7 @@ export default function App() {
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-              <span>{t('nav.lavagna')}</span>
-            </button>
-            <button
-              onClick={() => setActiveNav('video')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                activeNav === 'video'
-                  ? 'text-zinc-950 bg-[#00E5FF] font-semibold shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
-              }`}
-            >
-              <Video className="w-4 h-4" />
-              <span>{t('nav.video')}</span>
-            </button>
-            <button
-              onClick={() => setActiveNav('teoria')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                activeNav === 'teoria'
-                  ? 'text-zinc-950 bg-[#00E5FF] font-semibold shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>{t('nav.teoria')}</span>
+              <span>Lavagna Libera</span>
             </button>
           </nav>
 

@@ -21,6 +21,7 @@
     "source": "Source",
     "details": "Details",
     "export": "Export",
+    "exportJson": "Export JSON",
     "import": "Import",
     "reset": "Reset",
     "verify": "Verify",

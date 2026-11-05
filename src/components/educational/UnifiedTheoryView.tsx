@@ -17,29 +17,40 @@ import {
   ChevronRight,
   Sparkles,
   FileCheck2,
+  LayoutGrid,
+  Play,
+  Compass,
 } from 'lucide-react';
 import { TacticalLearningLab } from './TacticalLearningLab';
 import { BILINGUAL_TACTICAL_GLOSSARY, searchBilingualGlossary } from '../../core/bilingualGlossary';
 import { ADR_MATH_REGISTRY, PLAYER_ARCHETYPES_30 } from '../../core/presets';
+import { COACHING_STRATEGIES_CATALOG } from '../../core/tacticalStrategiesCatalog';
+import { TacticalPitchCanvas } from '../studio/TacticalPitchCanvas';
+import { TimelineBar } from '../studio/TimelineBar';
+import { useStudioStore } from '../../stores/studioStore';
 
 interface UnifiedTheoryViewProps {
-  initialSubTab?: 'impara' | 'consulta';
+  initialSubTab?: 'impara' | 'schemi' | 'consulta';
   initialGlossaryId?: string | null;
   onLoadScenarioOnBoard?: (presetId: string) => void;
 }
 
 export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
-  initialSubTab = 'impara',
+  initialSubTab = 'schemi',
   initialGlossaryId = null,
   onLoadScenarioOnBoard,
 }) => {
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language?.startsWith('en') ? 'en' : 'it') as 'it' | 'en';
 
-  const [activeTab, setActiveTab] = useState<'impara' | 'consulta'>(
+  const [activeTab, setActiveTab] = useState<'impara' | 'schemi' | 'consulta'>(
     initialGlossaryId ? 'consulta' : initialSubTab
   );
   const [consultSection, setConsultSection] = useState<'glossary' | 'adr' | 'archetypes'>('glossary');
+
+  const activeStrategyId = useStudioStore((s) => s.activeStrategyId);
+  const applyCoachingStrategy = useStudioStore((s) => s.applyCoachingStrategy);
+  const currentStrategy = COACHING_STRATEGIES_CATALOG.find((s) => s.id === activeStrategyId) || COACHING_STRATEGIES_CATALOG[0];
 
   // Filtri glossario
   const [glossaryQuery, setGlossaryQuery] = useState(initialGlossaryId || '');
@@ -56,23 +67,35 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-[#00E5FF] tracking-wider uppercase">
             <BookMarked className="w-4 h-4" />
-            <span>{t('teoria.title')}</span>
+            <span>Teoria, Maestri & Lavagna Didattica</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white mt-1">
-            {t('teoria.title')}
+            Dottrina Tattica & Riferimenti Ufficiali
           </h1>
           <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-            {t('teoria.subtitle')}
+            Studio degli schemi tattici dei grandi maestri con lavagna interattiva 2D, animazioni a 3 livelli, percorsi didattici e registro ADR firmato da Marco Razzano.
           </p>
         </div>
 
-        {/* Switch dei Due Livelli: IMPARA vs CONSULTA */}
+        {/* Switch dei Tre Livelli: SCHEMI MAESTRI vs IMPARA vs CONSULTA */}
         <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800 shrink-0">
           <button
+            onClick={() => setActiveTab('schemi')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'schemi'
+                ? 'bg-[#00E5FF] text-zinc-950 shadow-md font-bold'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span>Schemi dei Maestri</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('impara')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'impara'
-                ? 'bg-[#2ea043] text-white shadow-lg shadow-[#2ea043]/20'
+                ? 'bg-[#2ea043] text-white shadow-md'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -82,9 +105,9 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
 
           <button
             onClick={() => setActiveTab('consulta')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'consulta'
-                ? 'bg-[#00E5FF] text-zinc-950 shadow-lg shadow-[#00E5FF]/20 font-bold'
+                ? 'bg-amber-400 text-zinc-950 shadow-md font-bold'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -94,7 +117,87 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
         </div>
       </div>
 
-      {/* CONTENUTO LIVELLO 1: IMPARA (Didattica, Quiz, Puzzle) */}
+      {/* CONTENUTO LIVELLO 1: SCHEMI DEI MAESTRI (LAVAGNA INTERATTIVA 2D CON ANIMAZIONE) */}
+      {activeTab === 'schemi' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Selettore Maestri (Sinistra ~ 4 colonne) */}
+          <div className="lg:col-span-4 space-y-3">
+            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
+              <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider text-[#00E5FF]">
+                Catalogo Strategie dei Maestri
+              </h3>
+              <p className="text-[11px] text-zinc-400 mt-1">
+                Seleziona uno schema tattico per caricarlo direttamente sulla lavagna interattiva ed eseguirne l'animazione didattica a 60 FPS:
+              </p>
+            </div>
+
+            <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
+              {COACHING_STRATEGIES_CATALOG.map((strat) => {
+                const isActive = activeStrategyId === strat.id;
+                return (
+                  <button
+                    key={strat.id}
+                    onClick={() => applyCoachingStrategy(strat.id)}
+                    className={`w-full p-3.5 rounded-xl border text-left transition-all space-y-1.5 ${
+                      isActive
+                        ? 'bg-zinc-900 border-[#00E5FF] shadow-md shadow-[#00E5FF]/10'
+                        : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-zinc-100">{strat.name}</h4>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
+                        {strat.formation}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] font-medium text-[#00E5FF]">
+                      {strat.coach} · {strat.school}
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2">
+                      {strat.description}
+                    </p>
+
+                    <div className="text-[10px] text-zinc-500 font-mono pt-1 border-t border-zinc-800/60 truncate">
+                      {strat.keyTacticalPrinciples.slice(0, 2).join(' · ')}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Canvas Lavagna Interattiva & Timeline Animation (Destra ~ 8 colonne) */}
+          <div className="lg:col-span-8 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-mono text-[#00E5FF] uppercase font-bold">
+                  Schema Attivo
+                </span>
+                <h3 className="text-sm font-bold text-white mt-0.5">
+                  {currentStrategy.name} — {currentStrategy.coach}
+                </h3>
+              </div>
+              <span className="text-xs font-mono px-2.5 py-1 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                Modulo: {currentStrategy.formation} vs {currentStrategy.opponentFormation}
+              </span>
+            </div>
+
+            {/* Canvas della Lavagna Tattica 2D con visualizzazione integrata */}
+            <div className="relative aspect-[120/80] bg-[#070B12] rounded-xl border border-zinc-800 overflow-hidden shadow-2xl">
+              <TacticalPitchCanvas />
+            </div>
+
+            {/* Barra Temporale con Controlli di Animazione (Play, Scrubbing, Keyframe) */}
+            <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+              <TimelineBar />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONTENUTO LIVELLO 2: IMPARA (Didattica, Quiz, Puzzle) */}
       {activeTab === 'impara' && (
         <div className="w-full">
           <TacticalLearningLab />

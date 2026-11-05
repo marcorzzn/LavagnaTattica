@@ -5,6 +5,7 @@ import {
   BoardNote,
   BoardPenStroke,
   BoardZone,
+  CalibrationKeypoint,
   FormationPreset,
   GameFormat,
   Keyframe,
@@ -36,6 +37,26 @@ export interface TeamBlockSliders {
   shiftY: number; // 0..100 (50 neutral, Left/Right)
 }
 
+export const DEFAULT_CALIBRATION_KEYPOINTS: CalibrationKeypoint[] = [
+  { id: 'kp-1', label: 'Angolo Sup SX (18m, 14m)', imageU: 0.16, imageV: 0.22, pitchX: 18, pitchY: 14 },
+  { id: 'kp-2', label: 'Angolo Inf SX (18m, 66m)', imageU: 0.06, imageV: 0.88, pitchX: 18, pitchY: 66 },
+  { id: 'kp-3', label: 'Angolo Sup DX (96m, 14m)', imageU: 0.84, imageV: 0.22, pitchX: 96, pitchY: 14 },
+  { id: 'kp-4', label: 'Angolo Inf DX (96m, 66m)', imageU: 0.94, imageV: 0.88, pitchX: 96, pitchY: 66 },
+];
+
+export interface TacticalScene {
+  id: string;
+  name: string;
+  frameImageUrl: string | null;
+  frameMediaName: string;
+  perspectiveType: 'Broadcast' | 'Tactical High / Drone' | 'Goal-Line / Set-Piece';
+  keypoints: CalibrationKeypoint[];
+  players: PlayerNode[];
+  ball: { x: number; y: number };
+  matchContextNote: string;
+  createdAt: string;
+}
+
 interface StudioState {
   id: string;
   title: string;
@@ -63,7 +84,31 @@ interface StudioState {
   tags: TacticalTag[];
   activeTagId: string | null;
 
+  // Multi-frame Dossier & Scene Management
+  scenes: TacticalScene[];
+  activeSceneId: string;
+  analyzingTeam: 'home' | 'away';
+  attackDirection: 'right' | 'left';
+  currentUploadedFrameUrl: string | null;
+  currentUploadedMediaName: string;
+  currentKeypoints: CalibrationKeypoint[];
+  matchContextNote: string;
+
   // Actions
+  addPlayer: (team: 'home' | 'away', custom?: Partial<PlayerNode>) => PlayerNode;
+  removePlayer: (id: string) => void;
+  updatePlayer: (id: string, updates: Partial<PlayerNode>) => void;
+  setAnalyzingTeam: (team: 'home' | 'away') => void;
+  setAttackDirection: (dir: 'right' | 'left') => void;
+  setUploadedFrame: (url: string | null, name?: string) => void;
+  setKeypoints: (kps: CalibrationKeypoint[]) => void;
+  setMatchContextNote: (note: string) => void;
+  addScene: (name?: string) => string;
+  switchScene: (sceneId: string) => void;
+  deleteScene: (sceneId: string) => void;
+  exportProjectJson: () => string;
+  importProjectJson: (jsonStr: string) => boolean;
+
   addTacticalTag: (tag: TacticalTag) => void;
   setActiveTag: (tagId: string | null) => void;
   loadTagScenario: (tagId: string) => void;
@@ -122,6 +167,9 @@ function scheduleAutosave(state: any) {
         zones: state.zones,
         notes: state.notes,
         keyframes: state.keyframes,
+        scenes: state.scenes,
+        activeSceneId: state.activeSceneId,
+        matchContextNote: state.matchContextNote,
       },
     });
   }, 1500);
@@ -259,6 +307,281 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
   tags: CANONICAL_TACTICAL_TAGS,
   activeTagId: null,
+
+  // Multi-frame Dossier & Scene Management
+  scenes: [
+    {
+      id: 'scene-1',
+      name: 'Scena 1 · Costruzione',
+      frameImageUrl: null,
+      frameMediaName: '',
+      perspectiveType: 'Broadcast',
+      keypoints: DEFAULT_CALIBRATION_KEYPOINTS,
+      players: defaultStrategy.players,
+      ball: defaultStrategy.ball,
+      matchContextNote: 'Transizione offensiva · Minuto 75 · Punteggio 1-0',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  activeSceneId: 'scene-1',
+  analyzingTeam: 'home',
+  attackDirection: 'right',
+  currentUploadedFrameUrl: null,
+  currentUploadedMediaName: '',
+  currentKeypoints: DEFAULT_CALIBRATION_KEYPOINTS,
+  matchContextNote: 'Transizione offensiva · Minuto 75 · Punteggio 1-0',
+
+  addPlayer: (team: 'home' | 'away', custom?: Partial<PlayerNode>) => {
+    const s = get();
+    const teamPlayers = s.players.filter((p) => p.team === team);
+    if (teamPlayers.length >= 11) {
+      return teamPlayers[teamPlayers.length - 1];
+    }
+    const usedNumbers = new Set(teamPlayers.map((p) => p.number));
+    let nextNum = 2;
+    while (usedNumbers.has(nextNum) && nextNum <= 99) {
+      nextNum++;
+    }
+    const defaultArchetype =
+      PLAYER_ARCHETYPES_30.find(
+        (a) => a.positionGroup === (custom?.positionGroup || 'MID')
+      ) || PLAYER_ARCHETYPES_30[0];
+
+    const isHome = team === 'home';
+    const newPlayer: PlayerNode = {
+      id: `${team}-${String(nextNum).padStart(2, '0')}-${Date.now().toString().slice(-4)}`,
+      number: nextNum,
+      archetypeId: defaultArchetype.id,
+      archetypeName: defaultArchetype.name,
+      codeLabel: `${team.toUpperCase()}-${String(nextNum).padStart(2, '0')} (${defaultArchetype.name})`,
+      team,
+      role: defaultArchetype.name,
+      positionGroup: defaultArchetype.positionGroup,
+      x: isHome ? 45 + (nextNum % 4) * 6 : 75 - (nextNum % 4) * 6,
+      y: 18 + (nextNum % 5) * 11,
+      vx: 0,
+      vy: 0,
+      heightCm: defaultArchetype.defaultHeightCm,
+      foot: defaultArchetype.defaultFoot,
+      attributes: { ...defaultArchetype.defaultStats },
+      ...custom,
+    };
+
+    set((state) => ({
+      players: [...state.players, newPlayer],
+      basePlayers: [...state.basePlayers, newPlayer],
+    }));
+    scheduleAutosave(get());
+    return newPlayer;
+  },
+
+  removePlayer: (id: string) => {
+    set((state) => ({
+      players: state.players.filter((p) => p.id !== id),
+      basePlayers: state.basePlayers.filter((p) => p.id !== id),
+      ballCarrierId: state.ballCarrierId === id ? null : state.ballCarrierId,
+    }));
+    scheduleAutosave(get());
+  },
+
+  updatePlayer: (id: string, updates: Partial<PlayerNode>) => {
+    set((state) => ({
+      players: state.players.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+      basePlayers: state.basePlayers.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+    }));
+    scheduleAutosave(get());
+  },
+
+  setAnalyzingTeam: (team: 'home' | 'away') => {
+    set({ analyzingTeam: team });
+  },
+
+  setAttackDirection: (dir: 'right' | 'left') => {
+    set({ attackDirection: dir });
+  },
+
+  setUploadedFrame: (url: string | null, name = '') => {
+    set((state) => {
+      const updatedScenes = state.scenes.map((sc) =>
+        sc.id === state.activeSceneId
+          ? { ...sc, frameImageUrl: url, frameMediaName: name }
+          : sc
+      );
+      return {
+        currentUploadedFrameUrl: url,
+        currentUploadedMediaName: name,
+        scenes: updatedScenes,
+      };
+    });
+    scheduleAutosave(get());
+  },
+
+  setKeypoints: (kps: CalibrationKeypoint[]) => {
+    set((state) => {
+      const updatedScenes = state.scenes.map((sc) =>
+        sc.id === state.activeSceneId ? { ...sc, keypoints: kps } : sc
+      );
+      return {
+        currentKeypoints: kps,
+        scenes: updatedScenes,
+      };
+    });
+    scheduleAutosave(get());
+  },
+
+  setMatchContextNote: (note: string) => {
+    set((state) => {
+      const updatedScenes = state.scenes.map((sc) =>
+        sc.id === state.activeSceneId ? { ...sc, matchContextNote: note } : sc
+      );
+      return {
+        matchContextNote: note,
+        scenes: updatedScenes,
+      };
+    });
+    scheduleAutosave(get());
+  },
+
+  addScene: (name?: string) => {
+    const s = get();
+    const newIdx = s.scenes.length + 1;
+    const newSceneId = `scene-${Date.now()}`;
+    const newScene: TacticalScene = {
+      id: newSceneId,
+      name: name || `Scena ${newIdx}`,
+      frameImageUrl: s.currentUploadedFrameUrl,
+      frameMediaName: s.currentUploadedMediaName,
+      perspectiveType: 'Broadcast',
+      keypoints: s.currentKeypoints,
+      players: s.players.map((p) => ({ ...p })),
+      ball: { ...s.ball },
+      matchContextNote: s.matchContextNote,
+      createdAt: new Date().toISOString(),
+    };
+    set((state) => ({
+      scenes: [...state.scenes, newScene],
+      activeSceneId: newSceneId,
+    }));
+    scheduleAutosave(get());
+    return newSceneId;
+  },
+
+  switchScene: (sceneId: string) => {
+    const s = get();
+    const currentSceneIdx = s.scenes.findIndex((sc) => sc.id === s.activeSceneId);
+    let updatedScenes = [...s.scenes];
+    if (currentSceneIdx >= 0) {
+      updatedScenes[currentSceneIdx] = {
+        ...updatedScenes[currentSceneIdx],
+        players: s.players.map((p) => ({ ...p })),
+        ball: { ...s.ball },
+        keypoints: s.currentKeypoints,
+        frameImageUrl: s.currentUploadedFrameUrl,
+        frameMediaName: s.currentUploadedMediaName,
+        matchContextNote: s.matchContextNote,
+      };
+    }
+
+    const targetScene = updatedScenes.find((sc) => sc.id === sceneId);
+    if (!targetScene) return;
+
+    set({
+      scenes: updatedScenes,
+      activeSceneId: sceneId,
+      players: targetScene.players.map((p) => ({ ...p })),
+      ball: { ...targetScene.ball },
+      currentKeypoints: targetScene.keypoints,
+      currentUploadedFrameUrl: targetScene.frameImageUrl,
+      currentUploadedMediaName: targetScene.frameMediaName,
+      matchContextNote: targetScene.matchContextNote,
+    });
+    scheduleAutosave(get());
+  },
+
+  deleteScene: (sceneId: string) => {
+    const s = get();
+    if (s.scenes.length <= 1) return;
+    const remaining = s.scenes.filter((sc) => sc.id !== sceneId);
+    const nextActive = s.activeSceneId === sceneId ? remaining[0].id : s.activeSceneId;
+    set({ scenes: remaining, activeSceneId: nextActive });
+    get().switchScene(nextActive);
+  },
+
+  exportProjectJson: () => {
+    const s = get();
+    const payload = {
+      format: 'LAVAGNA_TATTICA_PROJECT_V2',
+      openCoreVersion: '2.0.0-SUPREME',
+      founderAuthority: 'Marco Razzano — 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
+      exportedAt: new Date().toISOString(),
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      homeFormation: s.homeFormation,
+      awayFormation: s.awayFormation,
+      analyzingTeam: s.analyzingTeam,
+      attackDirection: s.attackDirection,
+      matchContextNote: s.matchContextNote,
+      scenes: s.scenes,
+      activeSceneId: s.activeSceneId,
+      players: s.players,
+      ball: s.ball,
+      tags: s.tags,
+      arrows: s.arrows,
+      zones: s.zones,
+      notes: s.notes,
+    };
+    return JSON.stringify(payload, null, 2);
+  },
+
+  importProjectJson: (jsonStr: string) => {
+    try {
+      const data = JSON.parse(jsonStr);
+      if (!data || !data.players || !Array.isArray(data.players)) {
+        return false;
+      }
+      set({
+        id: data.id || `lavagna-imported-${Date.now()}`,
+        title: data.title || 'Progetto Importato',
+        description: data.description || '',
+        homeFormation: data.homeFormation || '4-3-3',
+        awayFormation: data.awayFormation || '3-5-2',
+        analyzingTeam: data.analyzingTeam || 'home',
+        attackDirection: data.attackDirection || 'right',
+        matchContextNote: data.matchContextNote || 'Transizione offensiva',
+        players: data.players,
+        basePlayers: data.players,
+        ball: data.ball || { x: 60, y: 40 },
+        scenes:
+          data.scenes && data.scenes.length > 0
+            ? data.scenes
+            : [
+                {
+                  id: 'scene-imported-1',
+                  name: 'Scena 1 · Importata',
+                  frameImageUrl: null,
+                  frameMediaName: '',
+                  perspectiveType: 'Broadcast',
+                  keypoints: DEFAULT_CALIBRATION_KEYPOINTS,
+                  players: data.players,
+                  ball: data.ball || { x: 60, y: 40 },
+                  matchContextNote: data.matchContextNote || '',
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+        activeSceneId: data.activeSceneId || data.scenes?.[0]?.id || 'scene-imported-1',
+        tags: Array.isArray(data.tags) ? data.tags : get().tags,
+        arrows: Array.isArray(data.arrows) ? data.arrows : [],
+        zones: Array.isArray(data.zones) ? data.zones : [],
+        notes: Array.isArray(data.notes) ? data.notes : [],
+      });
+      scheduleAutosave(get());
+      return true;
+    } catch (e) {
+      console.error('Failed to parse project JSON:', e);
+      return false;
+    }
+  },
 
   addTacticalTag: (tag) => {
     set((state) => ({

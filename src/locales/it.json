@@ -21,6 +21,7 @@
     "source": "Fonte",
     "details": "Dettagli",
     "export": "Esporta",
+    "exportJson": "Esporta JSON",
     "import": "Importa",
     "reset": "Ripristina",
     "verify": "Verifica",
