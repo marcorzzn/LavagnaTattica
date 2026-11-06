@@ -275,8 +275,9 @@ async function startServer() {
   app.get('/api/governance/adr-math', (_req, res) => {
     res.json({
       founder: 'Marco Razzano',
-      role: 'Fondatore, Proprietario, Autorità Matematica Suprema',
-      signatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
+      role: 'Ideatore del Progetto',
+      models: 'Google Gemini 2.5 Flash & Gemini 2.5 Pro (via Google Antigravity)',
+      signatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_CORE_ADR',
       adrRegistry: ADR_MATH_REGISTRY,
       archetypesCatalog: PLAYER_ARCHETYPES_30,
     });
@@ -507,7 +508,7 @@ Restituisci un JSON conforme allo schema richiesto con le posizioni normalizzate
     const ai = getAiClient();
     if (ai) {
       try {
-        const systemInstruction = `Sei l'LLM Orchestrator di LavagnaTattica (sotto l'autorità matematica suprema del Fondatore Marco Razzano, motore NucleoTattico).
+        const systemInstruction = `Sei l'LLM Orchestrator di LavagnaTattica (ideato da Marco Razzano con Gemini 2.5 Flash & Pro su Google Antigravity, motore NucleoTattico).
 REGOLE NON NEGOZIABILI:
 1. VIETATO USARE NOMI PROPRI di calciatori, squadre, allenatori, stadi o competizioni. Usa ESCLUSIVAMENTE le 30 Tipologie Astratte (es. Libero Moderno #6, Centravanti Boa #9, Mezzala d'Inserimento #13, Ala Invertita #11, Difensore Centrale di Copertura #4, Braccetto Aggressivo #2).
 2. L'LLM non inventa mai numeri e non calcola a mente; sintetizza esclusivamente i risultati restituiti dai tool matematici appena eseguiti.
@@ -586,7 +587,7 @@ Sintetizza la risposta tecnica in 2-3 paragrafi concisi senza usare alcun nome p
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`LavagnaTattica Supreme OS Server (motore NucleoTattico) running on http://localhost:${PORT}`);
+    console.log(`LavagnaTattica Server (motore NucleoTattico) running on http://localhost:${PORT}`);
   });
 }
 

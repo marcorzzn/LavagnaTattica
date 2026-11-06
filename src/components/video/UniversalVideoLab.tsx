@@ -24,6 +24,16 @@ import {
   AlertTriangle,
   Layers,
   Sparkles,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeftRight,
+  RefreshCw,
+  Maximize2,
+  Flag,
 } from 'lucide-react';
 import {
   CalibrationKeypoint,
@@ -55,8 +65,101 @@ import { PLAYER_ARCHETYPES_30 } from '../../core/presets';
 import { COACHING_STRATEGIES_CATALOG } from '../../core/tacticalStrategiesCatalog';
 import { Benchmark12Dimensions } from '../benchmark/Benchmark12Dimensions';
 import { TaggingPad } from './TaggingPad';
-import { useStudioStore } from '../../stores/studioStore';
+import { useStudioStore, DEFAULT_CALIBRATION_KEYPOINTS } from '../../stores/studioStore';
 import { useTranslation } from 'react-i18next';
+
+export type TacticalPhaseName =
+  | 'Costruzione dal Basso'
+  | 'Sviluppo Centrocampo'
+  | 'Rifinitura / Trequarti'
+  | 'Finalizzazione / Tiro'
+  | 'Transizione Offensiva'
+  | 'Ripiegamento Difensivo'
+  | 'Pressing Alto'
+  | 'Blocco Basso Difensivo';
+
+export interface CalibrationZonePreset {
+  id: string;
+  name: string;
+  badge: string;
+  description: string;
+  keypoints: CalibrationKeypoint[];
+}
+
+export const CALIBRATION_ZONE_PRESETS: CalibrationZonePreset[] = [
+  {
+    id: 'full_pitch',
+    name: 'Campo Intero / Broadcast',
+    badge: '0–120m',
+    description: 'Inquadratura panoramica grandangolare dell’intero campo 120×80m.',
+    keypoints: [
+      { id: 'kp-1', label: 'Angolo Sup SX (18m, 14m)', imageU: 0.16, imageV: 0.22, pitchX: 18, pitchY: 14 },
+      { id: 'kp-2', label: 'Angolo Inf SX (18m, 66m)', imageU: 0.06, imageV: 0.88, pitchX: 18, pitchY: 66 },
+      { id: 'kp-3', label: 'Angolo Sup DX (96m, 14m)', imageU: 0.84, imageV: 0.22, pitchX: 96, pitchY: 14 },
+      { id: 'kp-4', label: 'Angolo Inf DX (96m, 66m)', imageU: 0.94, imageV: 0.88, pitchX: 96, pitchY: 66 },
+    ],
+  },
+  {
+    id: 'penalty_box_left',
+    name: 'Area Rigore SX & Costruzione',
+    badge: '0–40m',
+    description: 'Inquadratura sull’area di rigore sinistra, uscita portiere e prima costruzione.',
+    keypoints: [
+      { id: 'kp-1', label: 'Linea Fondo SX Alto (2m, 16m)', imageU: 0.12, imageV: 0.20, pitchX: 2, pitchY: 16 },
+      { id: 'kp-2', label: 'Linea Fondo SX Basso (2m, 64m)', imageU: 0.06, imageV: 0.88, pitchX: 2, pitchY: 64 },
+      { id: 'kp-3', label: 'Trequarti Difesa SX Alto (38m, 16m)', imageU: 0.86, imageV: 0.20, pitchX: 38, pitchY: 16 },
+      { id: 'kp-4', label: 'Trequarti Difesa SX Basso (38m, 64m)', imageU: 0.92, imageV: 0.88, pitchX: 38, pitchY: 64 },
+    ],
+  },
+  {
+    id: 'half_pitch_left',
+    name: 'Metà Campo Sinistra',
+    badge: '0–60m',
+    description: 'Metà campo difensiva sinistra fino alla linea mediana di centrocampo a 60m.',
+    keypoints: [
+      { id: 'kp-1', label: 'Metà SX Fondo Alto (6m, 14m)', imageU: 0.14, imageV: 0.22, pitchX: 6, pitchY: 14 },
+      { id: 'kp-2', label: 'Metà SX Fondo Basso (6m, 66m)', imageU: 0.06, imageV: 0.88, pitchX: 6, pitchY: 66 },
+      { id: 'kp-3', label: 'Metà Campo Mediana Alto (58m, 14m)', imageU: 0.84, imageV: 0.22, pitchX: 58, pitchY: 14 },
+      { id: 'kp-4', label: 'Metà Campo Mediana Basso (58m, 66m)', imageU: 0.94, imageV: 0.88, pitchX: 58, pitchY: 66 },
+    ],
+  },
+  {
+    id: 'midfield_center',
+    name: 'Centrocampo Centrale',
+    badge: '35–85m',
+    description: 'Zona nevralgica centrale attorno al cerchio di centrocampo a 60m.',
+    keypoints: [
+      { id: 'kp-1', label: 'Centro SX Alto (36m, 14m)', imageU: 0.14, imageV: 0.22, pitchX: 36, pitchY: 14 },
+      { id: 'kp-2', label: 'Centro SX Basso (36m, 66m)', imageU: 0.06, imageV: 0.88, pitchX: 36, pitchY: 66 },
+      { id: 'kp-3', label: 'Centro DX Alto (84m, 14m)', imageU: 0.84, imageV: 0.22, pitchX: 84, pitchY: 14 },
+      { id: 'kp-4', label: 'Centro DX Basso (84m, 66m)', imageU: 0.94, imageV: 0.88, pitchX: 84, pitchY: 66 },
+    ],
+  },
+  {
+    id: 'half_pitch_right',
+    name: 'Metà Campo Destra',
+    badge: '60–120m',
+    description: 'Metà campo offensiva destra dalla linea mediana alla porta avversaria a 120m.',
+    keypoints: [
+      { id: 'kp-1', label: 'Metà Campo DX Alto (62m, 14m)', imageU: 0.14, imageV: 0.22, pitchX: 62, pitchY: 14 },
+      { id: 'kp-2', label: 'Metà Campo DX Basso (62m, 66m)', imageU: 0.06, imageV: 0.88, pitchX: 62, pitchY: 66 },
+      { id: 'kp-3', label: 'Fondo DX Alto (114m, 14m)', imageU: 0.84, imageV: 0.22, pitchX: 114, pitchY: 14 },
+      { id: 'kp-4', label: 'Fondo DX Basso (114m, 66m)', imageU: 0.94, imageV: 0.88, pitchX: 114, pitchY: 66 },
+    ],
+  },
+  {
+    id: 'penalty_box_right',
+    name: 'Area Rigore DX & Attacco',
+    badge: '80–120m',
+    description: 'Area di rigore destra d’attacco, tiri in porta, cross e finalizzazione.',
+    keypoints: [
+      { id: 'kp-1', label: 'Limite Area DX Alto (82m, 16m)', imageU: 0.12, imageV: 0.20, pitchX: 82, pitchY: 16 },
+      { id: 'kp-2', label: 'Limite Area DX Basso (82m, 64m)', imageU: 0.06, imageV: 0.88, pitchX: 82, pitchY: 64 },
+      { id: 'kp-3', label: 'Linea Fondo DX Alto (118m, 16m)', imageU: 0.86, imageV: 0.20, pitchX: 118, pitchY: 16 },
+      { id: 'kp-4', label: 'Linea Fondo DX Basso (118m, 64m)', imageU: 0.92, imageV: 0.88, pitchX: 118, pitchY: 64 },
+    ],
+  },
+];
 
 interface UniversalVideoLabProps {
   tacticalState: TacticalState;
@@ -141,9 +244,21 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   const [showPerspectiveHeatmap, setShowPerspectiveHeatmap] = useState<boolean>(true);
   const [showTacticalCorridors, setShowTacticalCorridors] = useState<boolean>(false);
   const [showOffsideLine, setShowOffsideLine] = useState<boolean>(true);
+  const [showProjectedFieldLines, setShowProjectedFieldLines] = useState<boolean>(true);
   const [showPose17, setShowPose17] = useState<boolean>(false);
   const [showHomographyGrid, setShowHomographyGrid] = useState<boolean>(false);
   const [showAllLabels, setShowAllLabels] = useState<boolean>(false);
+
+  // Fuorigioco Dinamico / Manuale
+  const [offsideMode, setOffsideMode] = useState<'auto' | 'manual'>('auto');
+  const [manualOffsideX, setManualOffsideX] = useState<number | null>(null);
+
+  // Fase Tattica Attiva
+  const [tacticalPhase, setTacticalPhase] = useState<TacticalPhaseName>('Sviluppo Centrocampo');
+
+  // Rimozione Pedina con Long-Press o Hover '✕'
+  const [heldPlayerId, setHeldPlayerId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Entità in Drag & Drop sul Canvas
   const [draggingEntity, setDraggingEntity] = useState<
@@ -152,6 +267,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
     | { type: 'kp'; id: string }
     | { type: 'arrow_from' }
     | { type: 'arrow_to' }
+    | { type: 'offside_line' }
     | null
   >(null);
 
@@ -226,9 +342,27 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
       fromY: storeBall.y,
       analyzingTeam,
       attackDirection,
+      manualOffsideX: offsideMode === 'manual' ? manualOffsideX : null,
     }),
-    [actionProps, storeBall.x, storeBall.y, analyzingTeam, attackDirection]
+    [actionProps, storeBall.x, storeBall.y, analyzingTeam, attackDirection, offsideMode, manualOffsideX]
   );
+
+  // Calcolo Coordinata X Effettiva della Linea di Fuorigioco (Auto o Manuale)
+  const effectiveOffsideX = useMemo(() => {
+    const isActorHome = analyzingTeam === 'home';
+    const homeAttacksRight = (attackDirection || 'right') === 'right';
+    const actorAttacksRight = isActorHome ? homeAttacksRight : !homeAttacksRight;
+    const targetX = actorAttacksRight ? 120 : 0;
+
+    const opps = storePlayers.filter((p) => p.team !== analyzingTeam);
+    const sortedOpps = opps
+      .slice()
+      .sort((a, b) => Math.abs(a.x - targetX) - Math.abs(b.x - targetX));
+    const secondLastDef = sortedOpps[1] || sortedOpps[0];
+    const autoX = secondLastDef ? secondLastDef.x : (actorAttacksRight ? 90 : 30);
+
+    return offsideMode === 'manual' && manualOffsideX !== null ? manualOffsideX : autoX;
+  }, [analyzingTeam, attackDirection, storePlayers, offsideMode, manualOffsideX]);
 
   // Calcolo Valutazione Azione (Fisica del Tiro, Fuorigioco, Portiere, Cover Shadow, Pressing)
   const actionEvaluation = useMemo(
@@ -354,10 +488,18 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
     } else if (draggingEntity.type === 'arrow_to') {
       setSelectedMoveRank('custom');
       setActionProps((prev) => ({ ...prev, toX: clampedX, toY: clampedY }));
+    } else if (draggingEntity.type === 'offside_line') {
+      const clampedOffX = Number(Math.max(5, Math.min(115, pitchPt.x)).toFixed(1));
+      setManualOffsideX(clampedOffX);
+      setOffsideMode('manual');
     }
   };
 
   const handleSvgMouseUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
     if (draggingEntity) {
       setDraggingEntity(null);
       onSyncTrackedPositionsToLab(storePlayers, homeDetected.formation, awayDetected.formation);
@@ -365,7 +507,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   };
 
   const selectedPlayer = useMemo(
-    () => storePlayers.find((p) => p.id === selectedPlayerId) || storePlayers[0],
+    () => storePlayers.find((p) => p.id === selectedPlayerId) || storePlayers[0] || null,
     [storePlayers, selectedPlayerId]
   );
 
@@ -381,6 +523,53 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
       foot: arch.defaultFoot,
       attributes: { ...arch.defaultStats },
     });
+  };
+
+  // Gestione Calibrazione & Spostamento/Zoom del Campo sul Frame
+  const handlePanField = (dx: number, dy: number) => {
+    const updated = currentKeypoints.map((kp) => ({
+      ...kp,
+      pitchX: Number(Math.max(0, Math.min(120, kp.pitchX + dx)).toFixed(1)),
+      pitchY: Number(Math.max(0, Math.min(80, kp.pitchY + dy)).toFixed(1)),
+    }));
+    setKeypoints(updated);
+  };
+
+  const handleZoomField = (factor: number) => {
+    const meanX = currentKeypoints.reduce((acc, k) => acc + k.pitchX, 0) / currentKeypoints.length;
+    const meanY = currentKeypoints.reduce((acc, k) => acc + k.pitchY, 0) / currentKeypoints.length;
+
+    const updated = currentKeypoints.map((kp) => ({
+      ...kp,
+      pitchX: Number(Math.max(0, Math.min(120, meanX + (kp.pitchX - meanX) * factor)).toFixed(1)),
+      pitchY: Number(Math.max(0, Math.min(80, meanY + (kp.pitchY - meanY) * factor)).toFixed(1)),
+    }));
+    setKeypoints(updated);
+  };
+
+  const handleResetKeypoints = () => {
+    setKeypoints(DEFAULT_CALIBRATION_KEYPOINTS);
+  };
+
+  const handleApplyZonePreset = (preset: CalibrationZonePreset) => {
+    setKeypoints(preset.keypoints);
+  };
+
+  const handleUpdateKeypointCoord = (
+    id: string,
+    field: 'pitchX' | 'pitchY',
+    delta: number
+  ) => {
+    const maxVal = field === 'pitchX' ? 120 : 80;
+    const updated = currentKeypoints.map((kp) =>
+      kp.id === id
+        ? {
+            ...kp,
+            [field]: Number(Math.max(0, Math.min(maxVal, kp[field] + delta)).toFixed(1)),
+          }
+        : kp
+    );
+    setKeypoints(updated);
   };
 
   // Calcolo Percentuale Barra Chess.com Bicolore (Blu vs Rosso)
@@ -574,12 +763,12 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
             </div>
           </div>
 
-          {/* BARRA CONTESTO: SQUADRA DI RIFERIMENTO + MODULI RILEVATI + DIREZIONE ATTACCO */}
+          {/* BARRA CONTESTO TATTICO: CHI ATTACCA / CHI DIFENDE + POSSESSO + FASE TATTICA + DIREZIONE */}
           <div className="px-4 py-2.5 rounded-xl bg-[#0F0F14] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Selettore Prospettiva di Analisi */}
-              <div className="flex items-center gap-1.5 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-                <span className="text-[11px] text-zinc-400 px-1.5">Analizza per:</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Selettore Chi Attacca e Chi Difende */}
+              <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                <span className="text-[11px] text-zinc-400 px-1.5 font-medium">Ruoli Tattici:</span>
                 <button
                   onClick={() => setAnalyzingTeam('home')}
                   className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
@@ -587,10 +776,20 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       ? 'bg-blue-600 text-white shadow'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
+                  title="Imposta la Squadra A (Blu) come squadra in fase offensiva"
                 >
                   <span className="w-2 h-2 rounded-full bg-blue-300" />
-                  Squadra A ({homePlayersList.length} pedine)
+                  Blu ATTACCA ({homePlayersList.length})
                 </button>
+
+                <button
+                  onClick={() => setAnalyzingTeam(analyzingTeam === 'home' ? 'away' : 'home')}
+                  className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+                  title="Inverti ruoli: scambia chi attacca e chi difende"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5 text-zinc-400" />
+                </button>
+
                 <button
                   onClick={() => setAnalyzingTeam('away')}
                   className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
@@ -598,47 +797,124 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       ? 'bg-red-600 text-white shadow'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
+                  title="Imposta la Squadra B (Rossa) come squadra in fase offensiva"
                 >
                   <span className="w-2 h-2 rounded-full bg-red-300" />
-                  Squadra B ({awayPlayersList.length} pedine)
+                  Rossi ATTACCA ({awayPlayersList.length})
                 </button>
-              </div>
-
-              {/* Riconoscimento Modulo Intelligente */}
-              <div className="flex items-center gap-2 text-zinc-300">
-                <span className="font-mono text-blue-400 font-semibold">
-                  A: {homeDetected.formation} (rilevato)
-                </span>
-                <span className="text-zinc-600">vs</span>
-                <span className="font-mono text-red-400 font-semibold">
-                  B: {awayDetected.formation} (rilevato)
-                </span>
               </div>
 
               {/* Toggle Direzione di Attacco */}
               <button
                 onClick={() => setAttackDirection(attackDirection === 'right' ? 'left' : 'right')}
-                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-md border border-zinc-800 flex items-center gap-1"
+                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 flex items-center gap-1.5 font-mono"
                 title="Inverti la direzione delle porte attaccate"
               >
                 <Compass className="w-3.5 h-3.5 text-amber-400" />
-                {attackDirection === 'right' ? 'A attacca →' : '← A attacca'}
+                <span>
+                  {attackDirection === 'right'
+                    ? `${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca ➔ (porta a 120m)`
+                    : `⬅ ${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca (porta a 0m)`}
+                </span>
               </button>
+
+              {/* Selettore Fase Tattica Attiva */}
+              <div className="flex items-center gap-1.5 bg-zinc-900 px-2 py-1 rounded-lg border border-zinc-800">
+                <span className="text-[11px] text-zinc-400 font-medium">Fase:</span>
+                <select
+                  value={tacticalPhase}
+                  onChange={(e) => setTacticalPhase(e.target.value as TacticalPhaseName)}
+                  className="bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none cursor-pointer"
+                >
+                  <option value="Costruzione dal Basso" className="bg-zinc-900 text-zinc-200">
+                    🏗️ Costruzione dal Basso
+                  </option>
+                  <option value="Sviluppo Centrocampo" className="bg-zinc-900 text-zinc-200">
+                    ⚙️ Sviluppo Centrocampo
+                  </option>
+                  <option value="Rifinitura / Trequarti" className="bg-zinc-900 text-zinc-200">
+                    🎯 Rifinitura / Trequarti
+                  </option>
+                  <option value="Finalizzazione / Tiro" className="bg-zinc-900 text-zinc-200">
+                    ⚡ Finalizzazione / Tiro
+                  </option>
+                  <option value="Transizione Offensiva" className="bg-zinc-900 text-zinc-200">
+                    🔄 Transizione Offensiva
+                  </option>
+                  <option value="Ripiegamento Difensivo" className="bg-zinc-900 text-zinc-200">
+                    🛡️ Ripiegamento Difensivo
+                  </option>
+                  <option value="Pressing Alto" className="bg-zinc-900 text-zinc-200">
+                    🛑 Pressing Alto
+                  </option>
+                  <option value="Blocco Basso Difensivo" className="bg-zinc-900 text-zinc-200">
+                    🧱 Blocco Basso Difensivo
+                  </option>
+                </select>
+              </div>
             </div>
 
-            {/* Possesso Palla Deterministico */}
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-400">Possesso:</span>
-              <span
-                className={`font-semibold px-2 py-0.5 rounded font-mono ${
-                  effectivePossessionTeam === 'home'
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}
-              >
-                {effectivePossessionTeam === 'home' ? 'Squadra A (Blu)' : 'Squadra B (Rossa)'}
-                {ballCarrier ? ` · #${ballCarrier.number} ${ballCarrier.archetypeName}` : ' (Palla contesa)'}
-              </span>
+            {/* Possesso Palla Deterministico + Controllo Fuorigioco */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Badge Possesso Palla */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-400">Possesso:</span>
+                <span
+                  className={`font-semibold px-2.5 py-1 rounded-lg font-mono flex items-center gap-1.5 ${
+                    ballCarrier
+                      ? ballCarrier.team === 'home'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      : 'bg-zinc-800/60 text-zinc-300 border border-zinc-700/60'
+                  }`}
+                  title={
+                    ballCarrier
+                      ? `Palla agganciata alla pedina #${ballCarrier.number} (${ballCarrier.archetypeName}) a ${Math.hypot(ballCarrier.x - storeBall.x, ballCarrier.y - storeBall.y).toFixed(1)}m`
+                      : 'Palla non vicina ad alcuna pedina (contesa o passaggio in volo)'
+                  }
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      ballCarrier
+                        ? ballCarrier.team === 'home'
+                          ? 'bg-blue-400'
+                          : 'bg-red-400'
+                        : 'bg-amber-400'
+                    }`}
+                  />
+                  {ballCarrier
+                    ? `${ballCarrier.team === 'home' ? 'Blu' : 'Rossi'} (#${ballCarrier.number} ${ballCarrier.archetypeName})`
+                    : 'Palla contesa / libera'}
+                </span>
+              </div>
+
+              {/* Badge Fuorigioco Attivo */}
+              <div className="flex items-center gap-1">
+                <span
+                  className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center gap-1 ${
+                    actionEvaluation.isOffside
+                      ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                      : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                  }`}
+                  title={`Linea a ${effectiveOffsideX.toFixed(1)}m (${offsideMode === 'manual' ? 'posizionata manualmente' : 'agganciata al penultimo difendente'})`}
+                >
+                  <Flag className="w-3 h-3" />
+                  {actionEvaluation.isOffside ? 'OFFSIDE!' : 'REGOLARE'} ({effectiveOffsideX.toFixed(0)}m)
+                </span>
+
+                {offsideMode === 'manual' && (
+                  <button
+                    onClick={() => {
+                      setOffsideMode('auto');
+                      setManualOffsideX(null);
+                    }}
+                    className="p-1 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded transition-colors"
+                    title="Ripristina fuorigioco automatico (penultimo difensore)"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -730,6 +1006,18 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
 
                 {/* Toggles Visivi Tattici */}
                 <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setShowProjectedFieldLines(!showProjectedFieldLines)}
+                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+                      showProjectedFieldLines
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                    }`}
+                    title="Proietta le linee canoniche del campo 120x80m (linee laterali, aree rigore, cerchio centrocampo) per allinearle al video"
+                  >
+                    Linee Campo
+                  </button>
+
                   <button
                     onClick={() => setShowTacticalCorridors(!showTacticalCorridors)}
                     className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
@@ -870,6 +1158,77 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       </marker>
                     </defs>
 
+                    {/* 0. Linee Campo Canoniche Proiettate sul Frame (120x80m) */}
+                    {showProjectedFieldLines && (
+                      <g className="pointer-events-none opacity-45" stroke="#F8FAFC" strokeWidth="1.2">
+                        {/* Perimetro */}
+                        {[
+                          [[0, 0], [120, 0]],
+                          [[120, 0], [120, 80]],
+                          [[120, 80], [0, 80]],
+                          [[0, 80], [0, 0]],
+                          // Metà campo
+                          [[60, 0], [60, 80]],
+                          // Area rigore SX
+                          [[0, 19.85], [16.5, 19.85]],
+                          [[16.5, 19.85], [16.5, 60.15]],
+                          [[16.5, 60.15], [0, 60.15]],
+                          // Area piccola SX
+                          [[0, 30.85], [5.5, 30.85]],
+                          [[5.5, 30.85], [5.5, 49.15]],
+                          [[5.5, 49.15], [0, 49.15]],
+                          // Area rigore DX
+                          [[120, 19.85], [103.5, 19.85]],
+                          [[103.5, 19.85], [103.5, 60.15]],
+                          [[103.5, 60.15], [120, 60.15]],
+                          // Area piccola DX
+                          [[120, 30.85], [114.5, 30.85]],
+                          [[114.5, 30.85], [114.5, 49.15]],
+                          [[114.5, 49.15], [120, 49.15]],
+                        ].map(([pA, pB], idx) => {
+                          const uA = projectPitchToImage(pA[0], pA[1], HInv);
+                          const uB = projectPitchToImage(pB[0], pB[1], HInv);
+                          return (
+                            <line
+                              key={`pitch-line-${idx}`}
+                              x1={uA.u * 1000}
+                              y1={uA.v * 562.5}
+                              x2={uB.u * 1000}
+                              y2={uB.v * 562.5}
+                              strokeDasharray={idx === 4 ? 'none' : '4 3'}
+                            />
+                          );
+                        })}
+
+                        {/* Cerchio di Centrocampo R=9.15m centrato a (60, 40) */}
+                        <polyline
+                          points={Array.from({ length: 25 }, (_, i) => {
+                            const angle = (i / 24) * 2 * Math.PI;
+                            const x = 60 + 9.15 * Math.cos(angle);
+                            const y = 40 + 9.15 * Math.sin(angle);
+                            const uv = projectPitchToImage(x, y, HInv);
+                            return `${uv.u * 1000},${uv.v * 562.5}`;
+                          }).join(' ')}
+                          fill="none"
+                          strokeDasharray="3 3"
+                        />
+
+                        {/* Dischetti Rigore (11m, 40m), (109m, 40m) e Centro (60m, 40m) */}
+                        {[[11, 40], [60, 40], [109, 40]].map(([sx, sy], sIdx) => {
+                          const uv = projectPitchToImage(sx, sy, HInv);
+                          return (
+                            <circle
+                              key={`pitch-spot-${sIdx}`}
+                              cx={uv.u * 1000}
+                              cy={uv.v * 562.5}
+                              r={2.5}
+                              fill="#F8FAFC"
+                            />
+                          );
+                        })}
+                      </g>
+                    )}
+
                     {/* 1. Corridoi Tattici Verticali e Zona 14 */}
                     {showTacticalCorridors && (
                       <g className="pointer-events-none opacity-45">
@@ -908,43 +1267,83 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       </g>
                     )}
 
-                    {/* 2. Linea Fuorigioco Dinamica */}
+                    {/* 2. Linea Fuorigioco Dinamica o Manuale (Trascina Libero) */}
                     {(showOffsideLine || actionEvaluation.isOffside) &&
                       (() => {
-                        const targetX = actionEvaluation.actorTeam === 'home' ? 120 : 0;
-                        const opps = storePlayers.filter((p) => p.team !== actionEvaluation.actorTeam);
-                        const sortedOpps = opps
-                          .slice()
-                          .sort((a, b) => Math.abs(a.x - targetX) - Math.abs(b.x - targetX));
-                        const secondLastDef = sortedOpps[1] || sortedOpps[0];
-                        if (!secondLastDef) return null;
+                        const off0 = projectPitchToImage(effectiveOffsideX, 0, HInv);
+                        const off1 = projectPitchToImage(effectiveOffsideX, 80, HInv);
+                        const midOff = projectPitchToImage(effectiveOffsideX, 40, HInv);
+                        const strokeColor = actionEvaluation.isOffside
+                          ? '#EF4444'
+                          : offsideMode === 'manual'
+                            ? '#00E5FF'
+                            : '#F59E0B';
 
-                        const off0 = projectPitchToImage(secondLastDef.x, 0, HInv);
-                        const off1 = projectPitchToImage(secondLastDef.x, 80, HInv);
-                        const strokeColor = actionEvaluation.isOffside ? '#EF4444' : '#F59E0B';
+                        const midPx = midOff.u * 1000;
+                        const midPy = midOff.v * 562.5;
 
                         return (
-                          <g className="pointer-events-none">
+                          <g>
+                            {/* Traccia Linea tratteggiata */}
                             <line
                               x1={off0.u * 1000}
                               y1={off0.v * 562.5}
                               x2={off1.u * 1000}
                               y2={off1.v * 562.5}
                               stroke={strokeColor}
-                              strokeWidth="2.5"
+                              strokeWidth={actionEvaluation.isOffside ? '3.2' : '2.5'}
                               strokeDasharray="6 4"
                             />
-                            <text
-                              x={off0.u * 1000 + 6}
-                              y={off0.v * 562.5 + 16}
-                              fontSize="10"
-                              fill={strokeColor}
-                              className="font-mono font-bold"
+
+                            {/* Linea invisibile spessa per drag facilitato */}
+                            <line
+                              x1={off0.u * 1000}
+                              y1={off0.v * 562.5}
+                              x2={off1.u * 1000}
+                              y2={off1.v * 562.5}
+                              stroke="transparent"
+                              strokeWidth="20"
+                              className="cursor-ew-resize pointer-events-auto"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setOffsideMode('manual');
+                                setDraggingEntity({ type: 'offside_line' });
+                              }}
+                            />
+
+                            {/* Badge / Maniglia Interattiva per Trascina Manuale */}
+                            <g
+                              transform={`translate(${midPx}, ${midPy})`}
+                              className="cursor-ew-resize pointer-events-auto select-none"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setOffsideMode('manual');
+                                setDraggingEntity({ type: 'offside_line' });
+                              }}
                             >
-                              {actionEvaluation.isOffside
-                                ? 'LINEA FUORIGIOCO (OFFSIDE!)'
-                                : 'LINEA FUORIGIOCO'}
-                            </text>
+                              <rect
+                                x={-76}
+                                y={-13}
+                                width={152}
+                                height={26}
+                                rx={6}
+                                fill="#09090B"
+                                fillOpacity="0.94"
+                                stroke={strokeColor}
+                                strokeWidth="1.5"
+                              />
+                              <text
+                                x={0}
+                                y={4}
+                                textAnchor="middle"
+                                fontSize="9"
+                                fill={strokeColor}
+                                className="font-mono font-bold"
+                              >
+                                {actionEvaluation.isOffside ? '⚠️ OFFSIDE' : '✓ REGOLARE'}{' '}
+                                ({effectiveOffsideX.toFixed(1)}m) {offsideMode === 'manual' ? '✋' : '🤖'}
+                              </text>
+                            </g>
                           </g>
                         );
                       })()}
@@ -1018,13 +1417,36 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                         <g
                           key={player.id}
                           transform={`translate(${px}, ${py})`}
-                          className="cursor-grab active:cursor-grabbing"
+                          className="cursor-grab active:cursor-grabbing select-none"
                           onMouseEnter={() => setHoveredPlayerId(player.id)}
-                          onMouseLeave={() => setHoveredPlayerId(null)}
+                          onMouseLeave={() => {
+                            setHoveredPlayerId(null);
+                            if (longPressTimerRef.current) {
+                              clearTimeout(longPressTimerRef.current);
+                              longPressTimerRef.current = null;
+                            }
+                          }}
                           onMouseDown={(e) => {
                             e.stopPropagation();
                             setSelectedPlayerId(player.id);
                             setDraggingEntity({ type: 'player', id: player.id });
+                            if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                            longPressTimerRef.current = setTimeout(() => {
+                              setHeldPlayerId(player.id);
+                            }, 380);
+                          }}
+                          onMouseUp={() => {
+                            if (longPressTimerRef.current) {
+                              clearTimeout(longPressTimerRef.current);
+                              longPressTimerRef.current = null;
+                            }
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removePlayer(player.id);
+                            if (selectedPlayerId === player.id) setSelectedPlayerId('');
+                            if (heldPlayerId === player.id) setHeldPlayerId(null);
                           }}
                         >
                           {/* Anello evidenziatore */}
@@ -1056,10 +1478,52 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                             textAnchor="middle"
                             fontSize="9.5"
                             fill="#FFFFFF"
-                            className="font-mono font-bold pointer-events-none"
+                            className="font-mono font-bold pointer-events-none select-none"
                           >
                             {player.number}
                           </text>
+
+                          {/* Bottone '✕' Rosso per Rimozione Immediata con 1 Click (su Hover, Selezione o Long-Press) */}
+                          {(isSelected || isHovered || heldPlayerId === player.id) && (
+                            <g
+                              transform="translate(11, -11)"
+                              className="cursor-pointer pointer-events-auto"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removePlayer(player.id);
+                                if (selectedPlayerId === player.id) setSelectedPlayerId('');
+                                if (heldPlayerId === player.id) setHeldPlayerId(null);
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                removePlayer(player.id);
+                                if (selectedPlayerId === player.id) setSelectedPlayerId('');
+                                if (heldPlayerId === player.id) setHeldPlayerId(null);
+                              }}
+                            >
+                              <title>Rimuovi pedina dal frame (Click rapido o Tasto destro)</title>
+                              <circle
+                                cx={0}
+                                cy={0}
+                                r={7.5}
+                                fill="#EF4444"
+                                stroke="#FFFFFF"
+                                strokeWidth="1.3"
+                                className="filter drop-shadow"
+                              />
+                              <text
+                                x={0}
+                                y={3}
+                                textAnchor="middle"
+                                fontSize="9.5"
+                                fontWeight="900"
+                                fill="#FFFFFF"
+                                className="pointer-events-none select-none font-sans"
+                              >
+                                ✕
+                              </text>
+                            </g>
+                          )}
 
                           {/* Nome Esteso su Hover / Selezione */}
                           {showBadge && (
@@ -1655,7 +2119,10 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                               </select>
 
                               <button
-                                onClick={() => removePlayer(p.id)}
+                                onClick={() => {
+                                  removePlayer(p.id);
+                                  if (selectedPlayerId === p.id) setSelectedPlayerId('');
+                                }}
                                 className="p-1 text-zinc-500 hover:text-red-400"
                                 title="Rimuovi pedina dal frame"
                               >
@@ -1726,7 +2193,10 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                               </select>
 
                               <button
-                                onClick={() => removePlayer(p.id)}
+                                onClick={() => {
+                                  removePlayer(p.id);
+                                  if (selectedPlayerId === p.id) setSelectedPlayerId('');
+                                }}
                                 className="p-1 text-zinc-500 hover:text-red-400"
                                 title="Rimuovi pedina dal frame"
                               >
@@ -1741,40 +2211,202 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 )}
 
                 {/* ================================================================
-                    SCHEDA 3: CALIBRAZIONE CAMERA & OMOGRAFIA H
+                    SCHEDA 3: CALIBRAZIONE CAMERA, INQUADRATURA & OMOGRAFIA H
                    ================================================================ */}
                 {rightTab === 'calibrazione' && (
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-100">Setup Camera & Omografia Planare H</h4>
+                      <h4 className="text-xs font-bold text-zinc-100 flex items-center justify-between">
+                        <span>Posizionamento Campo & Omografia H</span>
+                        <span className="font-mono text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          Errore: {reprojectionErrorPx}m
+                        </span>
+                      </h4>
                       <p className="text-[11px] text-zinc-400 leading-relaxed mt-1">
-                        Trascina i 4 riferimenti sul frame per adattare il campo reale 120×80m alla prospettiva della telecamera.
+                        Scegli la zona inquadrata nel frame, sposta il campo con i tasti direzionali o trascina i 4 punti di ancoraggio sul video.
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 text-xs">
-                      <span className="text-zinc-400">Errore medio riproiezione:</span>
-                      <span className="font-mono font-semibold text-emerald-400">
-                        {reprojectionErrorPx} m
-                      </span>
+                    {/* 1. PRESET RAPIDI DI INQUADRATURA (CAMPO INTERO, AREE RIGORE, CENTROCAMPO) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-200">
+                        <span>1. Zona Inquadrata nel Frame (Preset)</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">6 Zone</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {CALIBRATION_ZONE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.id}
+                            onClick={() => handleApplyZonePreset(preset)}
+                            className="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 hover:border-blue-500/50 text-left transition-all group"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-zinc-200 group-hover:text-blue-300">
+                                {preset.name}
+                              </span>
+                              <span className="text-[10px] font-mono text-zinc-400 font-semibold bg-zinc-800 px-1.5 py-0.5 rounded">
+                                {preset.badge}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-zinc-500 mt-1 line-clamp-1 leading-tight">
+                              {preset.description}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      {currentKeypoints.map((kp) => (
-                        <div
-                          key={kp.id}
-                          className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-xs font-mono"
+                    {/* 2. PULSANTIERA SPOSTAMENTO & ZOOM DEL CAMPO (PAN & SCALE) */}
+                    <div className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-200">
+                        <span>2. Regolazione Fine (Sposta & Zoom)</span>
+                        <button
+                          onClick={handleResetKeypoints}
+                          className="text-[10px] text-zinc-400 hover:text-amber-400 flex items-center gap-1 font-mono transition-colors"
+                          title="Ripristina i 4 riferimenti standard"
                         >
-                          <div className="text-zinc-200 font-semibold">
-                            {kp.id.toUpperCase()} → ({kp.pitchX}m, {kp.pitchY}m)
-                          </div>
-                          <div className="text-[10px] text-zinc-500 mt-0.5">
-                            u={kp.imageU}, v={kp.imageV}
-                          </div>
-                        </div>
-                      ))}
+                          <RefreshCw className="w-3 h-3" />
+                          Reset
+                        </button>
+                      </div>
+
+                      {/* Direction Pad & Zoom Buttons */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <div />
+                        <button
+                          onClick={() => handlePanField(0, -4)}
+                          className="px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1"
+                          title="Sposta il campo verso l'alto (-4m Y)"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                          Alto
+                        </button>
+                        <button
+                          onClick={() => handleZoomField(0.9)}
+                          className="px-2 py-1.5 rounded-lg bg-blue-950/60 hover:bg-blue-900 text-blue-300 border border-blue-800/60 text-xs font-semibold flex items-center justify-center gap-1"
+                          title="Zoom In: restringe il campo inquadrato (+10%)"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                          Zoom +
+                        </button>
+
+                        <button
+                          onClick={() => handlePanField(-5, 0)}
+                          className="px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1"
+                          title="Sposta il campo verso sinistra (-5m X)"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                          SX (-5m)
+                        </button>
+                        <button
+                          onClick={() => handlePanField(0, 4)}
+                          className="px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1"
+                          title="Sposta il campo verso il basso (+4m Y)"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                          Basso
+                        </button>
+                        <button
+                          onClick={() => handlePanField(5, 0)}
+                          className="px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1"
+                          title="Sposta il campo verso destra (+5m X)"
+                        >
+                          DX (+5m)
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div />
+                        <div />
+                        <button
+                          onClick={() => handleZoomField(1.1)}
+                          className="px-2 py-1.5 rounded-lg bg-blue-950/60 hover:bg-blue-900 text-blue-300 border border-blue-800/60 text-xs font-semibold flex items-center justify-center gap-1"
+                          title="Zoom Out: allarga il campo inquadrato (-10%)"
+                        >
+                          <ZoomOut className="w-3.5 h-3.5" />
+                          Zoom -
+                        </button>
+                      </div>
+
+                      {/* Toggle Linee Campo Canoniche */}
+                      <div className="pt-1 flex items-center justify-between border-t border-zinc-800 text-xs">
+                        <span className="text-zinc-400">Linee Proiettate sul Video:</span>
+                        <button
+                          onClick={() => setShowProjectedFieldLines(!showProjectedFieldLines)}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-colors ${
+                            showProjectedFieldLines
+                              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                              : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                          }`}
+                        >
+                          {showProjectedFieldLines ? '✓ Visibili' : 'Nascoste'}
+                        </button>
+                      </div>
                     </div>
 
+                    {/* 3. COORDINATE DEI 4 PUNTI CHIAVE (PITCH X / PITCH Y) */}
+                    <div className="space-y-2">
+                      <div className="text-xs font-bold text-zinc-200">
+                        3. Coordinate Metriche dei Punti Ancoraggio (X, Y)
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {currentKeypoints.map((kp) => (
+                          <div
+                            key={kp.id}
+                            className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5 text-xs font-mono"
+                          >
+                            <div className="text-zinc-200 font-semibold flex items-center justify-between">
+                              <span>{kp.id.toUpperCase()}</span>
+                              <span className="text-[10px] text-zinc-400 font-normal truncate max-w-[100px]">
+                                {kp.label}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-zinc-500">
+                              Frame: u={kp.imageU.toFixed(2)}, v={kp.imageV.toFixed(2)}
+                            </div>
+                            <div className="flex items-center justify-between gap-1 text-[11px] pt-1 border-t border-zinc-800/60">
+                              <span className="text-zinc-400">X: {kp.pitchX}m</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleUpdateKeypointCoord(kp.id, 'pitchX', -2)}
+                                  className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]"
+                                  title="Diminuisci X (-2m)"
+                                >
+                                  -2
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateKeypointCoord(kp.id, 'pitchX', 2)}
+                                  className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]"
+                                  title="Aumenta X (+2m)"
+                                >
+                                  +2
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-1 text-[11px]">
+                              <span className="text-zinc-400">Y: {kp.pitchY}m</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleUpdateKeypointCoord(kp.id, 'pitchY', -2)}
+                                  className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]"
+                                  title="Diminuisci Y (-2m)"
+                                >
+                                  -2
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateKeypointCoord(kp.id, 'pitchY', 2)}
+                                  className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]"
+                                  title="Aumenta Y (+2m)"
+                                >
+                                  +2
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Matrice H Risolta */}
                     <div className="p-3 rounded-xl bg-[#09090D] border border-zinc-800 font-mono text-[11px] space-y-1">
                       <div className="text-zinc-500 mb-1">Matrice H ∈ PGL(3, ℝ) (DLT 8x8 Solver):</div>
                       {H.map((row, rIdx) => (

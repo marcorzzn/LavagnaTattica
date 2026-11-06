@@ -31,7 +31,7 @@ export const GovernanceAndArchetypes: React.FC<GovernanceAndArchetypesProps> = (
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
             <span className="font-mono text-[#00F2FF]">
-              SEZIONE 0 & 19 — AUTORITÀ MATEMATICA SUPREMA
+              SEZIONE 0 & 19 — GOVERNANCE MATEMATICA E ADR
             </span>
             <span>·</span>
             <span>Ideatore del Progetto: Marco Razzano</span>

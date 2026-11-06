@@ -380,6 +380,10 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       players: state.players.filter((p) => p.id !== id),
       basePlayers: state.basePlayers.filter((p) => p.id !== id),
       ballCarrierId: state.ballCarrierId === id ? null : state.ballCarrierId,
+      scenes: state.scenes.map((sc) => ({
+        ...sc,
+        players: sc.players.filter((p) => p.id !== id),
+      })),
     }));
     scheduleAutosave(get());
   },
@@ -511,8 +515,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const s = get();
     const payload = {
       format: 'LAVAGNA_TATTICA_PROJECT_V2',
-      openCoreVersion: '2.0.0-SUPREME',
-      founderAuthority: 'Marco Razzano — Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro',
+      openCoreVersion: '2.0.0',
+      founderAuthority: 'Marco Razzano — Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)',
       exportedAt: new Date().toISOString(),
       id: s.id,
       title: s.title,

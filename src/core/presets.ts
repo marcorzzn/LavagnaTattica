@@ -783,7 +783,7 @@ export const BENCHMARK_FIXTURE_DATA = {
 };
 
 /**
- * SEZIONE 0 — REGISTRO UFFICIALE DEGLI ADR-MATH (Marco Razzano, Fondatore e Autorità Matematica Suprema)
+ * SEZIONE 0 — REGISTRO UFFICIALE DEGLI ADR-MATH (Marco Razzano, Ideatore del Progetto)
  */
 export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
   {
@@ -791,9 +791,9 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     title: 'Formulazione Anisotropa del Pitch Control e TTI con Reazione Finita (Pilastro II)',
     status: 'Approvato da Razzano',
     date: '2026-10-28',
-    proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
+    proposer: 'Marco Razzano (Ideatore del Progetto)',
     mrbReviewers: ['MRB-Chair-Continuum', 'MRB-Stochastic-Lead', 'MRB-CV-Lead'],
-    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR001',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_CORE_ADR001',
     context:
       'I modelli di Voronoi statici ignorano il vettore velocità istantaneo e il tempo fisiologico di reazione τ_react, sovrastimando il controllo spaziale dei difensori fermi rispetto agli incursori in corsa.',
     decision:
@@ -828,9 +828,9 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     title: 'Laplaciano Pesato per Cono d’Ombra, Connettività di Fiedler λ₂ e Hodge Decomposition (Pilastro IV)',
     status: 'Approvato da Razzano',
     date: '2026-10-28',
-    proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
+    proposer: 'Marco Razzano (Ideatore del Progetto)',
     mrbReviewers: ['MRB-Spectral-Graph', 'MRB-Topology-Lead', 'MRB-GameTheory'],
-    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR002',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_CORE_ADR002',
     context:
       'I grafi di passaggio costruiti solo sui passaggi storici non misurano la resilienza istantanea di uno schieramento al pressing avversario prima che la palla venga giocata.',
     decision:
@@ -863,9 +863,9 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     title: 'Funzione di Valutazione Composita Stile Chess.com e Generazione Top-3 Alternative (Sezione 3.8)',
     status: 'Approvato da Razzano',
     date: '2026-10-28',
-    proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
+    proposer: 'Marco Razzano (Ideatore del Progetto)',
     mrbReviewers: ['MRB-Decision-Theory', 'MRB-RL-Lead', 'MRB-Tactical-Analyst'],
-    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR003',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_CORE_ADR003',
     context:
       'Per trasformare LavagnaTattica in un motore di valutazione stile chess.com (motore NucleoTattico) serve un funzionale scalare composito che ordini ogni giocata possibile (passaggio, conduzione, smarcamento) e mostri le alternative scartate.',
     decision:
@@ -897,9 +897,9 @@ export const ADR_MATH_REGISTRY: ADRMathRecord[] = [
     title: 'Intervalli di Confidenza Binomiali di Wilson, Partizioni Ortogonali e Regola n ≥ 5',
     status: 'Approvato da Razzano',
     date: '2026-10-28',
-    proposer: 'Marco Razzano (Fondatore & Autorità Matematica Suprema)',
+    proposer: 'Marco Razzano (Ideatore del Progetto)',
     mrbReviewers: ['MRB-Statistics-Chair', 'MRB-Data-Quality'],
-    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY_ADR004',
+    razzanoSignatureHash: '0xLAVAGNATATTICA_MARCO_RAZZANO_CORE_ADR004',
     context:
       'I report calcistici tradizionali commettono errori metodologici gravi: sommano partizioni non disgiunte al 200% e dichiarano "più letale" un fondamentale su piccoli campioni (es. 9/50 vs 13/94) senza test d’ipotesi.',
     decision:

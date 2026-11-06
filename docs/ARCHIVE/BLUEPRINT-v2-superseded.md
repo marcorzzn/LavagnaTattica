@@ -4,7 +4,7 @@
 # BLUEPRINT ARCHITETTURALE (ARCHIVIATO): LAVAGNA TATTICA & MOTORE CARDINE
 > **Versione:** 2.0.0 (Fusione Unitaria OpenPitch + OpenZone — SUPERSEDED)  
 > **Data:** 30 Ottobre 2026  
-> **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+> **Ideatore del Progetto:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_CORE`)  
 > **Stato:** ARCHIVIATO A SCOPO DI DOCUMENTAZIONE STORICA E DI ROADMAP CONCETTUALE
 
 ---
@@ -220,7 +220,7 @@ Nessuna metrica simulata viene presentata come algoritmo completo. L'onestà int
 ### Miglioria 4: DuckDB WASM locale come Fallback del Data Warehouse
 Se l'utente utilizza l'applicazione offline senza l'ambiente Python attivo, il modulo di warehouse sfrutta `duckdb-wasm` direttamente nel client per eseguire query SQL analitiche sui match open data (Serie A, campioni StatsBomb) senza richiedere alcun server locale attivo.
 
-### Miglioria 5: Sigillo di Autorità Matematica nei Test di CI/CD
+### Miglioria 5: Sigillo di Garanzia Matematica nei Test di CI/CD
 Lo script di audit verifica:
 1. Errore di riproiezione omografica DLT 8×8 $= 0.0\text{ m}$.
 2. Conservazione probabilistica di Spearman: $P_{\text{home}} + P_{\text{away}} = 1.0000$.

@@ -3,7 +3,8 @@
  * Genera il manuale tecnico matematico completo sia in formato LaTeX (.tex)
  * che in documento accademico compilato in PDF (.pdf) ad altissima fedeltà.
  * 
- * Autorità Matematica Suprema: Marco Razzano
+ * Ideatore del Progetto: Marco Razzano
+ * Modelli AI: Google Gemini 2.5 Flash & Gemini 2.5 Pro (via Google Antigravity)
  */
 
 import fs from 'fs';

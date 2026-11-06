@@ -51,6 +51,7 @@ export interface VisualActionProperties {
   targetType?: 'pass' | 'shot' | 'dribble' | 'cross' | 'clearance';
   analyzingTeam?: 'home' | 'away';
   attackDirection?: 'right' | 'left'; // default 'right' for home, 'left' for away
+  manualOffsideX?: number | null; // coordinata X manuale per linea di fuorigioco
 }
 
 export interface DefenderInterceptDetail {
@@ -152,7 +153,33 @@ export function evaluateHumanDrawnAction(
   const { grid: xtGrid } = solveMarkovXtWithStats();
 
   // 1. Individua il giocatore più vicino all'origine della freccia (portatore reale sul frame)
-  let actor = state.players[0];
+  const defaultActor: PlayerNode = {
+    id: 'carrier-temp',
+    number: 10,
+    archetypeId: 10,
+    archetypeName: 'Regista',
+    codeLabel: 'REGISTA-10',
+    team: action.analyzingTeam || 'home',
+    role: 'Regista',
+    positionGroup: 'MID',
+    x: action.fromX,
+    y: action.fromY,
+    vx: 0,
+    vy: 0,
+    heightCm: 180,
+    foot: 'Right',
+    attributes: {
+      passing: 85,
+      pressResistance: 80,
+      aerial: 70,
+      progressiveCarries: 80,
+      defensiveIndex: 50,
+      speed: 75,
+      composure: 80,
+    },
+  };
+
+  let actor = state.players[0] || defaultActor;
   let minActorDist = Infinity;
   for (const p of state.players) {
     const d = Math.hypot(p.x - action.fromX, p.y - action.fromY);
@@ -217,7 +244,20 @@ export function evaluateHumanDrawnAction(
   );
 
   // 4. Ricevente designato (SOLO tra i compagni di squadra!)
-  let receiver = teammates[0] || actor;
+  const defaultReceiver: PlayerNode = {
+    ...defaultActor,
+    id: 'receiver-temp',
+    number: 9,
+    archetypeId: 9,
+    archetypeName: 'Punta Mobile',
+    codeLabel: 'PUNTA-9',
+    role: 'Punta Mobile',
+    positionGroup: 'FWD',
+    x: action.toX,
+    y: action.toY,
+  };
+
+  let receiver = teammates[0] || actor || defaultReceiver;
   let minRecDist = Infinity;
   for (const p of teammates) {
     const d = Math.hypot(p.x - action.toX, p.y - action.toY);
@@ -226,32 +266,42 @@ export function evaluateHumanDrawnAction(
       receiver = p;
     }
   }
+  if (!receiver) receiver = defaultReceiver;
 
-  // 5. Linea di Fuorigioco Dinamica (Penultimo Difendente)
+  // 5. Linea di Fuorigioco Dinamica o Manuale
   let isOffside = false;
   let offsideMarginMeters = 0;
-  if (!isShot && teammates.length > 0) {
+  if (!isShot) {
     const sortedOpponents = opponents.slice().sort((a, b) => {
       const da = Math.abs(a.x - targetGoalX);
       const db = Math.abs(b.x - targetGoalX);
       return da - db;
     });
     const secondLastDefender = sortedOpponents[1] || sortedOpponents[0];
-    if (secondLastDefender) {
+
+    // Se l'analista ha posizionato manualmente la linea di fuorigioco, usiamo quella coordinata X!
+    const effectiveOffsideLineX =
+      action.manualOffsideX !== undefined && action.manualOffsideX !== null
+        ? action.manualOffsideX
+        : secondLastDefender
+          ? secondLastDefender.x
+          : null;
+
+    if (effectiveOffsideLineX !== null) {
       const halfPitchLineX = 60;
       const receiverInAttackingHalf = actorAttacksRight
         ? receiver.x > halfPitchLineX
         : receiver.x < halfPitchLineX;
       const receiverBeyondBall = actorAttacksRight
-        ? receiver.x > action.fromX + 0.2
-        : receiver.x < action.fromX - 0.2;
+        ? receiver.x > action.fromX + 0.15
+        : receiver.x < action.fromX - 0.15;
       const receiverBeyondDef = actorAttacksRight
-        ? receiver.x > secondLastDefender.x + 0.35
-        : receiver.x < secondLastDefender.x - 0.35;
+        ? receiver.x > effectiveOffsideLineX + 0.2
+        : receiver.x < effectiveOffsideLineX - 0.2;
 
       if (receiverInAttackingHalf && receiverBeyondBall && receiverBeyondDef) {
         isOffside = true;
-        offsideMarginMeters = Number(Math.abs(receiver.x - secondLastDefender.x).toFixed(2));
+        offsideMarginMeters = Number(Math.abs(receiver.x - effectiveOffsideLineX).toFixed(2));
       }
     }
   }

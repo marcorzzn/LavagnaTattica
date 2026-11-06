@@ -38,6 +38,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const svgRef = externalSvgRef || internalSvgRef;
 
   const players = useStudioStore((s) => s.players);
+  const removePlayer = useStudioStore((s) => s.removePlayer);
   const ball = useStudioStore((s) => s.ball);
   const arrows = useStudioStore((s) => s.arrows);
   const zones = useStudioStore((s) => s.zones);
@@ -87,6 +88,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
     id: string;
     recordedHistory: boolean;
   } | null>(null);
+
+  const [hoveredPawnId, setHoveredPawnId] = useState<string | null>(null);
 
   const [draftVector, setDraftVector] = useState<{
     startX: number;
@@ -811,6 +814,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
               <g
                 key={player.id}
                 transform={`translate(${pos.x}, ${pos.y})`}
+                onPointerEnter={() => setHoveredPawnId(player.id)}
+                onPointerLeave={() => setHoveredPawnId(null)}
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   if (activeTool === 'select') {
@@ -818,8 +823,13 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                     onSelectPlayer?.(player.id);
                     setDraggingEntity({ type: 'player', id: player.id, recordedHistory: false });
                   } else if (activeTool === 'eraser') {
-                    // Non eliminiamo i giocatori titolari
+                    removePlayer(player.id);
                   }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removePlayer(player.id);
                 }}
                 onDoubleClick={(e) => {
                   e.stopPropagation();
@@ -908,6 +918,35 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                   >
                     {player.archetypeName}
                   </text>
+                )}
+
+                {/* Pulsante '✕' Rapido per rimozione pedina su Hover o Selezione */}
+                {(isSelected || hoveredPawnId === player.id) && (
+                  <g
+                    transform={`translate(${11 * tokenScale}, ${-11 * tokenScale})`}
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removePlayer(player.id);
+                    }}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      removePlayer(player.id);
+                    }}
+                  >
+                    <title>Rimuovi pedina dalla lavagna (Click o Tasto destro)</title>
+                    <circle r={6.5 * tokenScale} fill="#EF4444" stroke="#FFFFFF" strokeWidth="1.2" />
+                    <text
+                      y={2.8 * tokenScale}
+                      textAnchor="middle"
+                      fill="#FFFFFF"
+                      fontSize={8.5 * tokenScale}
+                      fontWeight="900"
+                      fontFamily="sans-serif"
+                    >
+                      ✕
+                    </text>
+                  </g>
                 )}
               </g>
             );

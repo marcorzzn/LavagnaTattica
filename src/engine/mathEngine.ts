@@ -280,6 +280,10 @@ export function computeSpearmanPitchControlAtPoint(
   ballX = 60,
   ballY = 40
 ): { homeProb: number; awayProb: number; minTtiHome: number; minTtiAway: number } {
+  if (!players || players.length === 0) {
+    return { homeProb: 0.5, awayProb: 0.5, minTtiHome: 99, minTtiAway: 99 };
+  }
+
   const vBall = 15.5; // velocità media passaggio rasoterra (m/s)
   const tBall = Math.hypot(targetX - ballX, targetY - ballY) / vBall;
 
@@ -307,6 +311,17 @@ export function computeSpearmanPitchControlAtPoint(
     } else {
       if (tti < minTtiAway) minTtiAway = tti;
     }
+  }
+
+  // Se mancano giocatori di una o entrambe le squadre
+  if (!Number.isFinite(minTtiHome) && !Number.isFinite(minTtiAway)) {
+    return { homeProb: 0.5, awayProb: 0.5, minTtiHome: 99, minTtiAway: 99 };
+  }
+  if (!Number.isFinite(minTtiHome)) {
+    return { homeProb: 0.015, awayProb: 0.985, minTtiHome: 99, minTtiAway };
+  }
+  if (!Number.isFinite(minTtiAway)) {
+    return { homeProb: 0.985, awayProb: 0.015, minTtiHome, minTtiAway: 99 };
   }
 
   // Ottimizzazione fisica di Spearman: se una squadra arriva > 1.8s prima dell'altra dopo tBall, domina la cella
@@ -867,6 +882,25 @@ export function computeGameTheoryAndGhosting(
     }
   }
 
+  if (!bestCandidate) {
+    return {
+      wassersteinCost: 0,
+      ghostTrajectory: {
+        playerId: 'none',
+        playerName: 'Nessun giocatore outfield disponibile',
+        currentX: 60,
+        currentY: 40,
+        optimalX: 60,
+        optimalY: 40,
+        path: [],
+        xtGain: 0,
+        pitchControlGain: 0,
+        rationale: 'Inserire almeno un giocatore di movimento per calcolare lo smarcamento ottimale.',
+      },
+      nashPenalty: solvePenaltyNashEquilibrium(players),
+    };
+  }
+
   const optX = Number(Math.min(108, Math.max(30, targetGap.centerX ?? bestCandidate.x + 10)).toFixed(1));
   const optY = Number(Math.min(72, Math.max(8, targetGap.centerY ?? bestCandidate.y)).toFixed(1));
 
@@ -942,6 +976,10 @@ export function computeChessStyleAlternatives(
 ): ChessStyleAlternative[] {
   const homePlayers = state.players.filter((p) => p.team === 'home');
   const awayPlayers = state.players.filter((p) => p.team === 'away');
+
+  if (!homePlayers || homePlayers.length === 0) {
+    return [];
+  }
 
   // 1. Individua il portatore di palla attuale (giocatore home più vicino a ballX, ballY)
   let carrier = homePlayers[0];

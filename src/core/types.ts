@@ -263,7 +263,7 @@ export interface VideoFrameAnalysisResult {
 }
 
 /**
- * Sezione 0 — Governance & ADR-Math (Marco Razzano Autorità Matematica Suprema)
+ * Sezione 0 — Governance & ADR-Math (Marco Razzano, Ideatore del Progetto)
  */
 export interface ADRMathRecord {
   id: string; // es. "ADR-Math-001"
