@@ -1,8 +1,8 @@
 # STATE — LavagnaTattica / NucleoTattico
 
-**Versione:** 0.2.0-ENTERPRISE  
-**Data:** 5 novembre 2026  
-**Commit:** Head post-refactor  
+**Versione:** 0.2.0  
+**Data:** 6 novembre 2026  
+**Commit:** Release v0.2.0  
 **Ideatore del Progetto:** Marco Razzano  
 **Modelli AI di Sviluppo:** Google Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)  
 **Deployment Live:** [https://lavagnatattica.pages.dev/](https://lavagnatattica.pages.dev/)
