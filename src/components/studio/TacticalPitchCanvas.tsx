@@ -936,16 +936,24 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
                   >
                     <title>Rimuovi pedina dalla lavagna (Click o Tasto destro)</title>
                     <circle r={6.5 * tokenScale} fill="#EF4444" stroke="#FFFFFF" strokeWidth="1.2" />
-                    <text
-                      y={2.8 * tokenScale}
-                      textAnchor="middle"
-                      fill="#FFFFFF"
-                      fontSize={8.5 * tokenScale}
-                      fontWeight="900"
-                      fontFamily="sans-serif"
-                    >
-                      ✕
-                    </text>
+                    <line
+                      x1={-2.6 * tokenScale}
+                      y1={-2.6 * tokenScale}
+                      x2={2.6 * tokenScale}
+                      y2={2.6 * tokenScale}
+                      stroke="#FFFFFF"
+                      strokeWidth={1.4 * tokenScale}
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1={2.6 * tokenScale}
+                      y1={-2.6 * tokenScale}
+                      x2={-2.6 * tokenScale}
+                      y2={2.6 * tokenScale}
+                      stroke="#FFFFFF"
+                      strokeWidth={1.4 * tokenScale}
+                      strokeLinecap="round"
+                    />
                   </g>
                 )}
               </g>

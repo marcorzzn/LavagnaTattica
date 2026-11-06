@@ -366,7 +366,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           title="Calcio d'Inizio: Palla al centro (60,40) e squadre rigorosamente nelle proprie metà campo"
           className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
         >
-          <span>⚽ {t('lavagna.toolbar.kickoff', 'Kickoff')}</span>
+          <span>{t('lavagna.toolbar.kickoff', 'Kickoff')}</span>
         </button>
 
         <button
@@ -443,10 +443,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onNotify }) => {
           aria-label="Tema Visivo del Campo"
           className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] font-semibold text-lime-300 hover:border-lime-500 focus:border-lime-400 focus:outline-none transition-colors"
         >
-          <option value="grass_cream">🌿 Verde Prato & Crema</option>
-          <option value="neon">🌌 Notte Tattica Cyber</option>
-          <option value="chalk">📋 Lavagna Gesso & Crema</option>
-          <option value="blueprint">📐 Blueprint Tattico</option>
+          <option value="grass_cream">Verde Prato &amp; Crema</option>
+          <option value="neon">Notte Tattica Cyber</option>
+          <option value="chalk">Lavagna Gesso &amp; Crema</option>
+          <option value="blueprint">Blueprint Tattico</option>
         </select>
       </div>
 

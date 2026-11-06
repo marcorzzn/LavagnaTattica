@@ -23,16 +23,16 @@ interface ActionEditorProps {
   onNotify?: (msg: string) => void;
 }
 
-const ACTION_TYPE_LABELS: Record<TacticalActionType, { label: string; icon: string; category: 'pass' | 'shot' | 'movement' }> = {
-  pass_ground: { label: 'Passaggio rasoterra', icon: '⚽', category: 'pass' },
-  pass_through: { label: 'Passaggio filtrante', icon: '⚡', category: 'pass' },
-  pass_lofted: { label: 'Passaggio aereo', icon: '↗️', category: 'pass' },
-  cross: { label: 'Cross', icon: '↪️', category: 'pass' },
-  shot_ground: { label: 'Tiro rasoterra', icon: '🎯', category: 'shot' },
-  shot_curl: { label: 'Tiro a giro', icon: '🌀', category: 'shot' },
-  shot_lofted: { label: 'Tiro al volo / Pallonetto', icon: '🚀', category: 'shot' },
-  run: { label: 'Scatto senza palla', icon: '🏃', category: 'movement' },
-  press: { label: 'Pressing coordinato', icon: '🛡️', category: 'movement' },
+const ACTION_TYPE_LABELS: Record<TacticalActionType, { label: string; category: 'pass' | 'shot' | 'movement' }> = {
+  pass_ground: { label: 'Passaggio rasoterra', category: 'pass' },
+  pass_through: { label: 'Passaggio filtrante', category: 'pass' },
+  pass_lofted: { label: 'Passaggio aereo', category: 'pass' },
+  cross: { label: 'Cross', category: 'pass' },
+  shot_ground: { label: 'Tiro rasoterra', category: 'shot' },
+  shot_curl: { label: 'Tiro a giro', category: 'shot' },
+  shot_lofted: { label: 'Tiro al volo / Pallonetto', category: 'shot' },
+  run: { label: 'Scatto senza palla', category: 'movement' },
+  press: { label: 'Pressing coordinato', category: 'movement' },
 };
 
 const CONTACT_LABELS: Record<ContactSurface, string> = {
@@ -179,7 +179,7 @@ export const ActionEditor: React.FC<ActionEditorProps> = ({ onClose, onNotify })
         {currentActions.map((act) => {
           const executor = players.find((p) => p.id === act.playerId);
           const target = players.find((p) => p.id === act.targetPlayerId);
-          const meta = ACTION_TYPE_LABELS[act.type] || { label: act.type, icon: '⚽' };
+          const meta = ACTION_TYPE_LABELS[act.type] || { label: act.type, category: 'pass' as const };
 
           return (
             <div
@@ -187,7 +187,6 @@ export const ActionEditor: React.FC<ActionEditorProps> = ({ onClose, onNotify })
               className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-2 text-xs transition-colors hover:border-slate-700"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base">{meta.icon}</span>
                 <div className="min-w-0">
                   <div className="font-semibold text-slate-200 truncate flex items-center gap-1.5">
                     <span>{meta.label}</span>
@@ -397,44 +396,44 @@ export const ActionEditor: React.FC<ActionEditorProps> = ({ onClose, onNotify })
             <button
               type="button"
               onClick={() => handleStartAdd('pass_ground')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>⚽ Rasoterra</span>
+              <span>Rasoterra</span>
             </button>
             <button
               type="button"
               onClick={() => handleStartAdd('pass_through')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>⚡ Filtrante</span>
+              <span>Filtrante</span>
             </button>
             <button
               type="button"
               onClick={() => handleStartAdd('pass_lofted')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>↗️ Aereo</span>
+              <span>Aereo</span>
             </button>
             <button
               type="button"
               onClick={() => handleStartAdd('cross')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>↪️ Cross</span>
+              <span>Cross</span>
             </button>
             <button
               type="button"
               onClick={() => handleStartAdd('shot_curl')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>🌀 A Giro</span>
+              <span>A Giro</span>
             </button>
             <button
               type="button"
               onClick={() => handleStartAdd('run')}
-              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1 truncate"
+              className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-[11px] font-medium text-slate-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center truncate"
             >
-              <span>🏃 Scatto</span>
+              <span>Scatto</span>
             </button>
           </div>
         </div>

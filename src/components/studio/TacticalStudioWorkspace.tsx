@@ -393,7 +393,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                         </span>
                         {isCarrier && (
                           <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-bold shrink-0">
-                            ⚽ Palla
+                            Palla
                           </span>
                         )}
                       </button>
@@ -576,7 +576,7 @@ export const TacticalStudioWorkspace: React.FC<TacticalStudioWorkspaceProps> = (
                 <div className="rounded-lg bg-slate-950 p-2.5 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
-                      <span>⚽ Possesso & Blocco Magnetico</span>
+                      <span>Possesso &amp; Blocco Magnetico</span>
                     </span>
                     {ballCarrier ? (
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">

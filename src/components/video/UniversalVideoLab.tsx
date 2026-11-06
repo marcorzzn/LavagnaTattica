@@ -813,8 +813,8 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 <Compass className="w-3.5 h-3.5 text-amber-400" />
                 <span>
                   {attackDirection === 'right'
-                    ? `${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca ➔ (porta a 120m)`
-                    : `⬅ ${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca (porta a 0m)`}
+                    ? `${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca -&gt; (porta a 120m)`
+                    : `&lt;- ${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca (porta a 0m)`}
                 </span>
               </button>
 
@@ -827,28 +827,28 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                   className="bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none cursor-pointer"
                 >
                   <option value="Costruzione dal Basso" className="bg-zinc-900 text-zinc-200">
-                    🏗️ Costruzione dal Basso
+                    Costruzione dal Basso
                   </option>
                   <option value="Sviluppo Centrocampo" className="bg-zinc-900 text-zinc-200">
-                    ⚙️ Sviluppo Centrocampo
+                    Sviluppo Centrocampo
                   </option>
                   <option value="Rifinitura / Trequarti" className="bg-zinc-900 text-zinc-200">
-                    🎯 Rifinitura / Trequarti
+                    Rifinitura / Trequarti
                   </option>
                   <option value="Finalizzazione / Tiro" className="bg-zinc-900 text-zinc-200">
-                    ⚡ Finalizzazione / Tiro
+                    Finalizzazione / Tiro
                   </option>
                   <option value="Transizione Offensiva" className="bg-zinc-900 text-zinc-200">
-                    🔄 Transizione Offensiva
+                    Transizione Offensiva
                   </option>
                   <option value="Ripiegamento Difensivo" className="bg-zinc-900 text-zinc-200">
-                    🛡️ Ripiegamento Difensivo
+                    Ripiegamento Difensivo
                   </option>
                   <option value="Pressing Alto" className="bg-zinc-900 text-zinc-200">
-                    🛑 Pressing Alto
+                    Pressing Alto
                   </option>
                   <option value="Blocco Basso Difensivo" className="bg-zinc-900 text-zinc-200">
-                    🧱 Blocco Basso Difensivo
+                    Blocco Basso Difensivo
                   </option>
                 </select>
               </div>
@@ -1340,8 +1340,8 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                                 fill={strokeColor}
                                 className="font-mono font-bold"
                               >
-                                {actionEvaluation.isOffside ? '⚠️ OFFSIDE' : '✓ REGOLARE'}{' '}
-                                ({effectiveOffsideX.toFixed(1)}m) {offsideMode === 'manual' ? '✋' : '🤖'}
+                                {actionEvaluation.isOffside ? 'OFFSIDE' : 'REGOLARE'}{' '}
+                                ({effectiveOffsideX.toFixed(1)}m) [{offsideMode === 'manual' ? 'MANUALE' : 'AUTO'}]
                               </text>
                             </g>
                           </g>
@@ -1511,17 +1511,24 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                                 strokeWidth="1.3"
                                 className="filter drop-shadow"
                               />
-                              <text
-                                x={0}
-                                y={3}
-                                textAnchor="middle"
-                                fontSize="9.5"
-                                fontWeight="900"
-                                fill="#FFFFFF"
-                                className="pointer-events-none select-none font-sans"
-                              >
-                                ✕
-                              </text>
+                              <line
+                                x1={-2.6}
+                                y1={-2.6}
+                                x2={2.6}
+                                y2={2.6}
+                                stroke="#FFFFFF"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                              <line
+                                x1={2.6}
+                                y1={-2.6}
+                                x2={-2.6}
+                                y2={2.6}
+                                stroke="#FFFFFF"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
                             </g>
                           )}
 
@@ -2338,7 +2345,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                               : 'bg-zinc-800 text-zinc-400 border-zinc-700'
                           }`}
                         >
-                          {showProjectedFieldLines ? '✓ Visibili' : 'Nascoste'}
+                          {showProjectedFieldLines ? 'Visibili' : 'Nascoste'}
                         </button>
                       </div>
                     </div>
