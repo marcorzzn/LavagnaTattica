@@ -34,24 +34,24 @@ export const GovernanceAndArchetypes: React.FC<GovernanceAndArchetypesProps> = (
               SEZIONE 0 & 19 — AUTORITÀ MATEMATICA SUPREMA
             </span>
             <span>·</span>
-            <span>Fondatore & Proprietario: Marco Razzano</span>
+            <span>Ideatore del Progetto: Marco Razzano</span>
             <span>·</span>
             <span className="font-mono text-[#B4FF39]">
-              0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
+              Modelli AI: Gemini 2.5 Flash &amp; Gemini 2.5 Pro (Google Antigravity)
             </span>
           </div>
           <h2 className="text-xl font-bold text-zinc-100 mt-1">
-            Governance Matematica (ADR-Math), 30 Tipologie Astratte & Architettura Enterprise
+            Governance Matematica (ADR-Math), 30 Tipologie Astratte &amp; Architettura Enterprise
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-4xl">
-            Il team propone, Marco Razzano decide. Il team implementa, Marco Razzano valida. Nessuna formula, peso, soglia, architettura di modello o metrica è efficace senza un ADR-Math firmato digitalmente dal Fondatore. Tutte le entità in campo sono astratte in 30 tipologie (zero nomi propri).
+            Progetto ideato e sviluppato da Marco Razzano con il supporto dei modelli di intelligenza artificiale Google Gemini 2.5 Flash e Gemini 2.5 Pro. Ogni formula, peso, soglia e metrica è formalizzata nel registro ADR-Math. Tutte le entità in campo sono astratte in 30 tipologie universali (zero nomi propri).
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="px-3.5 py-2 rounded-lg bg-[#09090D] border border-[#B4FF39]/40 text-xs font-mono text-[#B4FF39] flex items-center gap-2">
             <Lock className="w-4 h-4" />
-            <span>4/4 ADR-Math Firmati da Marco Razzano</span>
+            <span>4/4 ADR-Math Approvati</span>
           </div>
         </div>
       </div>

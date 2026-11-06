@@ -54,7 +54,8 @@ function getAllTsFiles(dir: string, acc: string[] = []): string[] {
 function runAudit() {
   console.log('================================================================================');
   console.log(' LAVAGNATATTICA — AUDIT AUTOMATICO DI VERIFICA (MOTORE NUCLEOTATTICO)');
-  console.log(' Autorità Matematica Suprema: Marco Razzano');
+  console.log(' Ideatore del Progetto: Marco Razzano');
+  console.log(' Modelli AI: Google Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)');
   console.log('================================================================================\n');
 
   const rootDir = process.cwd();

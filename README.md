@@ -29,7 +29,8 @@
 
 ---
 
-> **Proprietario & Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+> **Ideatore & Autore del Progetto:** Marco Razzano  
+> **Modelli di Intelligenza Artificiale Impiegati:** Google Gemini 2.5 Flash (`gemini-2.5-flash`) & Gemini 2.5 Pro (`gemini-2.5-pro`) via piattaforma agentica Google Antigravity  
 > **Trattato Matematico & Manuale Formale:** [`docs/paper/MANUALE_TECNICO_MATEMATICO.pdf`](docs/paper/MANUALE_TECNICO_MATEMATICO.pdf) • [Sorgente LaTeX](docs/paper/MANUALE_TECNICO_MATEMATICO.tex)  
 > **Contratto di Trasparenza & Stato dei Moduli:** [`docs/STATE.md`](docs/STATE.md) • [`docs/INVENTORY.md`](docs/INVENTORY.md)  
 > **Applicazione Web Online:** [https://lavagnatattica.pages.dev/](https://lavagnatattica.pages.dev/)
@@ -71,7 +72,7 @@ L'applicazione è organizzata in tre moduli coesi e privi di frammentazione:
 │     • 3 Livelli di Animazione (Keyframe, Azioni, Balistica 3D ed Easing│
 │     • Percorsi Formativi e Quiz Didattici Interattivi                  │
 │     • Glossario Tattico Bilingue (Italiano / Inglese)                  │
-│     • Registro ADR-Math con governance firmata Marco Razzano           │
+│     • Registro ADR-Math & Decisioni Architetturali (Marco Razzano)     │
 ├────────────────────────────────────────────────────────────────────────┤
 │  3. LAVAGNA LIBERA (Sandbox Tattico a 60 FPS)                          │
 │     • Canvas vettoriale 2D fluido con RequestAnimationFrame a 60 FPS   │

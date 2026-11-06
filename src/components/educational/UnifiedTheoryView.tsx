@@ -340,10 +340,10 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
                   <span>REGISTRO DECISIONI MATEMATICHE (ADR-MATH)</span>
                 </div>
                 <h3 className="text-base font-bold text-zinc-100 mt-1">
-                  Autorità Matematica Suprema: Marco Razzano
+                  Ideatore del Progetto: Marco Razzano
                 </h3>
                 <p className="text-xs text-zinc-400 mt-0.5 font-mono">
-                  Hash di Certificazione Immutabile: 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
+                  Modelli AI: Google Gemini 2.5 Flash &amp; Gemini 2.5 Pro (Google Antigravity)
                 </p>
               </div>
 

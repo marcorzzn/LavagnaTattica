@@ -512,7 +512,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const payload = {
       format: 'LAVAGNA_TATTICA_PROJECT_V2',
       openCoreVersion: '2.0.0-SUPREME',
-      founderAuthority: 'Marco Razzano — 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY',
+      founderAuthority: 'Marco Razzano — Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro',
       exportedAt: new Date().toISOString(),
       id: s.id,
       title: s.title,

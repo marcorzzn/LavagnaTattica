@@ -1,7 +1,8 @@
 # Trattato Matematico & Manuale Formale — LavagnaTattica
 
 > **Titolo:** *NucleoTattico & LavagnaTattica: Trattato Matematico-Cinematico e Manuale Formale dei Modelli Analitici per il Calcio Contemporaneo*  
-> **Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+> **Ideatore & Autore del Progetto:** Marco Razzano  
+> **Modelli AI di Sviluppo:** Google Gemini 2.5 Flash (`gemini-2.5-flash`) & Gemini 2.5 Pro (`gemini-2.5-pro`) via Google Antigravity  
 > **Versione:** 3.0-Enterprise (Novembre 2026)  
 > **Stato dei Moduli:** Copertura integrale Lossless (Geometria Proiettiva, Spearman ODE, Markov xT, Fiedler $\lambda_2$, EKF $4\times 4$, Chess.com $J(a \mid s)$, Balistica, Fuorigioco e 3 Livelli d'Animazione).
 

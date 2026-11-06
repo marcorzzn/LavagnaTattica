@@ -1,7 +1,7 @@
 /**
  * LavagnaTattica — Glossario Tecnico Bilingue (IT / EN) & Tassonomia Spaziale
  * Fonte di Verità Unica per l'i18n, la Schermata Teoria e le annotazioni tattiche.
- * Autorità Matematica Suprema: Marco Razzano (0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY)
+ * Ideatore: Marco Razzano | Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)
  */
 
 export interface BilingualGlossaryEntry {

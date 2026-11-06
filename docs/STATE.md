@@ -3,7 +3,8 @@
 **Versione:** 0.2.0-ENTERPRISE  
 **Data:** 5 novembre 2026  
 **Commit:** Head post-refactor  
-**Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+**Ideatore del Progetto:** Marco Razzano  
+**Modelli AI di Sviluppo:** Google Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)  
 **Deployment Live:** [https://lavagnatattica.pages.dev/](https://lavagnatattica.pages.dev/)
 
 ---

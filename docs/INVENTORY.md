@@ -2,7 +2,8 @@
 
 **Data:** 31 ottobre 2026  
 **Commit di riferimento:** `758b582` (aggiornato a pre-Tauri cleanup)  
-**Autorità Matematica Suprema:** Marco Razzano (`0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY`)  
+**Ideatore del Progetto:** Marco Razzano  
+**Modelli AI di Sviluppo:** Google Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)  
 **Repo:** [https://github.com/marcorzzn/LavagnaTattica](https://github.com/marcorzzn/LavagnaTattica)  
 
 ---

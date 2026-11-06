@@ -20,8 +20,8 @@ export const Benchmark12Dimensions: React.FC<Benchmark12DimensionsProps> = ({
 
   const exportMarkdownReport = () => {
     const md = `# LAVAGNATATTICA — REPORT TATTICO AUTOMATICO VERIFICATO (MOTORE NUCLEOTATTICO, ZERO NOMI PROPRI)
-Autorità Matematica Suprema: Marco Razzano (Fondatore & Proprietario)
-Hash Certificazione: 0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY
+Ideatore del Progetto: Marco Razzano
+Modelli AI Impiegati: Google Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)
 Data generazione: ${new Date().toISOString().slice(0, 10)}
 Scenario / Corpus: ${state.title}
 Copertura coordinate evento: ${BENCHMARK_FIXTURE_DATA.corpusSummary.coordinateCoverageEvents}/${BENCHMARK_FIXTURE_DATA.corpusSummary.coordinateCoverageTotal} (${BENCHMARK_FIXTURE_DATA.corpusSummary.coveragePct}%)

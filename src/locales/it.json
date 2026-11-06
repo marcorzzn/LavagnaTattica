@@ -156,9 +156,9 @@
     },
     "governance": {
       "title": "Governance Matematica (ADR-Math)",
-      "subtitle": "Nessuna formula è attiva senza un Architecture Decision Record firmato da Marco Razzano",
-      "founder": "Fondatore & Autorità Matematica Suprema: Marco Razzano",
-      "hash": "0xLAVAGNATATTICA_MARCO_RAZZANO_FOUNDER_SUPREME_AUTHORITY"
+      "subtitle": "Formule e modelli matematici registrati e validati da Marco Razzano",
+      "founder": "Ideatore: Marco Razzano",
+      "hash": "Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)"
     },
     "archetypes": {
       "title": "Catalogo delle 30 Tipologie Astratte",
