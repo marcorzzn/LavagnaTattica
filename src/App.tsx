@@ -15,7 +15,7 @@ import {
 import { INITIAL_TACTICAL_STATE } from './core/presets';
 import { evaluateTacticalState } from './engine/mathEngine';
 import { UniversalVideoLab } from './components/video/UniversalVideoLab';
-import { TacticalStudioWorkspace } from './components/studio/TacticalStudioWorkspace';
+import { FreeBoardCanvas } from './components/studio/FreeBoardCanvas';
 import { UnifiedTheoryView } from './components/educational/UnifiedTheoryView';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { useStudioStore } from './stores/studioStore';
@@ -120,7 +120,7 @@ export default function App() {
             LavagnaTattica
           </a>
 
-          {/* Zone 2: Navigation Views (Analisi Video Primaria, Teoria & Maestri, Lavagna Libera) */}
+          {/* Zone 2: Navigation Views (Analisi, Teoria, Lavagna Libera) */}
           <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium text-zinc-400 overflow-x-auto">
             <button
               onClick={() => setActiveNav('video')}
@@ -131,7 +131,7 @@ export default function App() {
               }`}
             >
               <Video className="w-4 h-4" />
-              <span>Analisi Video & Match Lab</span>
+              <span>Analisi</span>
             </button>
             <button
               onClick={() => setActiveNav('teoria')}
@@ -142,7 +142,7 @@ export default function App() {
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>Teoria, Maestri & Lavagna</span>
+              <span>Teoria</span>
             </button>
             <button
               onClick={() => setActiveNav('lavagna')}
@@ -179,12 +179,10 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main Content Container */}
-        <main className="flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
-          {/* VIEW 1: LAVAGNA TATTICA (COSTRUISCI) */}
-          {activeNav === 'lavagna' && (
-            <TacticalStudioWorkspace onSwitchToVideoCV={() => setActiveNav('video')} />
-          )}
+        {/* Main Content Container - Fitted to viewport without vertical outer scroll */}
+        <main className="flex-1 w-full mx-auto px-2 sm:px-4 py-2 flex flex-col min-h-0">
+          {/* VIEW 1: LAVAGNA LIBERA (PURAMENTE DISEGNO E POSIZIONAMENTO) */}
+          {activeNav === 'lavagna' && <FreeBoardCanvas />}
 
           {/* VIEW 2: ANALISI VIDEO & BOTONIERA TAG / CERTIFICAZIONE (VERIFICHI) */}
           {activeNav === 'video' && (

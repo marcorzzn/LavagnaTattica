@@ -34,6 +34,7 @@ import {
   RefreshCw,
   Maximize2,
   Flag,
+  Users,
 } from 'lucide-react';
 import {
   CalibrationKeypoint,
@@ -41,6 +42,13 @@ import {
   TacticalState,
   TacticalTag,
 } from '../../core/types';
+import {
+  evaluateCarrierDecision,
+  analyzeOffBallTeamMovements,
+  evaluateDefensiveShape,
+  detectTacticalPattern,
+  PlayerMovementVector,
+} from '../../engine/teamAnalysisEngine';
 import {
   computePitchControlGrid,
   computePlanarHomographyDLT,
@@ -176,9 +184,10 @@ type InteractionToolMode =
   | 'drag_players'
   | 'place_ball'
   | 'draw_action'
+  | 'draw_movement'
   | 'calibrate_homography';
 
-type RightPanelTab = 'analisi' | 'giocatori' | 'calibrazione' | 'pattern_maestri';
+type RightPanelTab = 'analisi' | 'squadra' | 'giocatori' | 'calibrazione' | 'pattern_maestri';
 
 export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   tacticalState,
@@ -267,9 +276,24 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
     | { type: 'kp'; id: string }
     | { type: 'arrow_from' }
     | { type: 'arrow_to' }
+    | { type: 'movement_target'; id: string }
     | { type: 'offside_line' }
     | null
   >(null);
+
+  // Movimenti Senza Palla dei Compagni & Frecce Tattiche
+  const [customMovements, setCustomMovements] = useState<Record<string, PlayerMovementVector>>({});
+  const [showTeamArrows, setShowTeamArrows] = useState<boolean>(true);
+
+  // Simulazione Dinamica Interattiva a 60 FPS
+  const [simProgress, setSimProgress] = useState<number>(0);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+
+  // Selezione Manuale vs Rilevamento Automatico (Formazioni & Pattern)
+  const [manualFormationHome, setManualFormationHome] = useState<string | null>(null);
+  const [manualFormationAway, setManualFormationAway] = useState<string | null>(null);
+  const [manualPattern, setManualPattern] = useState<string | null>(null);
+  const [showBenchmarkModal, setShowBenchmarkModal] = useState<boolean>(false);
 
   // Parametri della Traiettoria Tracciata
   const [actionProps, setActionProps] = useState<VisualActionProperties>({
@@ -370,6 +394,97 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
     [liveState, liveActionProps]
   );
 
+  // 1. Valutazione Scelta del Portatore (Errore grave su passaggio a rosso, spazzata se pressato, ecc.)
+  const carrierDecision = useMemo(() => {
+    return evaluateCarrierDecision(
+      storeBall,
+      { x: actionProps.toX, y: actionProps.toY },
+      ballCarrier || undefined,
+      storePlayers,
+      analyzingTeam,
+      attackDirection,
+      effectiveOffsideX
+    );
+  }, [storeBall, actionProps.toX, actionProps.toY, ballCarrier, storePlayers, analyzingTeam, attackDirection, effectiveOffsideX]);
+
+  // 2. Analisi Movimenti Senza Palla dei Compagni di Squadra
+  const teamMovementsResult = useMemo(() => {
+    return analyzeOffBallTeamMovements(
+      storePlayers,
+      storeBall,
+      ballCarrier || undefined,
+      analyzingTeam,
+      attackDirection,
+      effectiveOffsideX,
+      customMovements
+    );
+  }, [storePlayers, storeBall, ballCarrier, analyzingTeam, attackDirection, effectiveOffsideX, customMovements]);
+
+  // 3. Assetto della Squadra Difendente
+  const defensiveShape = useMemo(() => {
+    const defTeam = analyzingTeam === 'home' ? 'away' : 'home';
+    const defPlayers = storePlayers.filter((p) => p.team === defTeam);
+    return evaluateDefensiveShape(defPlayers, storeBall, attackDirection);
+  }, [storePlayers, analyzingTeam, storeBall, attackDirection]);
+
+  // 4. Pattern Riconosciuto Dinamicamente
+  const detectedPattern = useMemo(() => {
+    return detectTacticalPattern(storePlayers, storeBall, analyzingTeam, attackDirection);
+  }, [storePlayers, storeBall, analyzingTeam, attackDirection]);
+
+  // 5. Loop di Simulazione a 60 FPS
+  useEffect(() => {
+    if (!isSimulating) return;
+    let animId: number;
+    let lastTime = performance.now();
+
+    const step = (now: number) => {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      setSimProgress((prev) => {
+        const next = prev + dt / 2.5; // durata 2.5s
+        if (next >= 1) {
+          setIsSimulating(false);
+          return 1;
+        }
+        return next;
+      });
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [isSimulating]);
+
+  // Posizioni Efficaci in Simulazione
+  const effectiveBallPosition = useMemo(() => {
+    if (simProgress <= 0) return { x: storeBall.x, y: storeBall.y, z: 0 };
+    const t = simProgress;
+    const bx = actionProps.fromX + (actionProps.toX - actionProps.fromX) * t;
+    const by = actionProps.fromY + (actionProps.toY - actionProps.fromY) * t;
+    const maxHeightM = (actionProps.ballHeightCm || 0) / 100;
+    const bz = Math.max(0, 4 * maxHeightM * t * (1 - t));
+    return { x: bx, y: by, z: bz };
+  }, [simProgress, storeBall.x, storeBall.y, actionProps]);
+
+  const effectivePlayerPositions = useMemo(() => {
+    if (simProgress <= 0) return storePlayers;
+    const t = simProgress;
+    const smMap: Record<string, PlayerMovementVector> = {};
+    for (const sm of teamMovementsResult.suggestedMovements) {
+      smMap[sm.playerId] = sm;
+    }
+    return storePlayers.map((p) => {
+      const mv = customMovements[p.id] || smMap[p.id];
+      if (!mv) return p;
+      return {
+        ...p,
+        x: mv.startX + (mv.targetX - mv.startX) * t,
+        y: mv.startY + (mv.targetY - mv.startY) * t,
+      };
+    });
+  }, [simProgress, storePlayers, customMovements, teamMovementsResult.suggestedMovements]);
+
   // Calcolo Pitch Control Spearman in tempo reale
   const pitchControlData = useMemo(
     () => computePitchControlGrid(storePlayers, storeBall.x, storeBall.y),
@@ -457,6 +572,34 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
       }));
       setDraggingEntity({ type: 'arrow_to' });
     }
+
+    if (toolMode === 'draw_movement' && !draggingEntity) {
+      let closestP: PlayerNode | null = null;
+      let minD = Infinity;
+      for (const p of storePlayers) {
+        const d = Math.hypot(p.x - pt.x, p.y - pt.y);
+        if (d < minD) {
+          minD = d;
+          closestP = p;
+        }
+      }
+      if (closestP && minD <= 8.0) {
+        setDraggingEntity({ type: 'movement_target', id: closestP.id });
+        setCustomMovements((prev) => ({
+          ...prev,
+          [closestP!.id]: {
+            playerId: closestP!.id,
+            startX: closestP!.x,
+            startY: closestP!.y,
+            targetX: pt.x,
+            targetY: pt.y,
+            speedKmh: 24,
+            actionType: 'depth_run',
+            label: 'Corsa Senza Palla',
+          },
+        }));
+      }
+    }
   };
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -492,6 +635,23 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
       const clampedOffX = Number(Math.max(5, Math.min(115, pitchPt.x)).toFixed(1));
       setManualOffsideX(clampedOffX);
       setOffsideMode('manual');
+    } else if (draggingEntity.type === 'movement_target') {
+      const p = storePlayers.find((pl) => pl.id === draggingEntity.id);
+      if (p) {
+        setCustomMovements((prev) => ({
+          ...prev,
+          [p.id]: {
+            playerId: p.id,
+            startX: p.x,
+            startY: p.y,
+            targetX: clampedX,
+            targetY: clampedY,
+            speedKmh: 24,
+            actionType: 'depth_run',
+            label: 'Corsa Senza Palla',
+          },
+        }));
+      }
     }
   };
 
@@ -637,49 +797,119 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
   const awayPlayersList = useMemo(() => storePlayers.filter((p) => p.team === 'away'), [storePlayers]);
 
   return (
-    <div className="space-y-4">
-      {/* HEADER DELLA MODALITA' (Analisi Video vs Certificazione Benchmark) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('analysis')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
-              viewMode === 'analysis'
-                ? 'bg-[#00E5FF] text-zinc-950 shadow-md'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>{t('video.mode_analysis', 'Analisi Video & Match Lab')}</span>
-          </button>
+    <div className="space-y-2 flex flex-col h-full min-h-0 select-none">
+      {/* MODAL CERTIFICAZIONE BENCHMARK 12D */}
+      {showBenchmarkModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0F0F14] border border-zinc-700 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0 bg-[#111118]">
+              <span className="font-bold text-white text-sm flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                Certificazione Benchmark (12 Dimensioni &amp; IC di Wilson al 95%)
+              </span>
+              <button
+                onClick={() => setShowBenchmarkModal(false)}
+                className="px-2.5 py-1 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold"
+              >
+                Chiudi
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              <Benchmark12Dimensions state={liveState} metrics={liveMetrics} />
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* 1. TOP HEADER COMPATTO: DOSSIER FRAME (SINISTRA) + AZIONI DI PROGETTO & BENCHMARK (DESTRA) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-[#0F0F14] border border-zinc-800/80 text-xs shrink-0">
+        {/* Dossier Scene */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+          <span className="font-semibold text-zinc-400 flex items-center gap-1 shrink-0 text-[11px]">
+            <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+            Dossier:
+          </span>
+          {scenes.map((sc, idx) => (
+            <div key={sc.id} className="flex items-center shrink-0">
+              <button
+                onClick={() => switchScene(sc.id)}
+                className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1 ${
+                  activeSceneId === sc.id
+                    ? 'bg-[#00E5FF] text-zinc-950 font-bold shadow-sm'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                }`}
+              >
+                <span>{sc.name || `Frame ${idx + 1}`}</span>
+              </button>
+              {scenes.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteScene(sc.id);
+                  }}
+                  className="ml-0.5 p-0.5 text-zinc-600 hover:text-red-400 transition-colors"
+                  title="Elimina questo frame dal progetto"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
           <button
-            onClick={() => setViewMode('certification')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
-              viewMode === 'certification'
-                ? 'bg-amber-400 text-zinc-950 shadow-md'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
+            onClick={() => addScene()}
+            className="px-2 py-0.5 text-xs rounded-lg border border-dashed border-zinc-700 hover:border-[#00E5FF] text-zinc-400 hover:text-[#00E5FF] flex items-center gap-1 shrink-0 transition-colors"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{t('video.mode_benchmark', 'Certificazione Benchmark (12 Dimensioni & IC 95%)')}</span>
+            <Plus className="w-3 h-3" />
+            Nuovo
           </button>
         </div>
 
-        {/* Pulsanti Export / Import Progetto */}
-        <div className="flex items-center gap-2">
+        {/* Azioni Progetto, Caricamento Frame e Benchmark */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <label className="px-2.5 py-1 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 rounded-lg cursor-pointer transition-colors flex items-center gap-1">
+            <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+            Carica Frame
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleMediaUpload}
+              className="hidden"
+            />
+          </label>
+
           <button
-            onClick={handleExportProjectClick}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-colors"
-            title="Scarica il file completo di progetto (.json) per riprenderlo quando vuoi"
+            onClick={() => {
+              onSyncTrackedPositionsToLab(storePlayers, homeDetected.formation, awayDetected.formation);
+              setSyncedBadge(true);
+              setTimeout(() => setSyncedBadge(false), 2000);
+            }}
+            className="px-2.5 py-1 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-lg transition-colors flex items-center gap-1"
           >
-            <Download className="w-3.5 h-3.5 text-[#00E5FF]" />
-            Esporta Progetto
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {syncedBadge ? 'Sincronizzato' : 'Salva'}
           </button>
 
-          <label className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 cursor-pointer transition-colors">
+          <button
+            onClick={() => setShowBenchmarkModal(true)}
+            className="px-2.5 py-1 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-500/40 rounded-lg transition-colors flex items-center gap-1"
+            title="Visualizza certificazione rigorosa sui 26 gol e intervalli di Wilson al 95%"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            Benchmark (12D)
+          </button>
+
+          <button
+            onClick={handleExportProjectClick}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 transition-colors"
+            title="Esporta progetto JSON"
+          >
+            <Download className="w-3.5 h-3.5 text-[#00E5FF]" />
+            Esporta
+          </button>
+
+          <label className="px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 cursor-pointer transition-colors">
             <Upload className="w-3.5 h-3.5 text-emerald-400" />
-            Importa Progetto
+            Importa
             <input
               ref={fileImportInputRef}
               type="file"
@@ -691,381 +921,242 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
         </div>
       </div>
 
-      {viewMode === 'certification' ? (
-        <Benchmark12Dimensions state={liveState} metrics={liveMetrics} />
-      ) : (
-        <>
-          {/* DOSSIER PARTITA: CARTELLA DEI FRAME / SCENE MULTIPLE */}
-          <div className="px-4 py-2.5 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 overflow-x-auto py-1">
-              <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mr-1 shrink-0">
-                <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
-                Dossier Frame:
-              </span>
-              {scenes.map((sc, idx) => (
-                <div key={sc.id} className="flex items-center shrink-0">
-                  <button
-                    onClick={() => switchScene(sc.id)}
-                    className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                      activeSceneId === sc.id
-                        ? 'bg-[#00E5FF] text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                    }`}
-                  >
-                    <span>{sc.name || `Frame ${idx + 1}`}</span>
-                  </button>
-                  {scenes.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteScene(sc.id);
-                      }}
-                      className="ml-1 p-1 text-zinc-600 hover:text-red-400 transition-colors"
-                      title="Elimina questo frame dal progetto"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={() => addScene()}
-                className="px-2.5 py-1 text-xs rounded-lg border border-dashed border-zinc-700 hover:border-[#00E5FF] text-zinc-400 hover:text-[#00E5FF] flex items-center gap-1 shrink-0 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                Nuovo Frame
-              </button>
-            </div>
+      {/* 2. BARRA CONTESTUALE UNIFICATA: TATTICA, POSSESSO, STRUMENTI CANVAS E OVERLAY */}
+      <div className="px-3 py-1.5 rounded-xl bg-[#0F0F14] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+        {/* Blocco Sinistro: Ruoli Tattici, Direzione, Fase, Possesso, Fuorigioco */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Squadra che Attacca */}
+          <div className="flex items-center gap-0.5 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
+            <button
+              onClick={() => setAnalyzingTeam('home')}
+              className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                analyzingTeam === 'home'
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Squadra Blu in attacco"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-300" />
+              Blu ATTACCA ({homePlayersList.length})
+            </button>
+            <button
+              onClick={() => setAnalyzingTeam(analyzingTeam === 'home' ? 'away' : 'home')}
+              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+              title="Inverti ruoli attacco / difesa"
+            >
+              <ArrowLeftRight className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => setAnalyzingTeam('away')}
+              className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                analyzingTeam === 'away'
+                  ? 'bg-red-600 text-white shadow'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Squadra Rossa in attacco"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-300" />
+              Rossi ATTACCA ({awayPlayersList.length})
+            </button>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <label className="px-3 py-1 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
-                Carica Frame / Video
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleMediaUpload}
-                  className="hidden"
-                />
-              </label>
+          {/* Direzione */}
+          <button
+            onClick={() => setAttackDirection(attackDirection === 'right' ? 'left' : 'right')}
+            className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 flex items-center gap-1 font-mono text-[11px]"
+            title="Inverti direzione porta attaccata"
+          >
+            <Compass className="w-3 h-3 text-amber-400" />
+            <span>
+              {attackDirection === 'right'
+                ? `${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} -> (120m)`
+                : `<- ${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} (0m)`}
+            </span>
+          </button>
 
+          {/* Fase Tattica */}
+          <div className="flex items-center gap-1 bg-zinc-900 px-2 py-0.5 rounded-lg border border-zinc-800 text-[11px]">
+            <span className="text-zinc-400">Fase:</span>
+            <select
+              value={tacticalPhase}
+              onChange={(e) => setTacticalPhase(e.target.value as TacticalPhaseName)}
+              className="bg-transparent text-[11px] font-semibold text-emerald-400 focus:outline-none cursor-pointer"
+            >
+              <option value="Costruzione dal Basso" className="bg-zinc-900 text-zinc-200">Costruzione dal Basso</option>
+              <option value="Sviluppo Centrocampo" className="bg-zinc-900 text-zinc-200">Sviluppo Centrocampo</option>
+              <option value="Rifinitura / Trequarti" className="bg-zinc-900 text-zinc-200">Rifinitura / Trequarti</option>
+              <option value="Finalizzazione / Tiro" className="bg-zinc-900 text-zinc-200">Finalizzazione / Tiro</option>
+              <option value="Transizione Offensiva" className="bg-zinc-900 text-zinc-200">Transizione Offensiva</option>
+              <option value="Ripiegamento Difensivo" className="bg-zinc-900 text-zinc-200">Ripiegamento Difensivo</option>
+              <option value="Pressing Alto" className="bg-zinc-900 text-zinc-200">Pressing Alto</option>
+              <option value="Blocco Basso Difensivo" className="bg-zinc-900 text-zinc-200">Blocco Basso Difensivo</option>
+            </select>
+          </div>
+
+          {/* Possesso Palla */}
+          <span
+            className={`font-semibold px-2 py-0.5 rounded-lg font-mono text-[11px] flex items-center gap-1 ${
+              ballCarrier
+                ? ballCarrier.team === 'home'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                : 'bg-zinc-800/60 text-zinc-300 border border-zinc-700/60'
+            }`}
+            title={ballCarrier ? `Portatore: #${ballCarrier.number} (${ballCarrier.archetypeName})` : 'Palla libera'}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${ballCarrier ? (ballCarrier.team === 'home' ? 'bg-blue-400' : 'bg-red-400') : 'bg-amber-400'}`} />
+            {ballCarrier ? `${ballCarrier.team === 'home' ? 'Blu' : 'Rossi'} #${ballCarrier.number}` : 'Palla libera'}
+          </span>
+
+          {/* Fuorigioco */}
+          <div className="flex items-center gap-1">
+            <span
+              className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center gap-1 ${
+                carrierDecision.actionType === 'pass' && carrierDecision.title.includes('Fuorigioco')
+                  ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                  : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+              }`}
+            >
+              <Flag className="w-3 h-3" />
+              {carrierDecision.actionType === 'pass' && carrierDecision.title.includes('Fuorigioco') ? 'OFFSIDE' : 'REGOLARE'} ({effectiveOffsideX.toFixed(0)}m) [{offsideMode === 'manual' ? 'MANUALE' : 'AUTO'}]
+            </span>
+            {offsideMode === 'manual' && (
               <button
                 onClick={() => {
-                  onSyncTrackedPositionsToLab(storePlayers, homeDetected.formation, awayDetected.formation);
-                  setSyncedBadge(true);
-                  setTimeout(() => setSyncedBadge(false), 2000);
+                  setOffsideMode('auto');
+                  setManualOffsideX(null);
                 }}
-                className="px-3 py-1 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-lg transition-colors flex items-center gap-1.5"
+                className="p-0.5 text-zinc-400 hover:text-amber-400 rounded"
+                title="Ripristina fuorigioco automatico"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {syncedBadge ? 'Sincronizzato OK' : 'Salva Posizioni'}
+                <RefreshCw className="w-2.5 h-2.5" />
               </button>
-            </div>
+            )}
+          </div>
+        </div>
+
+        {/* Blocco Destro: Strumenti di Interazione e Overlays */}
+        <div className="flex flex-wrap items-center gap-1">
+          <div className="flex items-center bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 gap-0.5">
+            <button
+              onClick={() => setToolMode('drag_players')}
+              className={`px-2 py-0.5 text-[11px] font-medium rounded flex items-center gap-1 ${
+                toolMode === 'drag_players' ? 'bg-blue-600 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Sposta le pedine sul campo"
+            >
+              <Move className="w-3 h-3" />
+              Sposta
+            </button>
+            <button
+              onClick={() => setToolMode('place_ball')}
+              className={`px-2 py-0.5 text-[11px] font-medium rounded flex items-center gap-1 ${
+                toolMode === 'place_ball' ? 'bg-amber-400 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Posiziona la palla"
+            >
+              <CircleDot className="w-3 h-3" />
+              Palla
+            </button>
+            <button
+              onClick={() => setToolMode('draw_action')}
+              className={`px-2 py-0.5 text-[11px] font-medium rounded flex items-center gap-1 ${
+                toolMode === 'draw_action' ? 'bg-amber-400 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Traccia la traiettoria di passaggio o tiro"
+            >
+              <Navigation className="w-3 h-3" />
+              Freccia Palla
+            </button>
+            <button
+              onClick={() => setToolMode('draw_movement')}
+              className={`px-2 py-0.5 text-[11px] font-medium rounded flex items-center gap-1 ${
+                toolMode === 'draw_movement' ? 'bg-cyan-400 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Traccia lo scatto / corsa senza palla di un compagno o marcatore"
+            >
+              <ArrowUpRight className="w-3 h-3" />
+              Scatto Compagno
+            </button>
           </div>
 
-          {/* BARRA CONTESTO TATTICO: CHI ATTACCA / CHI DIFENDE + POSSESSO + FASE TATTICA + DIREZIONE */}
-          <div className="px-4 py-2.5 rounded-xl bg-[#0F0F14] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Selettore Chi Attacca e Chi Difende */}
-              <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-                <span className="text-[11px] text-zinc-400 px-1.5 font-medium">Ruoli Tattici:</span>
-                <button
-                  onClick={() => setAnalyzingTeam('home')}
-                  className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
-                    analyzingTeam === 'home'
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                  title="Imposta la Squadra A (Blu) come squadra in fase offensiva"
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-300" />
-                  Blu ATTACCA ({homePlayersList.length})
-                </button>
+          {/* Aggiunta Pedine */}
+          <button
+            onClick={() => {
+              const p = addPlayer('home');
+              setSelectedPlayerId(p.id);
+            }}
+            disabled={homePlayersList.length >= 11}
+            className="px-2 py-0.5 text-[11px] font-semibold rounded bg-blue-950/70 hover:bg-blue-900 text-blue-300 border border-blue-800/80 flex items-center gap-0.5 disabled:opacity-40"
+          >
+            <Plus className="w-2.5 h-2.5" />
+            Blu ({homePlayersList.length}/11)
+          </button>
+          <button
+            onClick={() => {
+              const p = addPlayer('away');
+              setSelectedPlayerId(p.id);
+            }}
+            disabled={awayPlayersList.length >= 11}
+            className="px-2 py-0.5 text-[11px] font-semibold rounded bg-red-950/70 hover:bg-red-900 text-red-300 border border-red-800/80 flex items-center gap-0.5 disabled:opacity-40"
+          >
+            <Plus className="w-2.5 h-2.5" />
+            Rosso ({awayPlayersList.length}/11)
+          </button>
 
-                <button
-                  onClick={() => setAnalyzingTeam(analyzingTeam === 'home' ? 'away' : 'home')}
-                  className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
-                  title="Inverti ruoli: scambia chi attacca e chi difende"
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5 text-zinc-400" />
-                </button>
+          {/* Overlays */}
+          <button
+            onClick={() => setShowProjectedFieldLines(!showProjectedFieldLines)}
+            className={`px-1.5 py-0.5 text-[10px] rounded border ${
+              showProjectedFieldLines ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+            }`}
+            title="Linee campo canoniche proiettate"
+          >
+            Linee
+          </button>
+          <button
+            onClick={() => setShowTacticalCorridors(!showTacticalCorridors)}
+            className={`px-1.5 py-0.5 text-[10px] rounded border ${
+              showTacticalCorridors ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/50' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+            }`}
+            title="5 Corridoi verticali"
+          >
+            5 Corridoi
+          </button>
+          <button
+            onClick={() => setShowOffsideLine(!showOffsideLine)}
+            className={`px-1.5 py-0.5 text-[10px] rounded border ${
+              showOffsideLine ? 'bg-amber-500/20 text-amber-400 border-amber-500/50' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+            }`}
+            title="Linea di fuorigioco"
+          >
+            Fuorigioco
+          </button>
+          <button
+            onClick={() => setShowPerspectiveHeatmap(!showPerspectiveHeatmap)}
+            className={`px-1.5 py-0.5 text-[10px] rounded border ${
+              showPerspectiveHeatmap ? 'bg-rose-500/20 text-rose-300 border-rose-500/50' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+            }`}
+            title="Heatmap Pitch Control continuo (Spearman 2018)"
+          >
+            Heatmap
+          </button>
+          <button
+            onClick={() => setShowTeamArrows(!showTeamArrows)}
+            className={`px-1.5 py-0.5 text-[10px] rounded border ${
+              showTeamArrows ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+            }`}
+            title="Visualizza le frecce dei movimenti senza palla della squadra"
+          >
+            Frecce Squadra
+          </button>
+        </div>
+      </div>
 
-                <button
-                  onClick={() => setAnalyzingTeam('away')}
-                  className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
-                    analyzingTeam === 'away'
-                      ? 'bg-red-600 text-white shadow'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                  title="Imposta la Squadra B (Rossa) come squadra in fase offensiva"
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-300" />
-                  Rossi ATTACCA ({awayPlayersList.length})
-                </button>
-              </div>
-
-              {/* Toggle Direzione di Attacco */}
-              <button
-                onClick={() => setAttackDirection(attackDirection === 'right' ? 'left' : 'right')}
-                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 flex items-center gap-1.5 font-mono"
-                title="Inverti la direzione delle porte attaccate"
-              >
-                <Compass className="w-3.5 h-3.5 text-amber-400" />
-                <span>
-                  {attackDirection === 'right'
-                    ? `${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca -&gt; (porta a 120m)`
-                    : `&lt;- ${analyzingTeam === 'home' ? 'Blu' : 'Rossi'} attacca (porta a 0m)`}
-                </span>
-              </button>
-
-              {/* Selettore Fase Tattica Attiva */}
-              <div className="flex items-center gap-1.5 bg-zinc-900 px-2 py-1 rounded-lg border border-zinc-800">
-                <span className="text-[11px] text-zinc-400 font-medium">Fase:</span>
-                <select
-                  value={tacticalPhase}
-                  onChange={(e) => setTacticalPhase(e.target.value as TacticalPhaseName)}
-                  className="bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none cursor-pointer"
-                >
-                  <option value="Costruzione dal Basso" className="bg-zinc-900 text-zinc-200">
-                    Costruzione dal Basso
-                  </option>
-                  <option value="Sviluppo Centrocampo" className="bg-zinc-900 text-zinc-200">
-                    Sviluppo Centrocampo
-                  </option>
-                  <option value="Rifinitura / Trequarti" className="bg-zinc-900 text-zinc-200">
-                    Rifinitura / Trequarti
-                  </option>
-                  <option value="Finalizzazione / Tiro" className="bg-zinc-900 text-zinc-200">
-                    Finalizzazione / Tiro
-                  </option>
-                  <option value="Transizione Offensiva" className="bg-zinc-900 text-zinc-200">
-                    Transizione Offensiva
-                  </option>
-                  <option value="Ripiegamento Difensivo" className="bg-zinc-900 text-zinc-200">
-                    Ripiegamento Difensivo
-                  </option>
-                  <option value="Pressing Alto" className="bg-zinc-900 text-zinc-200">
-                    Pressing Alto
-                  </option>
-                  <option value="Blocco Basso Difensivo" className="bg-zinc-900 text-zinc-200">
-                    Blocco Basso Difensivo
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            {/* Possesso Palla Deterministico + Controllo Fuorigioco */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Badge Possesso Palla */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-zinc-400">Possesso:</span>
-                <span
-                  className={`font-semibold px-2.5 py-1 rounded-lg font-mono flex items-center gap-1.5 ${
-                    ballCarrier
-                      ? ballCarrier.team === 'home'
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      : 'bg-zinc-800/60 text-zinc-300 border border-zinc-700/60'
-                  }`}
-                  title={
-                    ballCarrier
-                      ? `Palla agganciata alla pedina #${ballCarrier.number} (${ballCarrier.archetypeName}) a ${Math.hypot(ballCarrier.x - storeBall.x, ballCarrier.y - storeBall.y).toFixed(1)}m`
-                      : 'Palla non vicina ad alcuna pedina (contesa o passaggio in volo)'
-                  }
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      ballCarrier
-                        ? ballCarrier.team === 'home'
-                          ? 'bg-blue-400'
-                          : 'bg-red-400'
-                        : 'bg-amber-400'
-                    }`}
-                  />
-                  {ballCarrier
-                    ? `${ballCarrier.team === 'home' ? 'Blu' : 'Rossi'} (#${ballCarrier.number} ${ballCarrier.archetypeName})`
-                    : 'Palla contesa / libera'}
-                </span>
-              </div>
-
-              {/* Badge Fuorigioco Attivo */}
-              <div className="flex items-center gap-1">
-                <span
-                  className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center gap-1 ${
-                    actionEvaluation.isOffside
-                      ? 'bg-red-500/20 text-red-400 border-red-500/40'
-                      : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                  }`}
-                  title={`Linea a ${effectiveOffsideX.toFixed(1)}m (${offsideMode === 'manual' ? 'posizionata manualmente' : 'agganciata al penultimo difendente'})`}
-                >
-                  <Flag className="w-3 h-3" />
-                  {actionEvaluation.isOffside ? 'OFFSIDE!' : 'REGOLARE'} ({effectiveOffsideX.toFixed(0)}m)
-                </span>
-
-                {offsideMode === 'manual' && (
-                  <button
-                    onClick={() => {
-                      setOffsideMode('auto');
-                      setManualOffsideX(null);
-                    }}
-                    className="p-1 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded transition-colors"
-                    title="Ripristina fuorigioco automatico (penultimo difensore)"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* LAYOUT PRINCIPALE: BARRA CHESS.COM BICOLORE (70%) / PANNELLO SCHEDE (30%) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* COLONNA SINISTRA / CENTRALE (~70% -> 8 su 12): BARRA + CANVAS + TIMELINE */}
-            <div className="lg:col-span-8 space-y-3">
-              {/* Barra Strumenti del Canvas */}
-              <div className="px-3.5 py-2 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setToolMode('drag_players')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      toolMode === 'drag_players'
-                        ? 'bg-blue-600 text-white font-semibold'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Move className="w-3.5 h-3.5" />
-                    Sposta Pedine
-                  </button>
-
-                  <button
-                    onClick={() => setToolMode('place_ball')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      toolMode === 'place_ball'
-                        ? 'bg-amber-400 text-zinc-950 font-bold'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <CircleDot className="w-3.5 h-3.5" />
-                    Posiziona Palla
-                  </button>
-
-                  <button
-                    onClick={() => setToolMode('draw_action')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      toolMode === 'draw_action'
-                        ? 'bg-amber-400 text-zinc-950 font-semibold'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Navigation className="w-3.5 h-3.5" />
-                    Traccia Freccia
-                  </button>
-
-                  {/* Aggiunta Rapida Pedine */}
-                  <button
-                    onClick={() => {
-                      const p = addPlayer('home');
-                      setSelectedPlayerId(p.id);
-                    }}
-                    disabled={homePlayersList.length >= 11}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-blue-950/60 hover:bg-blue-900 text-blue-300 border border-blue-800/60 flex items-center gap-1 disabled:opacity-40"
-                    title="Aggiungi una pedina alla Squadra A (max 11)"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    + Blu ({homePlayersList.length}/11)
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const p = addPlayer('away');
-                      setSelectedPlayerId(p.id);
-                    }}
-                    disabled={awayPlayersList.length >= 11}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800/60 flex items-center gap-1 disabled:opacity-40"
-                    title="Aggiungi una pedina alla Squadra B (max 11)"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    + Rosso ({awayPlayersList.length}/11)
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setToolMode('calibrate_homography');
-                      setRightTab('calibrazione');
-                    }}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      toolMode === 'calibrate_homography'
-                        ? 'bg-zinc-200 text-zinc-950 font-semibold'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Crosshair className="w-3.5 h-3.5" />
-                    Calibra
-                  </button>
-                </div>
-
-                {/* Toggles Visivi Tattici */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setShowProjectedFieldLines(!showProjectedFieldLines)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                      showProjectedFieldLines
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
-                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                    }`}
-                    title="Proietta le linee canoniche del campo 120x80m (linee laterali, aree rigore, cerchio centrocampo) per allinearle al video"
-                  >
-                    Linee Campo
-                  </button>
-
-                  <button
-                    onClick={() => setShowTacticalCorridors(!showTacticalCorridors)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                      showTacticalCorridors
-                        ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/50'
-                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                    }`}
-                    title="Mostra i 5 corridoi verticali e la Zona 14"
-                  >
-                    5 Corridoi
-                  </button>
-
-                  <button
-                    onClick={() => setShowOffsideLine(!showOffsideLine)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                      showOffsideLine
-                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
-                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                    }`}
-                    title="Visualizza la linea del penultimo difendente avversario"
-                  >
-                    Fuorigioco
-                  </button>
-
-                  <button
-                    onClick={() => setShowPerspectiveHeatmap(!showPerspectiveHeatmap)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                      showPerspectiveHeatmap
-                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/40'
-                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                    }`}
-                  >
-                    Heatmap
-                  </button>
-
-                  <button
-                    onClick={() => setShowAllLabels(!showAllLabels)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors flex items-center gap-1 ${
-                      showAllLabels
-                        ? 'bg-zinc-800 text-zinc-200 border-zinc-600'
-                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
-                    }`}
-                  >
-                    <Eye className="w-3 h-3" />
-                    Nomi
-                  </button>
-                </div>
-              </div>
+      {/* 3. LAYOUT PRINCIPALE ALLINEATO: CANVAS (70%) + PANNELLO DESTRO (30%) AD ALTEZZA COORDINATA SENZA SCROLL */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch flex-1 min-h-[560px] h-[calc(100vh-140px)]">
+        {/* COLONNA SINISTRA / CENTRALE (~70% -> 8 su 12): BARRA + CANVAS + TIMELINE SIMULAZIONE */}
+        <div className="lg:col-span-8 flex flex-col justify-between h-full space-y-1.5 min-h-0">
 
               {/* CONTENITORE: [BARRA VALUTAZIONE BICOLORE BLU/ROSSA] + [CANVAS VIDEO] */}
               <div className="flex gap-2.5 items-stretch">
@@ -1155,6 +1246,28 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                         orient="auto-start-reverse"
                       >
                         <path d="M 0 1 L 10 5 L 0 9 z" fill="#FACC15" />
+                      </marker>
+                      <marker
+                        id="arrow-cyan-teammate"
+                        viewBox="0 0 10 10"
+                        refX="7"
+                        refY="5"
+                        markerWidth="6"
+                        markerHeight="6"
+                        orient="auto-start-reverse"
+                      >
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#00E5FF" />
+                      </marker>
+                      <marker
+                        id="arrow-red-opp"
+                        viewBox="0 0 10 10"
+                        refX="7"
+                        refY="5"
+                        markerWidth="6"
+                        markerHeight="6"
+                        orient="auto-start-reverse"
+                      >
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#EF4444" />
                       </marker>
                     </defs>
 
@@ -1398,8 +1511,113 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       />
                     )}
 
-                    {/* 5. Pedine Giocatori (Blu = Squadra A, Rosso = Squadra B) */}
-                    {storePlayers.map((player) => {
+                    {/* 4.5. Movimenti Senza Palla & Frecce Tattiche della Squadra */}
+                    {(showTeamArrows || toolMode === 'draw_movement') && (
+                      <g className="pointer-events-auto">
+                        {/* Corse suggerite dall'engine tattico per i compagni */}
+                        {teamMovementsResult.suggestedMovements.map((sm) => {
+                          if (customMovements[sm.playerId]) return null;
+                          const uvStart = projectPitchToImage(sm.startX, sm.startY, HInv);
+                          const uvTarget = projectPitchToImage(sm.targetX, sm.targetY, HInv);
+                          const x1 = uvStart.u * 1000;
+                          const y1 = uvStart.v * 562.5;
+                          const x2 = uvTarget.u * 1000;
+                          const y2 = uvTarget.v * 562.5;
+                          const midX = (x1 + x2) / 2;
+                          const midY = (y1 + y2) / 2;
+
+                          return (
+                            <g key={`sm-${sm.playerId}`}>
+                              <line
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke="#00E5FF"
+                                strokeWidth="2.2"
+                                strokeDasharray="5 3"
+                                markerEnd="url(#arrow-cyan-teammate)"
+                                opacity="0.85"
+                              />
+                              <circle
+                                cx={x2}
+                                cy={y2}
+                                r={4.5}
+                                fill="#00E5FF"
+                                fillOpacity="0.4"
+                                stroke="#00E5FF"
+                                strokeWidth="1.5"
+                              />
+                              <g transform={`translate(${midX}, ${midY - 7})`}>
+                                <rect
+                                  x={-34}
+                                  y={-7}
+                                  width={68}
+                                  height={14}
+                                  rx={3}
+                                  fill="#09090B"
+                                  fillOpacity="0.88"
+                                  stroke="#00E5FF"
+                                  strokeWidth="0.8"
+                                />
+                                <text
+                                  x={0}
+                                  y={3}
+                                  textAnchor="middle"
+                                  fontSize="7.5"
+                                  fill="#00E5FF"
+                                  className="font-mono font-bold"
+                                >
+                                  {sm.label}
+                                </text>
+                              </g>
+                            </g>
+                          );
+                        })}
+
+                        {/* Corse disegnate manualmente dall'utente */}
+                        {Object.values(customMovements).map((mv) => {
+                          const uvStart = projectPitchToImage(mv.startX, mv.startY, HInv);
+                          const uvTarget = projectPitchToImage(mv.targetX, mv.targetY, HInv);
+                          const x1 = uvStart.u * 1000;
+                          const y1 = uvStart.v * 562.5;
+                          const x2 = uvTarget.u * 1000;
+                          const y2 = uvTarget.v * 562.5;
+
+                          return (
+                            <g key={`custom-mv-${mv.playerId}`}>
+                              <line
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke="#FACC15"
+                                strokeWidth="2.6"
+                                strokeDasharray="6 3"
+                                markerEnd="url(#arrow-yellow-selected)"
+                              />
+                              <circle
+                                cx={x2}
+                                cy={y2}
+                                r={6.5}
+                                fill="#FACC15"
+                                fillOpacity="0.5"
+                                stroke="#FACC15"
+                                strokeWidth="2"
+                                className="cursor-grab active:cursor-grabbing pointer-events-auto"
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                  setDraggingEntity({ type: 'movement_target', id: mv.playerId });
+                                }}
+                              />
+                            </g>
+                          );
+                        })}
+                      </g>
+                    )}
+
+                    {/* 5. Pedine Giocatori (Blu = Squadra A, Rosso = Squadra B) con Posizioni Dinamiche */}
+                    {effectivePlayerPositions.map((player) => {
                       const uv = projectPitchToImage(player.x, player.y, HInv);
                       const px = uv.u * 1000;
                       const py = uv.v * 562.5;
@@ -1408,10 +1626,17 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       const isHovered = player.id === hoveredPlayerId;
                       const isCarrier = ballCarrier?.id === player.id;
                       const isBlocker = actionEvaluation.criticalBlocker?.defenderId === player.id;
+                      const isInterceptor =
+                        carrierDecision.isPassedToOpponent &&
+                        carrierDecision.interceptingOpponent?.id === player.id;
 
-                      const strokeColor = isHome ? '#60A5FA' : '#F87171';
+                      const strokeColor = isInterceptor
+                        ? '#EF4444'
+                        : isHome
+                          ? '#60A5FA'
+                          : '#F87171';
                       const fillColor = isHome ? '#1D4ED8' : '#B91C1C';
-                      const showBadge = showAllLabels || isSelected || isHovered;
+                      const showBadge = showAllLabels || isSelected || isHovered || isInterceptor;
 
                       return (
                         <g
@@ -1450,15 +1675,23 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                           }}
                         >
                           {/* Anello evidenziatore */}
-                          {(isSelected || isBlocker || isCarrier) && (
+                          {(isSelected || isBlocker || isCarrier || isInterceptor) && (
                             <circle
                               cx={0}
                               cy={0}
                               r={16}
                               fill="none"
-                              stroke={isCarrier ? '#FACC15' : isBlocker ? '#F59E0B' : '#00E5FF'}
-                              strokeWidth="2.2"
-                              strokeDasharray={isBlocker ? '3 2' : 'none'}
+                              stroke={
+                                isInterceptor
+                                  ? '#EF4444'
+                                  : isCarrier
+                                    ? '#FACC15'
+                                    : isBlocker
+                                      ? '#F59E0B'
+                                      : '#00E5FF'
+                              }
+                              strokeWidth={isInterceptor ? '2.8' : '2.2'}
+                              strokeDasharray={isInterceptor ? '4 2' : isBlocker ? '3 2' : 'none'}
                             />
                           )}
 
@@ -1470,7 +1703,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                             fill={fillColor}
                             fillOpacity={isSelected || isHovered ? 0.95 : 0.75}
                             stroke={strokeColor}
-                            strokeWidth={isSelected ? 2.4 : 1.5}
+                            strokeWidth={isSelected || isInterceptor ? 2.4 : 1.5}
                           />
                           <text
                             x={0}
@@ -1483,7 +1716,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                             {player.number}
                           </text>
 
-                          {/* Bottone '✕' Rosso per Rimozione Immediata con 1 Click (su Hover, Selezione o Long-Press) */}
+                          {/* Bottone '✕' Rosso per Rimozione Immediata con 1 Click */}
                           {(isSelected || isHovered || heldPlayerId === player.id) && (
                             <g
                               transform="translate(11, -11)"
@@ -1532,7 +1765,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                             </g>
                           )}
 
-                          {/* Nome Esteso su Hover / Selezione */}
+                          {/* Nome Esteso o Badge Intercettore */}
                           {showBadge && (
                             <g className="pointer-events-none">
                               <rect
@@ -1551,10 +1784,12 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                                 y={-20.5}
                                 textAnchor="middle"
                                 fontSize="9"
-                                fill="#F8FAFC"
+                                fill={isInterceptor ? '#FCA5A5' : '#F8FAFC'}
                                 className="font-sans font-medium"
                               >
-                                {player.archetypeName} ({player.x.toFixed(0)}m, {player.y.toFixed(0)}m)
+                                {isInterceptor
+                                  ? `Intercetto Avversario (#${player.number})`
+                                  : `${player.archetypeName} (${player.x.toFixed(0)}m, ${player.y.toFixed(0)}m)`}
                               </text>
                             </g>
                           )}
@@ -1562,39 +1797,79 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       );
                     })}
 
-                    {/* 6. Il Pallone Ufficiale (Marker Dedicato e Trascinabile) */}
+                    {/* 6. Il Pallone Ufficiale (Marker Dedicato e Parabola 3D) */}
                     {(() => {
-                      const ballUv = projectPitchToImage(storeBall.x, storeBall.y, HInv);
+                      const ballUv = projectPitchToImage(effectiveBallPosition.x, effectiveBallPosition.y, HInv);
                       const bx = ballUv.u * 1000;
-                      const by = ballUv.v * 562.5;
+                      const groundBy = ballUv.v * 562.5;
+                      const by = groundBy - (effectiveBallPosition.z * 18);
 
                       return (
-                        <g
-                          transform={`translate(${bx}, ${by})`}
-                          className="cursor-grab active:cursor-grabbing"
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                            setDraggingEntity({ type: 'ball' });
-                          }}
-                        >
-                          <circle cx={0} cy={0} r={14} fill="#FACC15" fillOpacity="0.22" />
-                          <circle cx={0} cy={0} r={7.5} fill="#FFFFFF" stroke="#09090B" strokeWidth="2" />
-                          <circle cx={0} cy={0} r={2.5} fill="#09090B" />
-                          <text
-                            x={0}
-                            y={-11}
-                            textAnchor="middle"
-                            fontSize="8.5"
-                            fill="#FACC15"
-                            className="font-mono font-bold pointer-events-none"
+                        <g>
+                          {/* Ombra del pallone a terra durante parabola */}
+                          {effectiveBallPosition.z > 0.05 && (
+                            <ellipse
+                              cx={bx}
+                              cy={groundBy}
+                              rx={Math.max(3.5, 7 - effectiveBallPosition.z * 1.2)}
+                              ry={Math.max(1.8, 3.5 - effectiveBallPosition.z * 0.6)}
+                              fill="#000000"
+                              fillOpacity={Math.max(0.18, 0.45 - effectiveBallPosition.z * 0.08)}
+                              className="pointer-events-none"
+                            />
+                          )}
+
+                          {/* Punto di Intercetto Avversario se rilevato sulla traiettoria */}
+                          {carrierDecision.isPassedToOpponent && carrierDecision.interceptingOpponent && (() => {
+                            const opp = carrierDecision.interceptingOpponent;
+                            const icpUv = projectPitchToImage(
+                              opp.x,
+                              opp.y,
+                              HInv
+                            );
+                            const ix = icpUv.u * 1000;
+                            const iy = icpUv.v * 562.5;
+                            return (
+                              <g transform={`translate(${ix}, ${iy})`} className="pointer-events-none">
+                                <circle cx={0} cy={0} r={9} fill="none" stroke="#EF4444" strokeWidth="2" strokeDasharray="3 2" />
+                                <circle cx={0} cy={0} r={3.5} fill="#EF4444" />
+                                <g transform="translate(0, -13)">
+                                  <rect x={-52} y={-8} width={104} height={15} rx={3} fill="#450A0A" stroke="#EF4444" strokeWidth="1" />
+                                  <text x={0} y={3} textAnchor="middle" fontSize="7.5" fill="#FCA5A5" className="font-mono font-bold">
+                                    INTERCETTO GARANTITO
+                                  </text>
+                                </g>
+                              </g>
+                            );
+                          })()}
+
+                          <g
+                            transform={`translate(${bx}, ${by})`}
+                            className="cursor-grab active:cursor-grabbing"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setDraggingEntity({ type: 'ball' });
+                            }}
                           >
-                            PALLA
-                          </text>
+                            <circle cx={0} cy={0} r={14} fill="#FACC15" fillOpacity="0.22" />
+                            <circle cx={0} cy={0} r={7.5} fill="#FFFFFF" stroke="#09090B" strokeWidth="2" />
+                            <circle cx={0} cy={0} r={2.5} fill="#09090B" />
+                            <text
+                              x={0}
+                              y={-11}
+                              textAnchor="middle"
+                              fontSize="8.5"
+                              fill="#FACC15"
+                              className="font-mono font-bold pointer-events-none"
+                            >
+                              PALLA
+                            </text>
+                          </g>
                         </g>
                       );
                     })()}
 
-                    {/* 7. Traiettoria Freccia Disegnata in GIALLO */}
+                    {/* 7. Traiettoria Freccia Disegnata (Gialla se valida, Rossa se Errore/Intercetto) */}
                     {(() => {
                       const x1 = arrowStartUv.u * 1000;
                       const y1 = arrowStartUv.v * 562.5;
@@ -1607,6 +1882,14 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                       const cx = (x1 + x2) / 2;
                       const cy = (y1 + y2) / 2 - liftPx;
 
+                      const isCriticalError =
+                        actionEvaluation.isOffside ||
+                        carrierDecision.isPassedToOpponent ||
+                        (carrierDecision.isOutOfBounds && !carrierDecision.isEmergencyClearance);
+
+                      const arrowColor = isCriticalError ? '#EF4444' : '#FACC15';
+                      const markerId = isCriticalError ? 'url(#arrow-red-opp)' : 'url(#arrow-yellow-selected)';
+
                       return (
                         <g>
                           {liftPx > 6 && (
@@ -1615,7 +1898,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                               y1={y1}
                               x2={x2}
                               y2={y2}
-                              stroke="#FACC15"
+                              stroke={arrowColor}
                               strokeOpacity="0.25"
                               strokeWidth="1.5"
                               strokeDasharray="4 4"
@@ -1625,9 +1908,9 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                           <path
                             d={`M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`}
                             fill="none"
-                            stroke={actionEvaluation.isOffside ? '#EF4444' : '#FACC15'}
+                            stroke={arrowColor}
                             strokeWidth="3.2"
-                            markerEnd="url(#arrow-yellow-selected)"
+                            markerEnd={markerId}
                           />
 
                           {/* Punta della freccia trascinabile */}
@@ -1635,9 +1918,9 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                             cx={x2}
                             cy={y2}
                             r={8.5}
-                            fill="#FACC15"
+                            fill={arrowColor}
                             fillOpacity="0.4"
-                            stroke="#FACC15"
+                            stroke={arrowColor}
                             strokeWidth="2.2"
                             className="cursor-grab active:cursor-grabbing"
                             onMouseDown={(e) => {
@@ -1690,76 +1973,107 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 </div>
               </div>
 
-              {/* TIMELINE / CONTROLLI SCRUBBER */}
-              <div className="px-4 py-2.5 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-1">
+              {/* TIMELINE / CONTROLLI SIMULAZIONE DINAMICA A 60 FPS */}
+              <div className="px-4 py-2 rounded-xl bg-[#111116] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2.5 flex-1 min-w-[280px]">
+                  {/* Tasto Play / Pausa Simulazione */}
                   <button
                     onClick={() => {
-                      const next = !isPlayingVideo;
-                      setIsPlayingVideo(next);
-                      if (videoRef.current) {
-                        if (next) videoRef.current.play();
-                        else videoRef.current.pause();
+                      if (simProgress >= 1) {
+                        setSimProgress(0);
+                        setIsSimulating(true);
+                      } else {
+                        setIsSimulating(!isSimulating);
                       }
                     }}
-                    className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-medium rounded-lg flex items-center gap-1.5 shrink-0"
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 ${
+                      isSimulating
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
+                    }`}
+                    title={isSimulating ? 'Sospendi simulazione' : 'Avvia simulazione dinamica a 60 FPS'}
                   >
-                    {isPlayingVideo ? (
+                    {isSimulating ? (
                       <>
                         <Pause className="w-3.5 h-3.5 text-amber-400" />
                         Pausa
                       </>
                     ) : (
                       <>
-                        <Play className="w-3.5 h-3.5 text-blue-400" />
-                        Play
+                        <Play className="w-3.5 h-3.5 fill-white text-white" />
+                        Simula Giocata (60 FPS)
                       </>
                     )}
                   </button>
 
-                  <input
-                    type="range"
-                    min={0}
-                    max={videoRef.current?.duration || 90}
-                    step={0.1}
-                    value={currentTimeSec}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setCurrentTimeSec(val);
-                      if (videoRef.current) videoRef.current.currentTime = val;
+                  {/* Tasto Riavvolgi */}
+                  <button
+                    onClick={() => {
+                      setIsSimulating(false);
+                      setSimProgress(0);
                     }}
-                    className="flex-1 accent-blue-500"
-                  />
+                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 text-xs font-semibold flex items-center gap-1 shrink-0"
+                    title="Riavvolgi la simulazione all'istante iniziale t = 0s"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                    Reset
+                  </button>
 
-                  <span className="text-xs font-mono text-zinc-400 shrink-0">
-                    {currentTimeSec.toFixed(1)}s
-                  </span>
+                  {/* Scrubber Range Slider per avanzamento simulazione */}
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={simProgress}
+                      onChange={(e) => {
+                        setIsSimulating(false);
+                        setSimProgress(Number(e.target.value));
+                      }}
+                      className="flex-1 accent-cyan-400 h-1.5 bg-zinc-800 rounded-lg cursor-pointer"
+                    />
+                    <span className="text-xs font-mono text-cyan-400 font-bold shrink-0 min-w-[55px] text-right">
+                      {(simProgress * (actionEvaluation.flightTimeSec || 2.5)).toFixed(2)}s
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-zinc-400 border-l border-zinc-800 pl-4">
-                  <div>
-                    Controllo Squadra A:{' '}
+                {/* Statistiche Live e Reset Corse */}
+                <div className="flex items-center gap-3 text-xs text-zinc-400 border-l border-zinc-800/80 pl-3">
+                  {Object.keys(customMovements).length > 0 && (
+                    <button
+                      onClick={() => setCustomMovements({})}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 font-mono underline shrink-0"
+                      title="Cancella tutte le corse manuali tracciate per i compagni"
+                    >
+                      Azzera Corse ({Object.keys(customMovements).length})
+                    </button>
+                  )}
+                  <div className="hidden sm:block">
+                    Controllo Sq. A:{' '}
                     <span className="font-mono font-semibold text-blue-400">
                       {pitchControlData.homeAvg}%
                     </span>
                   </div>
                   <div>
-                    Zona 14:{' '}
-                    <span className="font-mono font-semibold text-zinc-200">
-                      {pitchControlData.zone14Avg}%
+                    Compattezza Difensiva:{' '}
+                    <span className="font-mono font-semibold text-emerald-400">
+                      {defensiveShape.compactnessScore}%
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* COLONNA DESTRA (~30% -> 4 su 12): PANNELLO A SCHEDE */}
-            <div className="lg:col-span-4 rounded-xl bg-[#111116] border border-zinc-800/80 overflow-hidden">
-              {/* Intestazione Schede */}
-              <div className="grid grid-cols-4 border-b border-zinc-800 bg-[#0C0C10]">
+            {/* COLONNA DESTRA (~30% -> 4 su 12): PANNELLO A SCHEDE (ALTEZZA COORDINATA AL 100% SENZA SCROLL ESTERNO) */}
+            <div className="lg:col-span-4 rounded-xl bg-[#111116] border border-zinc-800/80 overflow-hidden flex flex-col h-full min-h-0">
+              {/* Intestazione 5 Schede Coordinate */}
+              <div className="grid grid-cols-5 border-b border-zinc-800 bg-[#0C0C10] shrink-0">
                 {(
                   [
-                    { id: 'analisi', label: 'Analisi' },
+                    { id: 'analisi', label: 'Portatore' },
+                    { id: 'squadra', label: 'Squadra' },
                     { id: 'giocatori', label: 'Pedine' },
                     { id: 'calibrazione', label: 'Calibra' },
                     { id: 'pattern_maestri', label: 'Maestri' },
@@ -1768,7 +2082,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                   <button
                     key={tab.id}
                     onClick={() => setRightTab(tab.id)}
-                    className={`py-3 text-[11px] sm:text-xs font-semibold transition-colors border-b-2 truncate px-1 ${
+                    className={`py-2.5 text-[10px] sm:text-[11px] font-semibold transition-colors border-b-2 truncate px-1 text-center ${
                       rightTab === tab.id
                         ? 'border-[#00E5FF] text-[#00E5FF] bg-[#111116]'
                         : 'border-transparent text-zinc-500 hover:text-zinc-300'
@@ -1779,12 +2093,51 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 ))}
               </div>
 
-              <div className="p-4 space-y-4">
+              <div className="p-3.5 space-y-3.5 overflow-y-auto flex-1 min-h-0">
                 {/* ================================================================
                     SCHEDA 1: ANALISI & MOSSE STILE CHESS.COM
                    ================================================================ */}
                 {rightTab === 'analisi' && (
                   <div className="space-y-4">
+                    {/* Alert Passaggio Diretto ad Avversario */}
+                    {carrierDecision.isPassedToOpponent && (
+                      <div className="p-3 rounded-xl bg-red-950/70 border border-red-700/80 flex items-start gap-2.5 text-xs text-red-200">
+                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="font-bold text-red-300 block">Palla Persa: Passaggio Diretto ad Avversario (??)</strong>
+                          <span className="text-[11px] text-red-200/90 leading-tight">
+                            {carrierDecision.description}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alert Spazzata di Sicurezza Sotto Pressione */}
+                    {carrierDecision.isEmergencyClearance && (
+                      <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-600/80 flex items-start gap-2.5 text-xs text-emerald-200">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="font-bold text-emerald-300 block">Spazzata di Sicurezza: Decisione Corretta (!)</strong>
+                          <span className="text-[11px] text-emerald-200/90 leading-tight">
+                            {carrierDecision.description}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alert Tiro o Passaggio Fuori Campo Senza Pressione */}
+                    {carrierDecision.isOutOfBounds && !carrierDecision.isEmergencyClearance && (
+                      <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-600/80 flex items-start gap-2.5 text-xs text-amber-200">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="font-bold text-amber-300 block">Palla Fuori Campo: Errore Inutile (?)</strong>
+                          <span className="text-[11px] text-amber-200/90 leading-tight">
+                            {carrierDecision.description}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Alert Fuorigioco se rilevato */}
                     {actionEvaluation.isOffside && (
                       <div className="p-3 rounded-xl bg-red-950/60 border border-red-700/80 flex items-center gap-2.5 text-red-200 text-xs">
@@ -1808,16 +2161,28 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                         </div>
                         <span
                           className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold shrink-0 ${
-                            actionEvaluation.classification === 'Best Move (!!)'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                              : actionEvaluation.classification === 'Good Alternative (!)'
-                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-                                : actionEvaluation.classification === 'Inaccuracy (?)'
+                            carrierDecision.isPassedToOpponent
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+                              : carrierDecision.isEmergencyClearance
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : carrierDecision.isOutOfBounds && !carrierDecision.isEmergencyClearance
                                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                                  : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                                  : actionEvaluation.classification === 'Best Move (!!)'
+                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                    : actionEvaluation.classification === 'Good Alternative (!)'
+                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                                      : actionEvaluation.classification === 'Inaccuracy (?)'
+                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                                        : 'bg-red-500/20 text-red-400 border border-red-500/40'
                           }`}
                         >
-                          {actionEvaluation.classification}
+                          {carrierDecision.isPassedToOpponent
+                            ? 'Blunder (??)'
+                            : carrierDecision.isEmergencyClearance
+                              ? 'Good Move (!)'
+                              : carrierDecision.isOutOfBounds && !carrierDecision.isEmergencyClearance
+                                ? 'Inaccuracy (?)'
+                                : actionEvaluation.classification}
                         </span>
                       </div>
 
@@ -2056,10 +2421,267 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 )}
 
                 {/* ================================================================
-                    SCHEDA 2: GESTIONE PEDINE (AGGIUNGI, ELIMINA, RUOLO, NUMERO)
+                    SCHEDA 2: ANALISI DI SQUADRA & MOVIMENTI SENZA PALLA
+                   ================================================================ */}
+                {rightTab === 'squadra' && (
+                  <div className="space-y-3.5">
+                    {/* Header Box Analisi di Squadra */}
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4 text-[#00E5FF]" />
+                          <h4 className="font-bold text-zinc-100">Movimenti Senza Palla</h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold">
+                          {analyzingTeam === 'home' ? 'Squadra Blu' : 'Squadra Rossa'}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Valutazione tattica complementare delle corse di smarcamento e dei movimenti senza palla dei compagni di squadra rispetto al portatore ({ballCarrier ? `#${ballCarrier.number} ${ballCarrier.archetypeName}` : 'Nessuno'}).
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            const newCustom: Record<string, PlayerMovementVector> = {};
+                            for (const sm of teamMovementsResult.suggestedMovements) {
+                              newCustom[sm.playerId] = { ...sm };
+                            }
+                            setCustomMovements(newCustom);
+                            setShowTeamArrows(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-700/60 text-cyan-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Carica le corse ottimali calcolate dall'engine per tutti i compagni"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                          Applica Corse Ottimali
+                        </button>
+
+                        <button
+                          onClick={() => setToolMode(toolMode === 'draw_movement' ? 'drag_players' : 'draw_movement')}
+                          className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-colors ${
+                            toolMode === 'draw_movement'
+                              ? 'bg-cyan-400 text-zinc-950 border-cyan-300 font-bold'
+                              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700'
+                          }`}
+                          title="Traccia manualmente una freccia di movimento per qualsiasi compagno"
+                        >
+                          <Navigation className="w-3.5 h-3.5" />
+                          {toolMode === 'draw_movement' ? 'Tracciamento Attivo' : 'Traccia Corsa'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Lista Valutazioni Corse dei Compagni */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-zinc-300">
+                        <span>Valutazione Corse dei Compagni</span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {teamMovementsResult.evaluations.length} compagni
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        {teamMovementsResult.evaluations.map((ev) => {
+                          const isCustom = Boolean(customMovements[ev.playerId]);
+                          return (
+                            <div
+                              key={ev.playerId}
+                              className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-all ${
+                                isCustom
+                                  ? 'bg-zinc-900/80 border-amber-500/50'
+                                  : 'bg-zinc-900/50 border-zinc-800/80'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-mono font-bold text-[10px] flex items-center justify-center shrink-0">
+                                    {ev.playerNumber}
+                                  </span>
+                                  <div className="truncate">
+                                    <span className="font-semibold text-zinc-200">{ev.archetypeName}</span>
+                                    <span className="text-[10px] text-zinc-500 ml-1.5 font-mono">
+                                      {ev.movement.label}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                      ev.badge === '!!'
+                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                        : ev.badge === '!'
+                                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                          : ev.badge === '?'
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                            : ev.badge === '??'
+                                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                              : 'bg-zinc-800 text-zinc-300'
+                                    }`}
+                                  >
+                                    {ev.badge}
+                                  </span>
+
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+                                    {isCustom ? 'MANUALE' : 'AUTO'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <p className="text-[11px] text-zinc-400 leading-tight">
+                                {ev.description}
+                              </p>
+
+                              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-800/60">
+                                <span>
+                                  Target: ({ev.movement.targetX.toFixed(1)}m, {ev.movement.targetY.toFixed(1)}m)
+                                </span>
+                                <span className={ev.score >= 0.1 ? 'text-emerald-400 font-bold' : ev.score < -0.1 ? 'text-red-400 font-bold' : 'text-zinc-400'}>
+                                  Score: {ev.score >= 0 ? '+' : ''}{ev.score.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Assetto Squadra Difendente */}
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 font-bold text-zinc-200">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          <span>Assetto Squadra Difendente</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          Pressione: {defensiveShape.pressureIntensity}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-xs">
+                        <div>
+                          <div className="flex justify-between text-[11px] mb-1">
+                            <span className="text-zinc-400">Compattezza Linee:</span>
+                            <span className="font-mono font-bold text-emerald-400">
+                              {defensiveShape.compactnessScore}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-emerald-500 h-full transition-all"
+                              style={{ width: `${defensiveShape.compactnessScore}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-[11px] py-1 border-t border-zinc-800/40">
+                          <span className="text-zinc-400">Intensità Pressione:</span>
+                          <span className="font-mono font-bold text-blue-400">
+                            {defensiveShape.pressureIntensity}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-[11px] py-1 border-t border-zinc-800/40">
+                          <span className="text-zinc-400">Marcatura & Chiusura Linee:</span>
+                          <span className="font-mono font-bold text-zinc-300">
+                            {defensiveShape.markingQuality}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-zinc-400 leading-relaxed pt-1.5 border-t border-zinc-800/60">
+                        {defensiveShape.recommendation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ================================================================
+                    SCHEDA 3: GESTIONE PEDINE (AGGIUNGI, ELIMINA, RUOLO, NUMERO, MODULO)
                    ================================================================ */}
                 {rightTab === 'giocatori' && (
-                  <div className="space-y-4">
+                  <div className="space-y-3.5">
+                    {/* Selettore Moduli con Badge AUTO vs MANUALE */}
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5">
+                      <div className="text-xs font-bold text-zinc-200">Riconoscimento Moduli Tattici</div>
+                      
+                      {/* Modulo Squadra A (Blu) */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-blue-400 font-semibold">Modulo Squadra Blu:</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            manualFormationHome
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {manualFormationHome ? `MANUALE: ${manualFormationHome}` : `AUTO: ${homeDetected.formation}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <select
+                            value={manualFormationHome || ''}
+                            onChange={(e) => setManualFormationHome(e.target.value || null)}
+                            className="flex-1 px-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100"
+                          >
+                            <option value="">Rilevamento Automatico ({homeDetected.formation})</option>
+                            <option value="4-3-3">4-3-3</option>
+                            <option value="4-2-3-1">4-2-3-1</option>
+                            <option value="3-5-2">3-5-2</option>
+                            <option value="3-4-2-1">3-4-2-1</option>
+                            <option value="4-4-2">4-4-2</option>
+                            <option value="5-3-2">5-3-2</option>
+                          </select>
+                          {manualFormationHome && (
+                            <button
+                              onClick={() => setManualFormationHome(null)}
+                              className="text-[10px] text-zinc-400 hover:text-zinc-200 underline shrink-0"
+                            >
+                              Auto
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Modulo Squadra B (Rossa) */}
+                      <div className="space-y-1 pt-1.5 border-t border-zinc-800/60">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-red-400 font-semibold">Modulo Squadra Rossa:</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            manualFormationAway
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {manualFormationAway ? `MANUALE: ${manualFormationAway}` : `AUTO: ${awayDetected.formation}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <select
+                            value={manualFormationAway || ''}
+                            onChange={(e) => setManualFormationAway(e.target.value || null)}
+                            className="flex-1 px-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100"
+                          >
+                            <option value="">Rilevamento Automatico ({awayDetected.formation})</option>
+                            <option value="4-3-3">4-3-3</option>
+                            <option value="4-2-3-1">4-2-3-1</option>
+                            <option value="3-5-2">3-5-2</option>
+                            <option value="3-4-2-1">3-4-2-1</option>
+                            <option value="4-4-2">4-4-2</option>
+                            <option value="5-3-2">5-3-2</option>
+                          </select>
+                          {manualFormationAway && (
+                            <button
+                              onClick={() => setManualFormationAway(null)}
+                              className="text-[10px] text-zinc-400 hover:text-zinc-200 underline shrink-0"
+                            >
+                              Auto
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between text-xs">
                       <h4 className="font-bold text-zinc-100">Pedine Presenti nel Frame</h4>
                       <span className="font-mono text-zinc-400">
@@ -2345,7 +2967,7 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                               : 'bg-zinc-800 text-zinc-400 border-zinc-700'
                           }`}
                         >
-                          {showProjectedFieldLines ? 'Visibili' : 'Nascoste'}
+                          {showProjectedFieldLines ? '✓ Visibili' : 'Nascoste'}
                         </button>
                       </div>
                     </div>
@@ -2428,10 +3050,52 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
                 )}
 
                 {/* ================================================================
-                    SCHEDA 4: PATTERN RECOGNITION & MAESTRI (EX BOTONIERA INTEGRATA)
+                    SCHEDA 5: PATTERN RECOGNITION & MAESTRI
                    ================================================================ */}
                 {rightTab === 'pattern_maestri' && (
                   <div className="space-y-3">
+                    {/* Box Pattern Riconosciuto Dinamicamente (AUTO vs MANUALE) */}
+                    <div className="p-3 rounded-xl bg-zinc-900/70 border border-[#00E5FF]/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] font-mono uppercase text-cyan-400 font-bold">Pattern Riconosciuto</div>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                          manualPattern
+                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        }`}>
+                          {manualPattern ? 'MANUALE' : `AUTO (${detectedPattern.confidence}%)`}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-zinc-100">
+                        {manualPattern || detectedPattern.name}
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 leading-tight">
+                        {detectedPattern.description}
+                      </p>
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <select
+                          value={manualPattern || ''}
+                          onChange={(e) => setManualPattern(e.target.value || null)}
+                          className="flex-1 px-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100"
+                        >
+                          <option value="">Riconoscimento Automatico ({detectedPattern.name})</option>
+                          {COACHING_STRATEGIES_CATALOG.map((strat) => (
+                            <option key={strat.id} value={strat.name}>
+                              {strat.name} ({strat.coach})
+                            </option>
+                          ))}
+                        </select>
+                        {manualPattern && (
+                          <button
+                            onClick={() => setManualPattern(null)}
+                            className="text-[10px] text-zinc-400 hover:text-zinc-200 underline shrink-0"
+                          >
+                            Auto
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -2505,8 +3169,6 @@ export const UniversalVideoLab: React.FC<UniversalVideoLabProps> = ({
               </div>
             </div>
           </div>
-        </>
-      )}
     </div>
   );
 };

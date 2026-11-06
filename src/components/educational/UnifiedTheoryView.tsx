@@ -29,8 +29,12 @@ import { TacticalPitchCanvas } from '../studio/TacticalPitchCanvas';
 import { TimelineBar } from '../studio/TimelineBar';
 import { useStudioStore } from '../../stores/studioStore';
 
+import { Benchmark12Dimensions } from '../benchmark/Benchmark12Dimensions';
+import { evaluateTacticalState } from '../../engine/mathEngine';
+import { INITIAL_TACTICAL_STATE } from '../../core/presets';
+
 interface UnifiedTheoryViewProps {
-  initialSubTab?: 'impara' | 'schemi' | 'consulta';
+  initialSubTab?: 'impara' | 'schemi' | 'consulta' | 'benchmark';
   initialGlossaryId?: string | null;
   onLoadScenarioOnBoard?: (presetId: string) => void;
 }
@@ -43,14 +47,28 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language?.startsWith('en') ? 'en' : 'it') as 'it' | 'en';
 
-  const [activeTab, setActiveTab] = useState<'impara' | 'schemi' | 'consulta'>(
+  const [activeTab, setActiveTab] = useState<'schemi' | 'impara' | 'consulta' | 'benchmark'>(
     initialGlossaryId ? 'consulta' : initialSubTab
   );
+  const [strategyCategory, setStrategyCategory] = useState<string>('all');
   const [consultSection, setConsultSection] = useState<'glossary' | 'adr' | 'archetypes'>('glossary');
 
   const activeStrategyId = useStudioStore((s) => s.activeStrategyId);
   const applyCoachingStrategy = useStudioStore((s) => s.applyCoachingStrategy);
+  const getTacticalState = useStudioStore((s) => s.getTacticalState);
+  const isPlaying = useStudioStore((s) => s.animation.playing);
+  const togglePlayAnimation = useStudioStore((s) => s.togglePlayAnimation);
+
   const currentStrategy = COACHING_STRATEGIES_CATALOG.find((s) => s.id === activeStrategyId) || COACHING_STRATEGIES_CATALOG[0];
+
+  const filteredStrategies = COACHING_STRATEGIES_CATALOG.filter((s) => {
+    if (strategyCategory === 'all') return true;
+    if (strategyCategory === 'positional') return s.school === 'Positional Play';
+    if (strategyCategory === 'italian') return s.school === 'Scuola Italiana / Zona';
+    if (strategyCategory === 'transition') return s.school === 'Transizione & Blocco Basso' || s.school === 'Gegenpressing / Red Bull';
+    if (strategyCategory === 'fluid') return s.school === 'Calcio Totale' || s.school === 'Bielsisme' || s.school === 'Calcio Fluido / Relazionale';
+    return true;
+  });
 
   // Filtri glossario
   const [glossaryQuery, setGlossaryQuery] = useState(initialGlossaryId || '');
@@ -77,11 +95,11 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
           </p>
         </div>
 
-        {/* Switch dei Tre Livelli: SCHEMI MAESTRI vs IMPARA vs CONSULTA */}
+        {/* Switch dei Livelli: SCHEMI MAESTRI vs IMPARA vs CONSULTA vs BENCHMARK */}
         <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800 shrink-0">
           <button
             onClick={() => setActiveTab('schemi')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'schemi'
                 ? 'bg-[#00E5FF] text-zinc-950 shadow-md font-bold'
                 : 'text-zinc-400 hover:text-zinc-200'
@@ -93,7 +111,7 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
 
           <button
             onClick={() => setActiveTab('impara')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'impara'
                 ? 'bg-[#2ea043] text-white shadow-md'
                 : 'text-zinc-400 hover:text-zinc-200'
@@ -105,7 +123,7 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
 
           <button
             onClick={() => setActiveTab('consulta')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'consulta'
                 ? 'bg-amber-400 text-zinc-950 shadow-md font-bold'
                 : 'text-zinc-400 hover:text-zinc-200'
@@ -113,6 +131,18 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
           >
             <BookMarked className="w-4 h-4" />
             <span>{t('teoria.tab_consulta')}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('benchmark')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'benchmark'
+                ? 'bg-purple-500 text-white shadow-md font-bold'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Benchmark (12D)</span>
           </button>
         </div>
       </div>
@@ -122,23 +152,48 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Selettore Maestri (Sinistra ~ 4 colonne) */}
           <div className="lg:col-span-4 space-y-3">
-            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
-              <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider text-[#00E5FF]">
-                Catalogo Strategie dei Maestri
-              </h3>
-              <p className="text-[11px] text-zinc-400 mt-1">
-                Seleziona uno schema tattico per caricarlo direttamente sulla lavagna interattiva ed eseguirne l'animazione didattica a 60 FPS:
-              </p>
+            <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#00E5FF]">
+                  Schemi &amp; Tattiche dei Maestri
+                </h3>
+                <span className="text-[10px] font-mono text-zinc-400">
+                  {filteredStrategies.length} Schemi
+                </span>
+              </div>
+              
+              {/* Filtri per Categoria */}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {[
+                  { id: 'all', label: 'Tutti' },
+                  { id: 'positional', label: 'Posizionale' },
+                  { id: 'italian', label: 'Italiana' },
+                  { id: 'transition', label: 'Transizione' },
+                  { id: 'fluid', label: 'Fluido' },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setStrategyCategory(cat.id)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                      strategyCategory === cat.id
+                        ? 'bg-[#00E5FF] text-zinc-950 font-bold'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
-              {COACHING_STRATEGIES_CATALOG.map((strat) => {
+              {filteredStrategies.map((strat) => {
                 const isActive = activeStrategyId === strat.id;
                 return (
                   <button
                     key={strat.id}
                     onClick={() => applyCoachingStrategy(strat.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition-all space-y-1.5 ${
+                    className={`w-full p-3 rounded-xl border text-left transition-all space-y-1.5 ${
                       isActive
                         ? 'bg-zinc-900 border-[#00E5FF] shadow-md shadow-[#00E5FF]/10'
                         : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'
@@ -146,7 +201,7 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold text-zinc-100">{strat.name}</h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">
                         {strat.formation}
                       </span>
                     </div>
@@ -170,7 +225,7 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
 
           {/* Canvas Lavagna Interattiva & Timeline Animation (Destra ~ 8 colonne) */}
           <div className="lg:col-span-8 space-y-3">
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-mono text-[#00E5FF] uppercase font-bold">
                   Schema Attivo
@@ -179,9 +234,22 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
                   {currentStrategy.name} — {currentStrategy.coach}
                 </h3>
               </div>
-              <span className="text-xs font-mono px-2.5 py-1 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                Modulo: {currentStrategy.formation} vs {currentStrategy.opponentFormation}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={togglePlayAnimation}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    isPlaying
+                      ? 'bg-amber-400 text-zinc-950 font-bold'
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  {isPlaying ? 'Pausa Animazione' : 'Avvia Animazione Schema'}
+                </button>
+                <span className="text-xs font-mono px-2 py-1 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  {currentStrategy.formation} vs {currentStrategy.opponentFormation}
+                </span>
+              </div>
             </div>
 
             {/* Canvas della Lavagna Tattica 2D con visualizzazione integrata */}
@@ -441,6 +509,16 @@ export const UnifiedTheoryView: React.FC<UnifiedTheoryViewProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* CONTENUTO LIVELLO 4: CERTIFICAZIONE BENCHMARK (12 Dimensioni & ADR-Math-004) */}
+      {activeTab === 'benchmark' && (
+        <div className="w-full">
+          <Benchmark12Dimensions
+            state={getTacticalState()}
+            metrics={evaluateTacticalState(getTacticalState()).metrics}
+          />
         </div>
       )}
     </div>

@@ -55,39 +55,32 @@ Copertura sotto-corpus Ospite: ${BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubset
 
   return (
     <div className="space-y-6">
-      <div className="p-5 rounded-xl bg-[#111118] border border-zinc-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="p-3.5 rounded-xl bg-[#111118] border border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
-            <span className="font-mono text-[#00F2FF]">12 DIMENSIONI & ADR-MATH-004 (ZERO NOMI PROPRI)</span>
+          <div className="flex flex-wrap items-center gap-2 text-zinc-400">
+            <span className="font-mono text-[#00F2FF] font-semibold">12 DIMENSIONI &amp; ADR-MATH-004</span>
             <span>·</span>
-            <span>Fixture Canonica: 26 Gol (22 con tracciamento tipo tiro)</span>
-            <span>·</span>
-            <span className="font-mono text-[#B4FF39]">
-              Copertura Totale: {BENCHMARK_FIXTURE_DATA.corpusSummary.coveragePct}% (Sotto-corpus: {BENCHMARK_FIXTURE_DATA.corpusSummary.awaySubsetCoveragePct}%)
-            </span>
+            <span>26 Gol (Copertura {BENCHMARK_FIXTURE_DATA.corpusSummary.coveragePct}%)</span>
           </div>
-          <h2 className="text-xl font-bold text-zinc-100 mt-1">
-            Analisi Multi-Dimensionale su Tipologie Astratte & 3 Primitive Canoniche
+          <h2 className="text-sm font-bold text-zinc-100 mt-0.5">
+            Certificazione Statistica &amp; Tipologie Astratte (Wilson 95% CI)
           </h2>
-          <p className="text-xs text-zinc-400 mt-1 max-w-3xl">
-            Tutte le metriche operano esclusivamente sulle 30 Tipologie Astratte di giocatore: partizioni ortogonali separate al 100%, intervalli di confidenza binomiali di Wilson al 95%, distinzione esplicita tra modulo dichiarato e inferito, ed etichettatura automatica "Aneddotico" per pattern con n &lt; 5.
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setAssertionsVerified(true)}
-            className="px-3.5 py-2 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-[#B4FF39] border border-[#B4FF39]/40 rounded-lg transition-colors flex items-center gap-1.5"
+            className="px-2.5 py-1 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-[#B4FF39] border border-[#B4FF39]/40 rounded-lg transition-colors flex items-center gap-1.5"
           >
-            <ShieldCheck className="w-4 h-4" />
-            Test Affermazioni: PASS (14/14)
+            <ShieldCheck className="w-3.5 h-3.5" />
+            PASS (14/14)
           </button>
           <button
             onClick={exportMarkdownReport}
-            className="px-4 py-2 text-xs font-semibold bg-[#00F2FF] text-zinc-950 rounded-lg hover:bg-[#00F2FF]/90 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1 text-xs font-semibold bg-[#00F2FF] text-zinc-950 rounded-lg hover:bg-[#00F2FF]/90 transition-colors flex items-center gap-1.5"
           >
-            <FileDown className="w-4 h-4" />
-            Esporta Report Markdown
+            <FileDown className="w-3.5 h-3.5" />
+            Esporta MD
           </button>
         </div>
       </div>
