@@ -13,14 +13,9 @@ import {
   KeyframeState,
   PlayerNode,
   TacticalAction,
-  TacticalState,
-  TacticalTag,
-  TagCategory,
 } from '../core/types';
-import { CANONICAL_TACTICAL_TAGS } from '../core/tacticalTagPresets';
-import { INITIAL_ABSTRACT_PLAYERS, PLAYER_ARCHETYPES_30 } from '../core/presets';
+import { PLAYER_ROLES } from '../core/roles';
 import { buildFormationPlayers } from '../core/formationPresets';
-import { COACHING_STRATEGIES_CATALOG, CoachingStrategy } from '../core/tacticalStrategiesCatalog';
 import { useHistoryStore } from './historyStore';
 import { saveProjectToIdb } from '../lib/idb';
 import {
@@ -28,7 +23,6 @@ import {
   normalizeKeyframePlayers,
   interpolateAt,
 } from '../engine/animationEngine';
-import { evaluateTacticalState } from '../engine/mathEngine';
 
 export interface TeamBlockSliders {
   depth: number;  // 0..100 (50 neutral)
@@ -79,10 +73,7 @@ interface StudioState {
   keyframes: Keyframe[];
   actions: TacticalAction[];
   activeKeyframeIndex: number;
-  activeStrategyId: string | null;
   animation: AnimationPlaybackState;
-  tags: TacticalTag[];
-  activeTagId: string | null;
 
   // Multi-frame Dossier & Scene Management
   scenes: TacticalScene[];
@@ -109,10 +100,6 @@ interface StudioState {
   exportProjectJson: () => string;
   importProjectJson: (jsonStr: string) => boolean;
 
-  addTacticalTag: (tag: TacticalTag) => void;
-  setActiveTag: (tagId: string | null) => void;
-  loadTagScenario: (tagId: string) => void;
-  createTagFromCurrentBoard: (customTitle?: string) => TacticalTag;
   setGameFormat: (fmt: GameFormat) => void;
   setHomeFormation: (fmt: FormationPreset) => void;
   setAwayFormation: (fmt: FormationPreset) => void;
@@ -131,7 +118,6 @@ interface StudioState {
   deleteElementById: (id: string) => void;
   clearCanvasDrawings: () => void;
   resetToInitialPreset: () => void;
-  applyCoachingStrategy: (strategyId: string) => void;
 
   // Keyframe & Animation Actions (3-Level Engine)
   captureKeyframe: (label?: string) => void;
@@ -144,9 +130,6 @@ interface StudioState {
   setAnimation: (patch: Partial<AnimationPlaybackState>) => void;
   seekAnimation: (currentTimeMs: number) => void;
   togglePlayAnimation: () => void;
-
-  // Export current TacticalState for NucleoTattico Math Engine
-  getTacticalState: () => TacticalState;
 }
 
 let saveTimer: any = null;
@@ -176,150 +159,74 @@ function scheduleAutosave(state: any) {
 }
 
 function createInitialKeyframes(players: PlayerNode[], ball: { x: number; y: number }): Keyframe[] {
-  const pList1: KeyframePlayer[] = players.map((p) => ({ id: p.id, x: p.x, y: p.y, visible: true }));
-  const pList2: KeyframePlayer[] = players.map((p) => {
-    let dx = 0;
-    let dy = 0;
-    if (p.team === 'home') {
-      if (p.positionGroup === 'FWD') { dx = 8; dy = p.y < 40 ? 3 : -3; }
-      else if (p.positionGroup === 'MID') { dx = 6; dy = 0; }
-      else if (p.positionGroup === 'DEF') { dx = 4; }
-    } else {
-      if (p.positionGroup === 'DEF') { dx = 3; }
-      else { dx = 2; }
-    }
-    return {
-      id: p.id,
-      x: Number(Math.max(4, Math.min(116, p.x + dx)).toFixed(1)),
-      y: Number(Math.max(4, Math.min(76, p.y + dy)).toFixed(1)),
-      visible: true,
-    };
-  });
-  const pList3: KeyframePlayer[] = pList2.map((p) => ({
-    id: p.id,
-    x: Number(Math.max(4, Math.min(116, p.x + 5)).toFixed(1)),
-    y: p.y,
-    visible: true,
-  }));
-
   return [
     {
       id: 'kf-1',
       timestamp: 0,
       timestampMs: 0,
-      label: 'Step 1 · Costruzione Bassa',
-      players: pList1,
-      ball: { x: ball.x, y: ball.y, z: 0, carrierId: 'home-06' },
-    },
-    {
-      id: 'kf-2',
-      timestamp: 2000,
-      timestampMs: 2000,
-      label: 'Step 2 · Sviluppo Catena',
-      players: pList2,
-      ball: { x: 58, y: 22, z: 0, carrierId: 'home-10' },
-    },
-    {
-      id: 'kf-3',
-      timestamp: 4500,
-      timestampMs: 4500,
-      label: 'Step 3 · Rifinitura & Taglio',
-      players: pList3,
-      ball: { x: 92, y: 38, z: 0, carrierId: 'home-09' },
+      label: 'Step 1',
+      players: players.map((p) => ({ id: p.id, x: p.x, y: p.y, visible: true })),
+      ball: { x: ball.x, y: ball.y, z: 0, carrierId: null },
     },
   ];
 }
 
-function createInitialActions(): TacticalAction[] {
+// Stato iniziale neutro: due formazioni schierate e la palla al centro.
+const INITIAL_HOME_FORMATION: FormationPreset = '4-3-3';
+const INITIAL_AWAY_FORMATION: FormationPreset = '4-4-2';
+const INITIAL_BALL = { x: 60, y: 40 };
+
+function createInitialPlayers(): PlayerNode[] {
   return [
-    {
-      id: 'act-init-1',
-      keyframeFrom: 'kf-1',
-      keyframeTo: 'kf-2',
-      type: 'pass_ground',
-      playerId: 'home-06',
-      targetPlayerId: 'home-10',
-      params: {
-        speedKmh: 58,
-        heightCm: 0,
-        curve: 0,
-        contact: 'flat',
-        duration: 2000,
-      },
-    },
-    {
-      id: 'act-init-2',
-      keyframeFrom: 'kf-2',
-      keyframeTo: 'kf-3',
-      type: 'cross',
-      playerId: 'home-10',
-      targetPlayerId: 'home-09',
-      params: {
-        speedKmh: 72,
-        heightCm: 240,
-        curve: 0.4,
-        contact: 'collar',
-        duration: 2500,
-      },
-    },
+    ...buildFormationPlayers(INITIAL_HOME_FORMATION, 'home'),
+    ...buildFormationPlayers(INITIAL_AWAY_FORMATION, 'away'),
   ];
 }
 
-const defaultStrategy = COACHING_STRATEGIES_CATALOG[0]; // Sarri catena sinistra
+const initialPlayers = createInitialPlayers();
 
 export const useStudioStore = create<StudioState>((set, get) => ({
-  id: `lavagnatattica-${defaultStrategy.id}`,
-  title: `${defaultStrategy.name} · ${defaultStrategy.coach}`,
-  description: defaultStrategy.description,
+  id: 'lavagnatattica-progetto',
+  title: 'Nuovo progetto',
+  description: '',
   gameFormat: '11v11',
-  homeFormation: defaultStrategy.formation,
-  awayFormation: defaultStrategy.opponentFormation,
-  players: defaultStrategy.players,
-  basePlayers: defaultStrategy.players,
-  ball: defaultStrategy.ball,
-  ballCarrierId: 'home-06',
+  homeFormation: INITIAL_HOME_FORMATION,
+  awayFormation: INITIAL_AWAY_FORMATION,
+  players: initialPlayers,
+  basePlayers: initialPlayers,
+  ball: INITIAL_BALL,
+  ballCarrierId: null,
   teamSliders: {
     home: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
     away: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
   },
-  arrows: defaultStrategy.arrows,
-  zones: defaultStrategy.zones,
+  arrows: [],
+  zones: [],
   strokes: [],
-  notes: [
-    {
-      id: 'note-init',
-      x: 52,
-      y: 72,
-      text: `Dottrina: ${defaultStrategy.coach} (${defaultStrategy.school})`,
-      color: '#00E5FF',
-    },
-  ],
-  keyframes: createInitialKeyframes(defaultStrategy.players, defaultStrategy.ball),
-  actions: createInitialActions(),
+  notes: [],
+  keyframes: createInitialKeyframes(initialPlayers, INITIAL_BALL),
+  actions: [],
   activeKeyframeIndex: 0,
-  activeStrategyId: defaultStrategy.id,
   animation: {
     playing: false,
     currentTime: 0,
-    totalDuration: 4500,
+    totalDuration: 1000,
     speed: 1,
     loop: true,
   },
-  tags: CANONICAL_TACTICAL_TAGS,
-  activeTagId: null,
 
   // Multi-frame Dossier & Scene Management
   scenes: [
     {
       id: 'scene-1',
-      name: 'Scena 1 · Costruzione',
+      name: 'Scena 1',
       frameImageUrl: null,
       frameMediaName: '',
       perspectiveType: 'Broadcast',
       keypoints: DEFAULT_CALIBRATION_KEYPOINTS,
-      players: defaultStrategy.players,
-      ball: defaultStrategy.ball,
-      matchContextNote: 'Transizione offensiva · Minuto 75 · Punteggio 1-0',
+      players: initialPlayers,
+      ball: INITIAL_BALL,
+      matchContextNote: '',
       createdAt: new Date().toISOString(),
     },
   ],
@@ -329,7 +236,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   currentUploadedFrameUrl: null,
   currentUploadedMediaName: '',
   currentKeypoints: DEFAULT_CALIBRATION_KEYPOINTS,
-  matchContextNote: 'Transizione offensiva · Minuto 75 · Punteggio 1-0',
+  matchContextNote: '',
 
   addPlayer: (team: 'home' | 'away', custom?: Partial<PlayerNode>) => {
     const s = get();
@@ -342,28 +249,21 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     while (usedNumbers.has(nextNum) && nextNum <= 99) {
       nextNum++;
     }
-    const defaultArchetype =
-      PLAYER_ARCHETYPES_30.find(
-        (a) => a.positionGroup === (custom?.positionGroup || 'MID')
-      ) || PLAYER_ARCHETYPES_30[0];
+    const defaultRole =
+      PLAYER_ROLES.find((r) => r.positionGroup === (custom?.positionGroup || 'MID')) || PLAYER_ROLES[0];
 
     const isHome = team === 'home';
     const newPlayer: PlayerNode = {
       id: `${team}-${String(nextNum).padStart(2, '0')}-${Date.now().toString().slice(-4)}`,
       number: nextNum,
-      archetypeId: defaultArchetype.id,
-      archetypeName: defaultArchetype.name,
-      codeLabel: `${team.toUpperCase()}-${String(nextNum).padStart(2, '0')} (${defaultArchetype.name})`,
+      archetypeId: defaultRole.id,
+      archetypeName: defaultRole.name,
+      codeLabel: `${team.toUpperCase()}-${String(nextNum).padStart(2, '0')} (${defaultRole.name})`,
       team,
-      role: defaultArchetype.name,
-      positionGroup: defaultArchetype.positionGroup,
+      role: defaultRole.name,
+      positionGroup: defaultRole.positionGroup,
       x: isHome ? 45 + (nextNum % 4) * 6 : 75 - (nextNum % 4) * 6,
       y: 18 + (nextNum % 5) * 11,
-      vx: 0,
-      vy: 0,
-      heightCm: defaultArchetype.defaultHeightCm,
-      foot: defaultArchetype.defaultFoot,
-      attributes: { ...defaultArchetype.defaultStats },
       ...custom,
     };
 
@@ -515,8 +415,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const s = get();
     const payload = {
       format: 'LAVAGNA_TATTICA_PROJECT_V2',
-      openCoreVersion: '2.0.0',
-      founderAuthority: 'Marco Razzano — Modelli AI: Gemini 2.5 Flash & Gemini 2.5 Pro (Google Antigravity)',
       exportedAt: new Date().toISOString(),
       id: s.id,
       title: s.title,
@@ -530,7 +428,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       activeSceneId: s.activeSceneId,
       players: s.players,
       ball: s.ball,
-      tags: s.tags,
       arrows: s.arrows,
       zones: s.zones,
       notes: s.notes,
@@ -552,7 +449,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         awayFormation: data.awayFormation || '3-5-2',
         analyzingTeam: data.analyzingTeam || 'home',
         attackDirection: data.attackDirection || 'right',
-        matchContextNote: data.matchContextNote || 'Transizione offensiva',
+        matchContextNote: data.matchContextNote || '',
         players: data.players,
         basePlayers: data.players,
         ball: data.ball || { x: 60, y: 40 },
@@ -574,7 +471,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
                 },
               ],
         activeSceneId: data.activeSceneId || data.scenes?.[0]?.id || 'scene-imported-1',
-        tags: Array.isArray(data.tags) ? data.tags : get().tags,
         arrows: Array.isArray(data.arrows) ? data.arrows : [],
         zones: Array.isArray(data.zones) ? data.zones : [],
         notes: Array.isArray(data.notes) ? data.notes : [],
@@ -585,115 +481,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       console.error('Failed to parse project JSON:', e);
       return false;
     }
-  },
-
-  addTacticalTag: (tag) => {
-    set((state) => ({
-      tags: [tag, ...state.tags],
-      activeTagId: tag.id,
-    }));
-  },
-
-  setActiveTag: (tagId) => {
-    set({ activeTagId: tagId });
-  },
-
-  loadTagScenario: (tagId) => {
-    const tag = get().tags.find((t) => t.id === tagId);
-    if (!tag) return;
-    useHistoryStore.getState().pushSnapshot(get());
-    set((state) => {
-      const ballPos = { x: tag.pitchCoordinates.x, y: tag.pitchCoordinates.y };
-      const actorInvolvement = tag.playersInvolved.find((p) => p.role === 'actor');
-      let updatedPlayers = state.players;
-      let newCarrierId = state.ballCarrierId;
-
-      if (actorInvolvement) {
-        newCarrierId = actorInvolvement.playerId;
-        updatedPlayers = state.players.map((p) => {
-          if (p.id === actorInvolvement.playerId) {
-            return {
-              ...p,
-              x: Math.max(4, Math.min(116, tag.pitchCoordinates.x - 1.5)),
-              y: tag.pitchCoordinates.y,
-            };
-          }
-          return p;
-        });
-      }
-
-      // Freccia tattica rappresentativa dell'azione
-      const targetX = tag.category === 'shot' ? 120 : Math.min(116, tag.pitchCoordinates.x + 16);
-      const targetY = tag.category === 'shot' ? 40 : Math.max(10, Math.min(70, tag.pitchCoordinates.y - 6));
-      const newArrow: BoardArrow = {
-        id: `arrow-tag-${tag.id}`,
-        fromX: tag.pitchCoordinates.x,
-        fromY: tag.pitchCoordinates.y,
-        toX: targetX,
-        toY: targetY,
-        type: tag.category === 'shot' ? 'pass' : 'run',
-        style: 'curved',
-        color: '#00E5FF',
-        strokeWidth: 2,
-      };
-
-      const newNotes = [
-        ...state.notes,
-        {
-          id: `note-${tag.id}`,
-          x: tag.pitchCoordinates.x,
-          y: Math.min(76, tag.pitchCoordinates.y + 4),
-          text: `[TAG SCENARIO] ${tag.title}`,
-          color: '#00E5FF',
-        },
-      ];
-
-      return {
-        activeTagId: tag.id,
-        ball: ballPos,
-        ballCarrierId: newCarrierId,
-        players: updatedPlayers,
-        arrows: [...state.arrows, newArrow],
-        notes: newNotes,
-      };
-    });
-  },
-
-  createTagFromCurrentBoard: (customTitle) => {
-    const s = get();
-    const ballCarrier = s.players.find((p) => p.id === s.ballCarrierId);
-    const category: TagCategory = s.ball.x > 80 ? 'shot' : s.ball.x > 50 ? 'pass' : 'recovery';
-    const tacticalState = s.getTacticalState();
-    const { metrics } = evaluateTacticalState(tacticalState);
-    const bestMove = metrics.chessAlternatives[0];
-
-    const newTag: TacticalTag = {
-      id: `tag-${Date.now()}`,
-      matchId: s.id,
-      timestampSec: Number((s.animation.currentTime / 1000).toFixed(1)),
-      category,
-      eventType: category === 'shot' ? 'shot_creation' : 'pass_progression',
-      title: customTitle || `${category.toUpperCase()} da ${ballCarrier?.archetypeName || 'Pedina'} (${s.ball.x.toFixed(0)}, ${s.ball.y.toFixed(0)})`,
-      pitchCoordinates: { x: s.ball.x, y: s.ball.y },
-      playersInvolved: ballCarrier
-        ? [{ playerId: ballCarrier.id, archetypeId: String(ballCarrier.archetypeId), role: 'actor' }]
-        : [],
-      metricsSnapshot: {
-        xtDelta: bestMove?.deltaXt || 0.02,
-        pitchControlAdvantage: (metrics.homePitchControlPct - 50) / 100,
-        evalScore: bestMove?.compositeScore || 0.3,
-        qualitativeBadge: 'best_move',
-      },
-      glossaryReferenceId: category === 'shot' ? 'expected-threat' : 'pitch-control',
-      createdAt: new Date().toISOString(),
-    };
-
-    set((state) => ({
-      tags: [newTag, ...state.tags],
-      activeTagId: newTag.id,
-    }));
-
-    return newTag;
   },
 
   setGameFormat: (fmt) => {
@@ -726,7 +513,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         ball: centerBall,
         ballCarrierId: null,
         teamSliders: neutralSliders,
-        activeStrategyId: null,
       };
       scheduleAutosave(nextState);
       return nextState;
@@ -754,20 +540,17 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
 
   updatePlayerArchetype: (playerId, archetypeId) => {
-    const arch = PLAYER_ARCHETYPES_30.find((a) => a.id === archetypeId);
-    if (!arch) return;
+    const role = PLAYER_ROLES.find((r) => r.id === archetypeId);
+    if (!role) return;
     set((state) => ({
       players: state.players.map((p) => {
         if (p.id !== playerId) return p;
         return {
           ...p,
-          archetypeId: arch.id,
-          archetypeName: arch.name,
-          role: `${arch.name} (#${p.number})`,
-          positionGroup: arch.positionGroup,
-          heightCm: arch.defaultHeightCm,
-          foot: arch.defaultFoot,
-          attributes: { ...arch.defaultStats },
+          archetypeId: role.id,
+          archetypeName: role.name,
+          role: `${role.name} (#${p.number})`,
+          positionGroup: role.positionGroup,
         };
       }),
     }));
@@ -1042,83 +825,16 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   resetToInitialPreset: () => {
     useHistoryStore.getState().pushSnapshot(get());
+    const players = createInitialPlayers();
     set({
-      players: INITIAL_ABSTRACT_PLAYERS,
-      ball: { x: 27, y: 40 },
-      keyframes: createInitialKeyframes(INITIAL_ABSTRACT_PLAYERS, { x: 27, y: 40 }),
-      activeKeyframeIndex: 0,
-      activeStrategyId: null,
-    });
-  },
-
-  applyCoachingStrategy: (strategyId) => {
-    const strat = COACHING_STRATEGIES_CATALOG.find((s) => s.id === strategyId);
-    if (!strat) return;
-    useHistoryStore.getState().pushSnapshot(get());
-
-    const pMapBase: Record<string, { x: number; y: number }> = {};
-    for (const p of strat.players) {
-      pMapBase[p.id] = { x: p.x, y: p.y };
-    }
-
-    const populatedKeyframes = strat.keyframes.map((kf, idx) => {
-      // In base alla fase del keyframe, calcola lo spostamento dinamico dei giocatori della catena
-      const kfMap: Record<string, { x: number; y: number }> = {};
-      for (const p of strat.players) {
-        let dx = 0;
-        let dy = 0;
-        if (idx === 1) {
-          if (p.team === 'home' && (p.role.includes('Fluidificante') || p.role.includes('Invertita') || p.role.includes('Inserimento'))) {
-            dx = 12;
-            dy = p.y < 40 ? -4 : 4;
-          }
-        } else if (idx === 2) {
-          if (p.team === 'home' && (p.role.includes('Boa') || p.role.includes('Inserimento') || p.role.includes('Invertita'))) {
-            dx = 18;
-          }
-        }
-        kfMap[p.id] = {
-          x: Number(Math.max(4, Math.min(116, p.x + dx)).toFixed(1)),
-          y: Number(Math.max(4, Math.min(76, p.y + dy)).toFixed(1)),
-        };
-      }
-      return {
-        ...kf,
-        players: kfMap,
-      };
-    });
-
-    set({
-      id: `session-${strat.id}`,
-      title: `${strat.name} · ${strat.coach}`,
-      description: strat.description,
-      homeFormation: strat.formation,
-      awayFormation: strat.opponentFormation,
-      players: strat.players,
-      basePlayers: strat.players,
-      ball: strat.ball,
+      players,
+      basePlayers: players,
+      ball: INITIAL_BALL,
       ballCarrierId: null,
-      teamSliders: {
-        home: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
-        away: { depth: 50, width: 50, shiftX: 50, shiftY: 50 },
-      },
-      arrows: strat.arrows,
-      zones: strat.zones,
-      strokes: [],
-      notes: [
-        {
-          id: `note-${strat.id}`,
-          x: 48,
-          y: 72,
-          text: `Filosofia: ${strat.coach} (${strat.school})`,
-          color: '#00E5FF',
-        },
-      ],
-      keyframes: populatedKeyframes,
+      keyframes: createInitialKeyframes(players, INITIAL_BALL),
+      actions: [],
       activeKeyframeIndex: 0,
-      activeStrategyId: strat.id,
     });
-    scheduleAutosave(get());
   },
 
   captureKeyframe: (label) => {
@@ -1285,29 +1001,5 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         },
       });
     }
-  },
-
-  getTacticalState: (): TacticalState => {
-    const s = get();
-    return {
-      matchId: s.id,
-      title: s.title,
-      competition: 'Corpus Dottrinale Strategie Allenatori & Filosofie Tattiche',
-      season: '2026/2027',
-      date: '2026-10-29',
-      homeTeam: `Squadra (${s.title.split(' · ')[1] || 'Tattica'})`,
-      awayTeam: 'Squadra Avversaria (Blocco Tattico)',
-      homeFormation: s.homeFormation,
-      awayFormation: s.awayFormation,
-      formationSource: 'declared',
-      phase: 'progression',
-      minute: 27,
-      ballX: s.ball.x,
-      ballY: s.ball.y,
-      ballZ: 0,
-      players: s.players,
-      passEdges: [],
-      events: [],
-    };
   },
 }));

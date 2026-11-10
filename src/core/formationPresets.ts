@@ -1,13 +1,13 @@
 /**
- * LavagnaTattica — Template Canonici di Formazione (7 Moduli Standard)
+ * Schieramenti di partenza per le pedine, uno per modulo.
  *
- * Conforme alla Regola Non Negoziabile #3 (Zero Nomi Propri):
- * Ogni slot è rigorosamente mappato su una delle 30 Tipologie Astratte (PLAYER_ARCHETYPES_30).
- * Coordinate in formato StatsBomb canonico [0..120] x [0..80].
+ * Sono disposizioni illustrative per cominciare a lavorare sulla lavagna: non hanno una fonte
+ * e non descrivono come una squadra reale occupa il campo.
+ * Coordinate nel sistema 120 × 80 (non sono metri).
  */
 
 import { FormationPreset, PlayerNode } from './types';
-import { PLAYER_ARCHETYPES_30 } from './presets';
+import { PLAYER_ROLES } from './roles';
 
 interface FormationSlotDef {
   number: number;
@@ -150,40 +150,25 @@ export function buildFormationPlayers(
   const slots = CANONICAL_FORMATION_TEMPLATES[formation] || CANONICAL_FORMATION_TEMPLATES['4-3-3'];
 
   return slots.map((slot) => {
-    const arch = PLAYER_ARCHETYPES_30.find((a) => a.id === slot.archetypeId) || PLAYER_ARCHETYPES_30[0];
+    const playerRole = PLAYER_ROLES.find((r) => r.id === slot.archetypeId) || PLAYER_ROLES[0];
     const prefix = team === 'home' ? 'H' : 'A';
     const id = `${team}-${slot.number.toString().padStart(2, '0')}`;
 
-    // Per away invertiamo la prospettiva del campo in coordinate StatsBomb (120 - x, 80 - y)
+    // La squadra ospite è schierata specchiata: (120 - x, 80 - y).
     const x = team === 'home' ? slot.xSb : Number((120 - slot.xSb).toFixed(1));
     const y = team === 'home' ? slot.ySb : Number((80 - slot.ySb).toFixed(1));
 
     return {
       id,
       number: slot.number,
-      archetypeId: arch.id,
-      archetypeName: arch.name,
-      codeLabel: `${prefix}${slot.number.toString().padStart(2, '0')} · ${arch.name}`,
+      archetypeId: playerRole.id,
+      archetypeName: playerRole.name,
+      codeLabel: `${prefix}${slot.number.toString().padStart(2, '0')} · ${playerRole.name}`,
       team,
       role: `${slot.role} (#${slot.number})`,
-      positionGroup: arch.positionGroup,
+      positionGroup: playerRole.positionGroup,
       x,
       y,
-      vx: team === 'home' ? 0.4 : -0.4,
-      vy: 0,
-      heightCm: arch.defaultHeightCm,
-      foot: arch.defaultFoot,
-      confidence: 1.0,
-      sources: ['manual_entry'],
-      attributes: {
-        passing: arch.defaultStats.passing,
-        pressResistance: arch.defaultStats.pressResistance,
-        aerial: arch.defaultStats.aerial,
-        progressiveCarries: arch.defaultStats.progressiveCarries,
-        defensiveIndex: arch.defaultStats.defensiveIndex,
-        speed: arch.defaultStats.speed,
-        composure: arch.defaultStats.composure,
-      },
     };
   });
 }

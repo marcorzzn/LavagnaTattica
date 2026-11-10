@@ -7,6 +7,7 @@
 \usepackage{geometry}
 \geometry{a4paper, margin=25mm, headheight=14pt}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -42,11 +43,45 @@
 \small Piattaforma Agentica Google Antigravity\\[0.3em]
 \small Progetto Open-Source \textsl{LavagnaTattica} • \url{https://lavagnatattica.pages.dev/}}
 
-\date{Novembre 2026 • Versione 3.0-Enterprise}
+\date{Novembre 2026 --- documento in revisione}
 
 \begin{document}
 
 \maketitle
+
+\begin{center}
+\fbox{\parbox{0.94\textwidth}{%
+\textbf{Documento in revisione (10 novembre 2026).}
+Questo manuale descrive una versione precedente del progetto. Molte parti non sono più in uso
+nell'applicazione, alcune formule non corrispondevano al codice e alcune affermazioni
+(«certificazione», «errore nullo», «senza approssimazioni») non erano giustificate.
+Il manuale verrà riscritto come specifica del motore NucleoTattico: ogni scelta di modello,
+adottata o scartata, sarà motivata. La tabella qui sotto dice che cosa è in uso oggi, che cosa no
+e perché; sarà aggiornata a ogni progresso significativo.
+Questo sorgente e il PDF pubblicato sono oggi due testi separati e non allineati: verranno unificati.
+Il sorgente non è ancora stato compilato con un motore \LaTeX{}.
+}}
+\end{center}
+
+\begin{longtable}{p{0.27\textwidth}p{0.17\textwidth}p{0.46\textwidth}}
+\toprule
+\textbf{Argomento} & \textbf{Stato} & \textbf{Perché} \\
+\midrule
+\endhead
+Calibrazione del fermo immagine (omografia a 4 punti) & In uso, con limiti & È coperta da test automatici. Con 4 punti l'errore di riproiezione è zero per costruzione, quindi non misura la qualità della calibrazione. Le coordinate del campo sono nel sistema $120 \times 80$, non in metri. \\
+Ruoli delle pedine & In uso solo i nomi & Statistiche e parametri fisici non avevano una fonte: sono stati tolti. \\
+Controllo dello spazio (modello di Spearman) & Non in uso & Il codice usava parametri scelti a mano, diversi da quelli scritti qui. Nella funzione d'intensità il coefficiente è scritto invertito rispetto all'articolo originale. \\
+Expected Threat (xT) & Non in uso & Le probabilità di tiro e di transizione non erano stimate da partite reali. \\
+Teoria spettrale dei grafi (Fiedler) & Non in uso & Mancava un legame verificato con il valore della situazione di gioco. \\
+Filtro di Kalman & Non in uso & Senza tracciamento automatico non ha misure da filtrare. \\
+Motore decisionale e voti alle giocate & Non in uso & Tre valutatori diversi tra loro e dalla formula scritta qui, con pesi scelti a mano. L'analisi resta senza voto finché NucleoTattico non è pronto. \\
+Balistica del tiro e portiere & Non in uso & Regole e soglie scelte a mano. \\
+Linea del fuorigioco & In uso come aiuto visivo & Viene disegnata la linea del penultimo difendente; non produce giudizi sull'azione. \\
+Animazione & In uso come illustrazione & Interpola passi disegnati a mano ed è coperta da test; non è una simulazione fisica. \\
+Pipeline di visione artificiale & Non in uso & Era simulata: non leggeva i pixel del video. \\
+Certificazione, audit e corpus di 26 gol & Ritirati & L'audit conteneva controlli veri per costruzione e l'origine dei dati non è nota. Sono sostituiti da test automatici e, in futuro, dalla validazione su dati reali. \\
+\bottomrule
+\end{longtable}
 
 \begin{abstract}
 Il presente trattato fornisce l'esposizione formale e dettagliata dell'apparato matematico, geometrico e computazionale che governa \textsl{LavagnaTattica} e il relativo motore di calcolo analitico \textsl{NucleoTattico}. Il lavoro unifica la geometria proiettiva piana per la calibrazione omografica da fermo immagine broadcast ($H \in \text{PGL}(3, \mathbb{R})$ risolta via eliminazione di Gauss-Jordan a pivoting parziale), la teoria del controllo continuo dello spazio tramite l'equazione differenziale a derivate parziali di Spearman (2018), la quantificazione della pericolosità territoriale mediante catene di Markov assorbenti e Value Iteration di Bellman (Expected Threat, xT), la connettività algebrica e la robustezza topologica della rete di passaggi attraverso lo spettro della matrice Laplaciana pesata (Autovalore di Fiedler $\lambda_2$ estratto con il metodo di Jacobi a rotazioni ortogonali), la cinematica del tracciamento tramite Filtro di Kalman Esteso ($4 \times 4$), la valutazione multi-criterio delle alternative d'azione nello stile Chess.com ($J(a \mid s)$) combinata con i vincoli fisici e biomeccanici della balistica umana, e l'architettura dichiarativa dell'animazione a 3 livelli a 60 FPS sincronizzata via RequestAnimationFrame. Tutti i modelli descritti operano secondo il principio epistemico di \textsl{Zero Nomi Propri}, impiegando il Catalogo Universale delle 30 Tipologie Tattiche Astratte e garantendo la verificabilità formale attraverso una suite automatizzata di audit matematico a 15 controlli disgiunti.
@@ -68,7 +103,6 @@ Per preservare l'universalità scientifica e l'indipendenza da contingenze comme
 \end{equation}
 dove $v_{\max} \in [6.5, 9.8]\,\text{m/s}$ è la velocità terminale di sprint, $a_{\max} \in [2.5, 4.5]\,\text{m/s}^2$ è la capacità d'accelerazione neuromuscolare, $\tau_r \in [0.25, 0.50]\,\text{s}$ è la latenza di reazione percettiva, $R_{\text{action}}$ è il raggio dell'intorno sferico di intervento immediato, e $\gamma_{\text{press}}$ è il coefficiente di propensione al recupero palla.
 
----
 
 \section{Capitolo 1 — Geometria Proiettiva \& Calibrazione Omografica DLT}
 
@@ -107,7 +141,7 @@ dove il vettore delle incognite è $\mathbf{h} = [h_{11}, h_{12}, h_{13}, h_{21}
 \For{$k = 1$ to $8$}
     \State Trova riga pivot $p = \arg\max_{r \ge k} |M_{r, k}|$
     \State Swap righe: $M_k \leftrightarrow M_p$
-    \If{$|M_{k, k}| < 10^{-12}$} \Throw Errore di singolarità o collinearità \EndIf
+    \If{$|M_{k, k}| < 10^{-12}$} \State \textbf{errore}: singolarità o collinearità \EndIf
     \State Normalizza riga pivot: $M_k \leftarrow M_k / M_{k, k}$
     \For{$r = 1$ to $8$, $r \ne k$}
         \State $M_r \leftarrow M_r - M_{r, k} M_k$
@@ -132,7 +166,6 @@ h_{21}h_{32} - h_{22}h_{31} & h_{12}h_{31} - h_{11}h_{32} & h_{11}h_{22} - h_{12
 \end{equation}
 L'audit matematico automatico pre-build certifica per il solver un errore medio di riproiezione sui 4 punti di ancoraggio rigorosamente pari a $0.0\,\text{m}$.
 
----
 
 \section{Capitolo 2 — Pitch Control Continuo Deterministico (Modello Spearman 2018)}
 
@@ -174,7 +207,6 @@ L'integrazione temporale della dinamica viene condotta per $t \in [t_{\text{ball
 P_{\text{Home}}(\mathbf{r}) + P_{\text{Away}}(\mathbf{r}) = 1.0000 \pm 10^{-6}
 \end{equation}
 
----
 
 \section{Capitolo 3 — Expected Threat (xT) su Catena di Markov Assorbente}
 
@@ -212,7 +244,6 @@ Essendo $\gamma < 1$ (a causa della probabilità non nulla di tiro o intercetto)
 \end{proof}
 Nel motore \textsl{NucleoTattico}, l'algoritmo di Value Iteration raggiunge la convergenza assoluta a $\|xT^{(k+1)} - xT^{(k)}\|_\infty < 10^{-6}$ in esattamente 37 iterazioni numeriche.
 
----
 
 \section{Capitolo 4 — Teoria Spettrale dei Grafi \& Connettività di Fiedler $\lambda_2$}
 
@@ -237,7 +268,7 @@ Essendo $L$ una matrice simmetrica e semi-definita positiva, possiede autovalori
 \begin{equation}
 0 = \lambda_1 \le \lambda_2 \le \dots \le \lambda_{N_p}
 \end{equation}
-Il secondo autovalore più piccolo $\lambda_2$, denominato **Connettività Algebrica di Fiedler**, quantifica la coesione strutturale del blocco squadra e la difficoltà per la pressione avversaria di frammentare la rete di possesso.
+Il secondo autovalore più piccolo $\lambda_2$, denominato \textbf{Connettività Algebrica di Fiedler}, quantifica la coesione strutturale del blocco squadra e la difficoltà per la pressione avversaria di frammentare la rete di possesso.
 
 Per estrarre l'intero spettro di $L$ in ambiente client-side a 60 FPS senza librerie esterne pesanti, \textsl{NucleoTattico} adotta l'algoritmo di rotazione ortogonale di Jacobi:
 \begin{equation}
@@ -256,7 +287,6 @@ dove l'angolo di rotazione ottimale $\theta$ per azzerare l'elemento fuori diago
 \tan(2\theta) = \frac{2 L_{pq}}{L_{qq} - L_{pp}}
 \end{equation}
 
----
 
 \section{Capitolo 5 — Filtro di Kalman Esteso (EKF $4 \times 4$)}
 
@@ -292,7 +322,6 @@ P_t = (I - K_t H_{\text{meas}}) P_t^-
 \end{equation}
 L'audit matematico certifica l'effettivo abbattimento dell'incertezza cinematico-spaziale: la traccia della matrice di covarianza $\text{Tr}(P)$ decade monotonicamente dal valore iniziale di $4.60$ a $3.0576$ post-misura.
 
----
 
 \section{Capitolo 6 — Motore Decisionale Stile Chess.com \& Funzionale di Valutazione}
 
@@ -320,7 +349,6 @@ Confrontando lo score $J(a_{\text{selected}})$ con l'ottimo teorico $J^*(s) = \m
     \item \textbf{Blunder (??)}: $J(a) < J^*(s) - 0.60 \lor P_{\text{succ}} < 0.15 \lor \text{isOffside} = \text{true}$.
 \end{itemize}
 
----
 
 \section{Capitolo 7 — Balistica Realistica del Tiro \& Meccanica del Portiere}
 
@@ -355,7 +383,6 @@ La probabilità di successo decade a $xG \le 10^{-4}$, determinando $J \approx -
 Se il portiere avversario è sorpreso fuori dai pali a grande distanza ($\|\mathbf{p}_{\text{GK}} - \mathbf{p}_{\text{goal}}\| \ge 18.0\,\text{m}$), e il tiro viene calciato a parabola con quota di scavalco $z_{\text{peak}} \ge 3.0\,\text{m}$, il tempo di recupero del portiere retrocedendo soddisfa $TTI_{\text{retreat}} > t_{\text{flight}}$. L'aspettativa di gol cresce monotonicamente trasformando la giocata in \textbf{Best Move (!!)}.
 \end{proposizione}
 
----
 
 \section{Capitolo 8 — Vincoli Topologici: Fuorigioco \& Coni d'Ombra}
 
@@ -372,9 +399,8 @@ Per ogni potenziale ricevitore compagno $p_k$:
 \text{false} & \text{altrimenti}
 \end{cases}
 \end{equation}
-Se $\text{isOffside}(p_k) = \text{true}$, il motore impone istantaneamente $P_{\text{succ}} = 0.0$ e classifica il passaggio come **Blunder (??)**.
+Se $\text{isOffside}(p_k) = \text{true}$, il motore impone istantaneamente $P_{\text{succ}} = 0.0$ e classifica il passaggio come \textbf{Blunder (??)}.
 
----
 
 \section{Capitolo 9 — Motore di Animazione Balistica a 3 Livelli (60 FPS)}
 
@@ -404,7 +430,6 @@ L'ombra della sfera proiettata a terra sul piano $XY$ subisce un ridimensionamen
 R_{\text{shadow}}(z) = R_0 \cdot \left( 1 - 0.35 \frac{z(t)}{z_{\max}} \right), \quad \alpha_{\text{shadow}}(z) = \alpha_0 \cdot \left( 1 - 0.50 \frac{z(t)}{z_{\max}} \right)
 \end{equation}
 
----
 
 \section{Capitolo 10 — Pipeline di Visione Artificiale a 9 Stadi}
 
@@ -421,11 +446,10 @@ La conversione del frame video in un modello analitico avviene attraverso 9 stad
     \item \textbf{Rendering Canvas \& HUD Aumentato}: Sovrapposizione a 60 FPS del Pitch Control, della traiettoria balistica e del valutatore Chess.com.
 \end{enumerate}
 
----
 
 \section{Capitolo 11 — Governance ADR-Math \& Certificazione su Corpus 26-Gol}
 
-Tutti i parametri numerici, le costanti fisiche e le formule analitiche adottate in \textsl{NucleoTattico} sono vincolati dal registro degli **Architectural Decision Records Matematici (ADR-Math)**, validati da Marco Razzano con il supporto dei modelli di intelligenza artificiale Google Gemini 2.5 Flash e Gemini 2.5 Pro:
+Tutti i parametri numerici, le costanti fisiche e le formule analitiche adottate in \textsl{NucleoTattico} sono vincolati dal registro degli \textbf{Architectural Decision Records Matematici (ADR-Math)}, validati da Marco Razzano con il supporto dei modelli di intelligenza artificiale Google Gemini 2.5 Flash e Gemini 2.5 Pro:
 \begin{itemize}
     \item \textbf{ADR-Math 001}: Calibrazione DLT planare con pivot parziale ed eliminazione esatta.
     \item \textbf{ADR-Math 002}: Formulazione differenziale Spearman ODE per il Pitch Control continuo.
@@ -433,7 +457,6 @@ Tutti i parametri numerici, le costanti fisiche e le formule analitiche adottate
     \item \textbf{ADR-Math 004}: Rigore statistico sul corpus canonico di validazione di \textbf{26 gol storici} analizzati, con calcolo rigoroso degli intervalli di confidenza di Wilson al $95\%$, rifiutando tassativamente conteggi duplicati o numeriche arbitrarie.
 \end{itemize}
 
----
 
 \section{Conclusioni}
 

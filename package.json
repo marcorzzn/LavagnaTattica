@@ -1,11 +1,12 @@
 {
   "name": "lavagna-tattica",
   "version": "0.2.0",
-  "description": "Lavagna tattica aumentata e Video Match Lab per il calcio contemporaneo — Pitch Control (Spearman), xT (Markov-Bellman), Chess.com eval, DLT 8x8, animazioni a 3 livelli e PWA offline",
+  "description": "Lavagna tattica e annotazione di situazioni di gioco su fermo immagine. Il motore di analisi NucleoTattico è in costruzione.",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "engines": {
-    "node": ">=20",
+    "node": ">=22.12",
     "npm": ">=10"
   },
   "repository": {
@@ -17,35 +18,27 @@
     "url": "https://github.com/marcorzzn/LavagnaTattica/issues"
   },
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "vite",
     "build": "vite build",
-    "start": "node server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "audit": "tsx scripts/audit_real_vs_stub.ts",
+    "test": "vitest run",
+    "check": "npm run lint && npm run test && npm run build",
     "build:paper": "tsx scripts/build_math_paper.ts"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
-    "i18next": "^26.7.2",
-    "i18next-browser-languagedetector": "^8.3.0",
     "idb": "^8.0.2",
     "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "react-i18next": "^17.1.13",
     "vite": "^8.3.0",
     "vite-plugin-pwa": "^2.0.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/katex": "^0.16.8",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
@@ -55,6 +48,7 @@
     "katex": "^0.19.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }

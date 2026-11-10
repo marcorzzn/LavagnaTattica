@@ -8,7 +8,7 @@ Questa guida illustra la procedura operativa per il deploy continuo e a zero cos
 
 1. **Banda e Traffico Illimitati a Costo Zero**: A differenza di altre piattaforme con quote rigide di bandwidth o fatturazione a consumo imprevisto, Cloudflare Pages offre egress illimitato nel piano gratuito.
 2. **Edge Network Globale Anycast a Bassa Latenza**: Distribuzione automatica su oltre 300 data center mondiali, garantendo TTFB istantaneo in Europa, Americhe e Asia.
-3. **PWA e Service Worker Nativi**: Pieno supporto al caching offline PWA (`registerType: 'autoUpdate'`), permettendo agli allenatori e match analyst di utilizzare la lavagna anche senza connessione internet su campo.
+3. **Service worker**: l'app registra un service worker (`registerType: 'autoUpdate'`). Il funzionamento senza connessione non è ancora stato verificato.
 4. **Single Page Application (SPA) Routing**: Supportato tramite la regola standard `public/_redirects` (`/* /index.html 200`), che previene qualsiasi errore 404 sui refresh.
 5. **Zero Sorprese di Fatturazione per Uso Commerciale**: Ideale per l'infrastruttura di LavagnaTattica fondata da Marco Razzano.
 
@@ -33,11 +33,14 @@ Compila i campi di configurazione del build con i seguenti valori esatti:
 | **Root directory** | `/` (lasciare vuoto) |
 
 ### Passo 3: Variabili d'Ambiente (Environment Variables)
-In **Environment variables (advanced)**, imposta la versione di Node.js per garantire compatibilità con Node 20+:
+In **Environment variables (advanced)**, imposta la versione di Node.js:
 
 | Chiave | Valore |
 |---|---|
-| `NODE_VERSION` | `20` |
+| `NODE_VERSION` | `22` |
+
+Node 20 non è più supportato dal progetto Node.js da aprile 2026. La build richiede Node 20.19 o 22.12 e successivi;
+i test richiedono Node 22.12 o successivo.
 
 Clicca su **Save and Deploy**. La build iniziale richiederà circa 45-60 secondi.
 
@@ -79,10 +82,9 @@ Nel repository sono già inclusi nella cartella `public/` (copiati automaticamen
 ## 5. Verifica Post-Deploy
 
 Dopo il deploy:
-1. **Verifica Bilinguismo**: Il toggle `IT / EN` nell'header deve cambiare lingua istantaneamente e persistere al ricaricamento (chiave `lavagnatattica_lng` in localStorage).
-2. **Verifica Navigazione 3 Viste**:
-   - `Lavagna Tattica` (`/`): canvas 2D interattivo, drawer archetipi, timeline 60 FPS.
-   - `Analisi Video & Botoniera Tag`: canvas video con omografia DLT 8x8, botoniera tag e modalità Certificazione Benchmark 12D.
-   - `Teoria & Riferimenti`: didattica "Impara" (quiz e puzzle) e consulta "Glossario Bilingue con KaTeX", "Registro ADR-Math (Marco Razzano)" e "30 Archetipi".
-3. **Verifica PWA Offline**: Apri DevTools → Application → Service Workers: lo script `sw.js` deve risultare attivo e funzionante.
+1. **Le tre viste si aprono**:
+   - `Analisi`: fermo immagine con calibrazione a 4 punti, pedine, palla, freccia della giocata e corse.
+   - `Lavagna animata`: pedine, passi e riproduzione della sequenza.
+   - `Lavagna libera`: disegno sul campo.
+2. **Service worker**: in DevTools → Application → Service Workers lo script `sw.js` risulta attivo.
 
