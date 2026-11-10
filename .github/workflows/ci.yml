@@ -1,0 +1,37 @@
+name: Controlli
+
+# A ogni push su main e a ogni pull request: typecheck, test e build.
+# Se uno dei tre fallisce, il controllo risulta rosso su GitHub.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  controlli:
+    name: Typecheck, test e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # I test (Vitest 5) richiedono Node 22.12 o successivo.
+          node-version: 22
+          cache: npm
+
+      - name: Installa le dipendenze dal file di blocco
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

@@ -3,7 +3,6 @@ import { useStudioStore } from '../../stores/studioStore';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { useViewportStore } from '../../stores/viewportStore';
 import {
-  getTacticalZoneName,
   optaToStatsbomb,
   optaToSvg,
   snapOptaCoordinate,
@@ -11,7 +10,6 @@ import {
   statsbombToSvg,
   svgToOpta,
 } from '../../engine/coordinateAdapter';
-import { sampleXtAtCoord, solveMarkovXtWithStats } from '../../engine/mathEngine';
 import { PlayerNode } from '../../core/types';
 import { getPitchTheme } from '../../core/pitchThemes';
 import {
@@ -21,16 +19,12 @@ import {
 
 interface TacticalPitchCanvasProps {
   svgRef?: React.RefObject<SVGSVGElement | null>;
-  showXtOverlay?: boolean;
-  showPitchControlOverlay?: boolean;
   selectedPlayerId?: string | null;
   onSelectPlayer?: (id: string | null) => void;
 }
 
 export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   svgRef: externalSvgRef,
-  showXtOverlay = false,
-  showPitchControlOverlay = false,
   selectedPlayerId,
   onSelectPlayer,
 }) => {
@@ -67,8 +61,6 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const selectSingle = useSelectionStore((s) => s.selectSingle);
 
-  const gridVisible = useViewportStore((s) => s.gridVisible);
-  const halfSpacesVisible = useViewportStore((s) => s.halfSpacesVisible);
   const snapEnabled = useViewportStore((s) => s.snapEnabled);
   const blindMode = useViewportStore((s) => s.blindMode);
   const showHomeTeam = useViewportStore((s) => s.showHomeTeam);
@@ -104,22 +96,15 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
     optaY: number;
     sbX: number;
     sbY: number;
-    zoneName: string;
-    xtValue: number;
   }>({
     optaX: 50,
     optaY: 50,
     sbX: 60,
     sbY: 40,
-    zoneName: 'Corridoio Centrale · Terzo Centrale (Costruzione)',
-    xtValue: 0.024,
   });
 
   const [noteDraftPos, setNoteDraftPos] = useState<{ x: number; y: number } | null>(null);
   const [noteDraftText, setNoteDraftText] = useState('');
-
-  // Valori xT calcolati dal Bellman solver reale di NucleoTattico
-  const xtGrid = React.useMemo(() => solveMarkovXtWithStats().grid, []);
 
   const getCanvasCoordinates = (e: React.PointerEvent<SVGSVGElement>): { optaX: number; optaY: number; sbX: number; sbY: number } => {
     const svg = svgRef.current;
@@ -164,10 +149,8 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const { optaX, optaY, sbX, sbY } = getCanvasCoordinates(e);
-    const zoneName = getTacticalZoneName(optaX, optaY);
-    const xtValue = sampleXtAtCoord(sbX, sbY, xtGrid);
 
-    setTelemetry({ optaX, optaY, sbX, sbY, zoneName, xtValue });
+    setTelemetry({ optaX, optaY, sbX, sbY });
 
     if (draggingEntity) {
       const snapped = snapOptaCoordinate(optaX, optaY, snapEnabled);
@@ -224,7 +207,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
             controlY: activeArrowStyle === 'curved' ? midY : undefined,
             color: activeColor,
             strokeWidth: 2.6,
-            label: `${activeArrowType.toUpperCase()} (ΔxT: +${(sampleXtAtCoord(draftVector.currX, draftVector.currY, xtGrid) - sampleXtAtCoord(draftVector.startX, draftVector.startY, xtGrid)).toFixed(3)})`,
+            label: activeArrowType.toUpperCase(),
           });
         } else if (activeTool === 'zone') {
           const x = Math.min(draftVector.startX, draftVector.currX);
@@ -239,7 +222,6 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
             height,
             color: activeColor,
             opacity: 0.16,
-            label: getTacticalZoneName(statsbombToOpta(x + width / 2, y + height / 2).x, statsbombToOpta(x + width / 2, y + height / 2).y).split(' · ')[0],
           });
         }
       }
@@ -304,7 +286,7 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
 
   return (
     <div className="relative w-full select-none overflow-hidden rounded-xl border border-slate-800/90 bg-slate-950 shadow-2xl">
-      {/* Telemetria Spaziale Superiore (Integrazione NucleoTattico Math + Opta + FIFA) */}
+      {/* Coordinate del puntatore */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/90 bg-slate-900/95 px-4 py-2 text-xs text-slate-300">
         <div className="flex items-center gap-3">
           <span className="font-mono font-semibold text-cyan-400 tabular-nums">
@@ -312,21 +294,10 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
           </span>
           <span className="text-slate-600">|</span>
           <span className="font-mono font-semibold text-lime-400 tabular-nums">
-            StatsBomb: {telemetry.sbX.toFixed(1)}m × {telemetry.sbY.toFixed(1)}m
+            Campo 120 × 80: {telemetry.sbX.toFixed(1)}, {telemetry.sbY.toFixed(1)}
           </span>
-          <span className="text-slate-600">|</span>
-          <span className="font-medium text-slate-200">{telemetry.zoneName}</span>
         </div>
         <div className="flex items-center gap-3 font-mono text-[11px] tabular-nums">
-          <span className="text-cyan-300">
-            xT Cella: <strong>{telemetry.xtValue.toFixed(4)}</strong>
-          </span>
-          <span className="text-slate-600">|</span>
-          <span>FIFA 105×68m</span>
-          <span className="text-slate-600">|</span>
-          <span className={snapEnabled ? 'text-lime-400' : 'text-slate-500'}>
-            Snap: {snapEnabled ? 'ON' : 'OFF'}
-          </span>
           {blindMode && (
             <span className="font-bold text-amber-400 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
               LAVAGNA CIECA
@@ -391,76 +362,6 @@ export const TacticalPitchCanvas: React.FC<TacticalPitchCanvasProps> = ({
               data-pitch-bg="true"
             />
           ))}
-
-          {/* 2. Overlay Expected Threat (xT) su griglia Markoviana reale 16x24 */}
-          {showXtOverlay && (
-            <g pointerEvents="none" opacity="0.65">
-              {xtGrid.map((row, r) =>
-                row.map((val, c) => {
-                  const cellW = 1050 / 24;
-                  const cellH = 680 / 16;
-                  const intensity = Math.min(0.65, val * 3.5);
-                  return (
-                    <rect
-                      key={`xt_${r}_${c}`}
-                      x={c * cellW}
-                      y={r * cellH}
-                      width={cellW}
-                      height={cellH}
-                      fill="#00E5FF"
-                      opacity={intensity}
-                      stroke="rgba(0,229,255,0.12)"
-                    />
-                  );
-                })
-              )}
-            </g>
-          )}
-
-          {/* 3. Half-Spaces & Corridoi Verticali */}
-          {halfSpacesVisible && (
-            <g pointerEvents="none">
-              {/* Half-Space Sinistro (Y: 18% a 36%) */}
-              <rect
-                x="0"
-                y={optaToSvg(0, 18).y}
-                width="1050"
-                height={optaToSvg(0, 18).y}
-                fill={currentTheme.halfSpaceFill}
-                stroke={currentTheme.halfSpaceStroke}
-                strokeDasharray="5 5"
-              />
-              <text x="525" y={optaToSvg(0, 27).y + 4} textAnchor="middle" fill={currentTheme.halfSpaceText} fontSize="10" fontFamily="monospace" opacity="0.6">
-                HALF-SPACE SINISTRO
-              </text>
-
-              {/* Half-Space Destro (Y: 64% a 82%) */}
-              <rect
-                x="0"
-                y={optaToSvg(0, 64).y}
-                width="1050"
-                height={optaToSvg(0, 18).y}
-                fill={currentTheme.halfSpaceFill}
-                stroke={currentTheme.halfSpaceStroke}
-                strokeDasharray="5 5"
-              />
-              <text x="525" y={optaToSvg(0, 73).y + 4} textAnchor="middle" fill={currentTheme.halfSpaceText} fontSize="10" fontFamily="monospace" opacity="0.6">
-                HALF-SPACE DESTRO
-              </text>
-            </g>
-          )}
-
-          {/* 4. Griglia 18 Zone Tattiche */}
-          {gridVisible && (
-            <g stroke={currentTheme.gridLineColor} strokeWidth="1" strokeDasharray="4 4" pointerEvents="none">
-              <line x1={optaToSvg(33.3, 0).x} y1="0" x2={optaToSvg(33.3, 0).x} y2="680" />
-              <line x1={optaToSvg(66.7, 0).x} y1="0" x2={optaToSvg(66.7, 0).x} y2="680" />
-              <line x1="0" y1={optaToSvg(0, 18).y} x2="1050" y2={optaToSvg(0, 18).y} />
-              <line x1="0" y1={optaToSvg(0, 36).y} x2="1050" y2={optaToSvg(0, 36).y} />
-              <line x1="0" y1={optaToSvg(0, 64).y} x2="1050" y2={optaToSvg(0, 64).y} />
-              <line x1="0" y1={optaToSvg(0, 82).y} x2="1050" y2={optaToSvg(0, 82).y} />
-            </g>
-          )}
 
           {/* 5. Tracciature Regolamentari FIFA 105x68m (Bianco Crema / Colore Tema) */}
           <g

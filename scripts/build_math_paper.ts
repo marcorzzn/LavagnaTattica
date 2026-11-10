@@ -75,9 +75,39 @@ const rawBody = `
     <div style="font-size: 8.5pt; color: #475569; margin-top: 3px;">
       Repository Ufficiale: <a href="https://github.com/marcorzzn/LavagnaTattica" style="color:#1a56db;">github.com/marcorzzn/LavagnaTattica</a> • Web App: <a href="https://lavagnatattica.pages.dev/" style="color:#1a56db;">lavagnatattica.pages.dev</a>
     </div>
-    <div style="font-size: 8pt; color: #64748b; margin-top: 2px;">Novembre 2026 • Release 3.0-Enterprise • Formalizzazione Rigorosa Lossless</div>
+    <div style="font-size: 8pt; color: #64748b; margin-top: 2px;">Novembre 2026 • documento in revisione</div>
   </div>
 </div>
+
+<div class="prop-box">
+  <div class="box-title">Documento in revisione (10 novembre 2026)</div>
+  Questo manuale descrive una versione precedente del progetto. Molte parti non sono più in uso nell'applicazione,
+  alcune formule non corrispondevano al codice e alcune affermazioni («certificazione», «errore nullo»,
+  «senza approssimazioni») non erano giustificate. Il manuale verrà riscritto come specifica del motore NucleoTattico:
+  ogni scelta di modello, adottata o scartata, sarà motivata. La tabella qui sotto dice che cosa è in uso oggi,
+  che cosa no e perché; sarà aggiornata a ogni progresso significativo. Questo PDF e il sorgente LaTeX sono oggi
+  due testi separati e non allineati: verranno unificati.
+</div>
+
+<table class="academic-table">
+  <thead>
+    <tr><th>Argomento</th><th>Stato</th><th>Perché</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Calibrazione del fermo immagine (omografia a 4 punti)</td><td>In uso, con limiti</td><td>È coperta da test automatici. Con 4 punti l'errore di riproiezione è zero per costruzione, quindi non misura la qualità della calibrazione. Le coordinate del campo sono nel sistema 120 &times; 80, non in metri.</td></tr>
+    <tr><td>Ruoli delle pedine</td><td>In uso solo i nomi</td><td>Statistiche e parametri fisici non avevano una fonte: sono stati tolti.</td></tr>
+    <tr><td>Controllo dello spazio (modello di Spearman)</td><td>Non in uso</td><td>Il codice usava parametri scelti a mano, diversi da quelli scritti in questo manuale.</td></tr>
+    <tr><td>Expected Threat (xT)</td><td>Non in uso</td><td>Le probabilità di tiro e di transizione non erano stimate da partite reali.</td></tr>
+    <tr><td>Teoria spettrale dei grafi (Fiedler)</td><td>Non in uso</td><td>Mancava un legame verificato con il valore della situazione di gioco.</td></tr>
+    <tr><td>Filtro di Kalman</td><td>Non in uso</td><td>Senza tracciamento automatico non ha misure da filtrare.</td></tr>
+    <tr><td>Motore decisionale e voti alle giocate</td><td>Non in uso</td><td>Tre valutatori diversi tra loro e dalla formula scritta qui, con pesi scelti a mano. L'analisi resta senza voto finché NucleoTattico non è pronto.</td></tr>
+    <tr><td>Balistica del tiro e portiere</td><td>Non in uso</td><td>Regole e soglie scelte a mano.</td></tr>
+    <tr><td>Linea del fuorigioco</td><td>In uso come aiuto visivo</td><td>Viene disegnata la linea del penultimo difendente; non produce giudizi sull'azione.</td></tr>
+    <tr><td>Animazione</td><td>In uso come illustrazione</td><td>Interpola passi disegnati a mano ed è coperta da test; non è una simulazione fisica.</td></tr>
+    <tr><td>Pipeline di visione artificiale</td><td>Non in uso</td><td>Era simulata: non leggeva i pixel del video.</td></tr>
+    <tr><td>Certificazione, audit e corpus di 26 gol</td><td>Ritirati</td><td>L'audit conteneva controlli veri per costruzione e l'origine dei dati non è nota. Sono sostituiti da test automatici e, in futuro, dalla validazione su dati reali.</td></tr>
+  </tbody>
+</table>
 
 <div class="abstract-box">
   <div class="abstract-heading">Estratto Epistemico &amp; Sommario Esecutivo</div>

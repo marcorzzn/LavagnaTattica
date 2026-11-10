@@ -3,6 +3,36 @@
 Tutte le modifiche degne di nota a questo progetto saranno documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [Non rilasciato]
+
+Revisione del progetto: resta solo ciò che è in uso e verificato. Le voci delle versioni 0.1.0 e 0.2.0 descrivono
+anche funzioni poi ritirate e restano come storico.
+
+### Added
+- Test automatici con Vitest (37 test su animazione, omografia e conversioni di coordinate) e comando `npm test`.
+- Comando `npm run check`: typecheck, test e build in sequenza.
+- Controlli automatici su GitHub a ogni push su `main` e a ogni pull request.
+- Avviso «in revisione» nel manuale, con una tabella di che cosa è in uso, che cosa no e perché.
+- Vista «Lavagna animata», separata dalla vista Teoria che è stata ritirata.
+
+### Changed
+- La vista Analisi non dà più voti: permette di calibrare il fermo immagine, piazzare pedine e palla, disegnare e
+  descrivere la giocata e le corse.
+- I ruoli delle pedine sono solo nomi, senza statistiche né parametri fisici.
+- Lo stato iniziale è neutro: due formazioni schierate e la palla al centro.
+- `npm run dev` avvia il server di sviluppo di Vite.
+- È richiesto Node.js 22.12 o successivo.
+- Licenza del codice: PolyForm Noncommercial 1.0.0 (file `LICENSE.md`).
+
+### Removed
+- Valutatori delle giocate, alternative suggerite, barra di valutazione e simulazione animata dell'Analisi.
+- Mappa del controllo dello spazio, Expected Threat, connettività di Fiedler, filtro di Kalman e gli altri indicatori
+  del vecchio motore.
+- Pipeline di visione artificiale e posa a 17 punti, che erano simulate.
+- Vista Teoria: schemi dei maestri, lezioni e quiz, glossario, registro ADR e benchmark su 26 gol.
+- Selettore di lingua, chat con Gemini, server Express e relative dipendenze.
+- Audit «15/15» e script di controllo pre-build, sostituiti dai test.
+
 ## [0.2.0] - 2026-11-06
 
 ### Added

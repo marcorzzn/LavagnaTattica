@@ -15,7 +15,7 @@ export default defineConfig(() => {
         manifest: {
           name: 'LavagnaTattica',
           short_name: 'LavagnaTattica',
-          description: 'Lavagna tattica aumentata con motore matematico NucleoTattico',
+          description: 'Lavagna tattica e annotazione di situazioni di gioco su fermo immagine',
           theme_color: '#09090B',
           background_color: '#09090B',
           display: 'standalone',

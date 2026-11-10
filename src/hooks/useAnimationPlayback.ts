@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useStudioStore } from '../stores/studioStore';
 
 /**
- * Hook that manages the smooth 60 FPS requestAnimationFrame playback loop
+ * Hook that runs the requestAnimationFrame playback loop
  * for the 3-level tactical animation engine.
  */
 export function useAnimationPlayback() {
